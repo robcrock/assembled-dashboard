@@ -1,0 +1,294 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+@source "../../../apps/**/*.{ts,tsx}";
+@source "../../../components/**/*.{ts,tsx}";
+@source "../**/*.{ts,tsx}";
+
+/* ---------------------------------------------------------------------------
+ * Token architecture — four tiers, all color in oklch. (ROB-63)
+ *
+ *   composite / component ──▶ semantic ──▶ primitive
+ *
+ * 1. PRIMITIVE  --primitive-<hue>-<step>   Context-free raw values. Defined in
+ *    :root only, never in @theme — so Tailwind generates NO utilities for them
+ *    and components cannot reach them by class. Only semantic tokens may
+ *    reference primitives. Never themed: .dark does not touch this tier.
+ * 2. SEMANTIC   --background, --muted, --status-* …   Role-based aliases that
+ *    reference primitives via var(). Light/dark remaps happen at THIS tier
+ *    only: .dark re-points roles at different primitive steps.
+ * 3. COMPONENT  --<component>-<part>   Per-component knobs referencing
+ *    semantic tokens. Earning rule: a component gets its own tokens only when
+ *    two consumers need different values for the same semantic role — a knob
+ *    nobody overrides is dead weight. None minted yet.
+ * 4. COMPOSITE  Multi-property bundles (shadows, focus ring, type ramps).
+ *    Where Tailwind v4 has a namespace for it (--shadow-*), it lives in
+ *    @theme; otherwise it becomes an @utility.
+ *
+ * Neutral ramp: custom, cool-cast (hue ~255, low chroma) after Linear's
+ * Void→Paper scale; lightness steps preserve the previous shadcn values so
+ * existing consumers keep their contrast. Chromatic ramps (red/amber/green/
+ * indigo) adopt Tailwind v4's oklch values at sparse steps — mint more steps
+ * only when a semantic role needs one.
+ * ------------------------------------------------------------------------- */
+
+@theme inline {
+    --font-heading: var(--font-sans);
+    --color-sidebar-ring: var(--sidebar-ring);
+    --color-sidebar-border: var(--sidebar-border);
+    --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+    --color-sidebar-accent: var(--sidebar-accent);
+    --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+    --color-sidebar-primary: var(--sidebar-primary);
+    --color-sidebar-foreground: var(--sidebar-foreground);
+    --color-sidebar: var(--sidebar);
+    --color-chart-5: var(--chart-5);
+    --color-chart-4: var(--chart-4);
+    --color-chart-3: var(--chart-3);
+    --color-chart-2: var(--chart-2);
+    --color-chart-1: var(--chart-1);
+    --color-ring: var(--ring);
+    --color-input: var(--input);
+    --color-border: var(--border);
+    --color-destructive: var(--destructive);
+    --color-accent-foreground: var(--accent-foreground);
+    --color-accent: var(--accent);
+    --color-muted-foreground: var(--muted-foreground);
+    --color-muted: var(--muted);
+    --color-secondary-foreground: var(--secondary-foreground);
+    --color-secondary: var(--secondary);
+    --color-primary-foreground: var(--primary-foreground);
+    --color-primary: var(--primary);
+    --color-popover-foreground: var(--popover-foreground);
+    --color-popover: var(--popover);
+    --color-card-foreground: var(--card-foreground);
+    --color-card: var(--card);
+    --color-foreground: var(--foreground);
+    --color-background: var(--background);
+    --radius-sm: calc(var(--radius) * 0.6);
+    --radius-md: calc(var(--radius) * 0.8);
+    --radius-lg: var(--radius);
+    --radius-xl: calc(var(--radius) * 1.4);
+    --radius-2xl: calc(var(--radius) * 1.8);
+    --radius-3xl: calc(var(--radius) * 2.2);
+    --radius-4xl: calc(var(--radius) * 2.6);
+    --font-sans: var(--font-sans);
+    /* composite: hairline elevation — surfaces separate by border, not shadow */
+    --shadow-hairline: inset 0 0 0 1px var(--border);
+    /* semantic: status + adherence (ROB-47) — one canonical scale for every
+       status surface (badges, dots, rows, meters) so nothing drifts */
+    --color-status-healthy: var(--status-healthy);
+    --color-status-healthy-foreground: var(--status-healthy-foreground);
+    --color-status-healthy-bg: var(--status-healthy-bg);
+    --color-status-at-risk: var(--status-at-risk);
+    --color-status-at-risk-foreground: var(--status-at-risk-foreground);
+    --color-status-at-risk-bg: var(--status-at-risk-bg);
+    --color-status-breached: var(--status-breached);
+    --color-status-breached-foreground: var(--status-breached-foreground);
+    --color-status-breached-bg: var(--status-breached-bg);
+    --color-adherence-ok: var(--adherence-ok);
+    --color-adherence-ok-foreground: var(--adherence-ok-foreground);
+    --color-adherence-ok-bg: var(--adherence-ok-bg);
+    --color-adherence-out: var(--adherence-out);
+    --color-adherence-out-foreground: var(--adherence-out-foreground);
+    --color-adherence-out-bg: var(--adherence-out-bg);
+}
+
+:root {
+    /* ---- primitive: neutral (cool cast, hue ~255) ---- */
+    --primitive-neutral-0: oklch(1 0 0);
+    --primitive-neutral-50: oklch(0.985 0.001 255);
+    --primitive-neutral-100: oklch(0.97 0.002 255);
+    --primitive-neutral-200: oklch(0.922 0.004 255);
+    --primitive-neutral-300: oklch(0.87 0.006 255);
+    --primitive-neutral-400: oklch(0.708 0.01 255);
+    --primitive-neutral-500: oklch(0.556 0.012 255);
+    --primitive-neutral-600: oklch(0.439 0.011 255);
+    --primitive-neutral-700: oklch(0.371 0.01 255);
+    --primitive-neutral-800: oklch(0.269 0.008 255);
+    --primitive-neutral-900: oklch(0.205 0.006 255);
+    --primitive-neutral-950: oklch(0.145 0.005 255);
+    --primitive-neutral-975: oklch(0.13 0.004 255);
+
+    /* ---- primitive: red ---- */
+    --primitive-red-100: oklch(0.936 0.032 17.717);
+    --primitive-red-300: oklch(0.808 0.114 19.571);
+    --primitive-red-400: oklch(0.704 0.191 22.216);
+    --primitive-red-500: oklch(0.637 0.237 25.331);
+    --primitive-red-600: oklch(0.577 0.245 27.325);
+    --primitive-red-700: oklch(0.505 0.213 27.518);
+    --primitive-red-950: oklch(0.258 0.092 26.042);
+
+    /* ---- primitive: amber ---- */
+    --primitive-amber-100: oklch(0.962 0.059 95.617);
+    --primitive-amber-300: oklch(0.879 0.169 91.605);
+    --primitive-amber-400: oklch(0.828 0.189 84.429);
+    --primitive-amber-500: oklch(0.769 0.188 70.08);
+    --primitive-amber-600: oklch(0.666 0.179 58.318);
+    --primitive-amber-700: oklch(0.555 0.163 48.998);
+    --primitive-amber-950: oklch(0.279 0.077 45.635);
+
+    /* ---- primitive: green ---- */
+    --primitive-green-100: oklch(0.962 0.044 156.743);
+    --primitive-green-300: oklch(0.871 0.15 154.449);
+    --primitive-green-400: oklch(0.792 0.209 151.711);
+    --primitive-green-500: oklch(0.723 0.219 149.579);
+    --primitive-green-600: oklch(0.627 0.194 149.214);
+    --primitive-green-700: oklch(0.527 0.154 150.069);
+    --primitive-green-950: oklch(0.266 0.065 152.934);
+
+    /* ---- primitive: indigo (accent) ---- */
+    --primitive-indigo-300: oklch(0.785 0.115 274.713);
+    --primitive-indigo-400: oklch(0.673 0.182 276.935);
+    --primitive-indigo-500: oklch(0.585 0.233 277.117);
+    --primitive-indigo-600: oklch(0.511 0.262 276.966);
+    --primitive-indigo-950: oklch(0.257 0.09 281.288);
+
+    /* ---- semantic (light) ---- */
+    --background: var(--primitive-neutral-0);
+    --foreground: var(--primitive-neutral-950);
+    --card: var(--primitive-neutral-0);
+    --card-foreground: var(--primitive-neutral-950);
+    --popover: var(--primitive-neutral-0);
+    --popover-foreground: var(--primitive-neutral-950);
+    --primary: var(--primitive-neutral-900);
+    --primary-foreground: var(--primitive-neutral-50);
+    --secondary: var(--primitive-neutral-100);
+    --secondary-foreground: var(--primitive-neutral-900);
+    --muted: var(--primitive-neutral-100);
+    --muted-foreground: var(--primitive-neutral-500);
+    --accent: var(--primitive-neutral-100);
+    --accent-foreground: var(--primitive-neutral-900);
+    --destructive: var(--primitive-red-600);
+    --border: var(--primitive-neutral-200);
+    --input: var(--primitive-neutral-200);
+    --ring: var(--primitive-indigo-500);
+    --chart-1: var(--primitive-neutral-300);
+    --chart-2: var(--primitive-neutral-500);
+    --chart-3: var(--primitive-neutral-600);
+    --chart-4: var(--primitive-neutral-700);
+    --chart-5: var(--primitive-neutral-800);
+    --radius: 0.625rem;
+    --sidebar: var(--primitive-neutral-50);
+    --sidebar-foreground: var(--primitive-neutral-950);
+    --sidebar-primary: var(--primitive-neutral-900);
+    --sidebar-primary-foreground: var(--primitive-neutral-50);
+    --sidebar-accent: var(--primitive-neutral-100);
+    --sidebar-accent-foreground: var(--primitive-neutral-900);
+    --sidebar-border: var(--primitive-neutral-200);
+    --sidebar-ring: var(--primitive-indigo-500);
+
+    /* ---- semantic: status (light) ----
+       ink doubles as text-on-page, text-on-tint, and solid fill; -foreground
+       sits on the solid fill; -bg is the subtle tint. AA verified (ROB-47). */
+    --status-healthy: var(--primitive-green-700);
+    --status-healthy-foreground: var(--primitive-neutral-0);
+    --status-healthy-bg: var(--primitive-green-100);
+    --status-at-risk: var(--primitive-amber-700);
+    --status-at-risk-foreground: var(--primitive-neutral-0);
+    --status-at-risk-bg: var(--primitive-amber-100);
+    --status-breached: var(--primitive-red-700);
+    --status-breached-foreground: var(--primitive-neutral-0);
+    --status-breached-bg: var(--primitive-red-100);
+
+    /* ---- semantic: adherence — aliases of the status scale (same optics,
+       own names so the ubiquitous language survives and can diverge later
+       without touching components). Aliases resolve through .dark remaps
+       automatically, so they are defined once here. ---- */
+    --adherence-ok: var(--status-healthy);
+    --adherence-ok-foreground: var(--status-healthy-foreground);
+    --adherence-ok-bg: var(--status-healthy-bg);
+    --adherence-out: var(--status-at-risk);
+    --adherence-out-foreground: var(--status-at-risk-foreground);
+    --adherence-out-bg: var(--status-at-risk-bg);
+}
+
+.dark {
+    /* semantic only — primitives never change per theme.
+       Void-style canvas with Carbon-style card elevation; separation via
+       solid graphite hairlines rather than alpha borders. */
+    --background: var(--primitive-neutral-975);
+    --foreground: var(--primitive-neutral-50);
+    --card: var(--primitive-neutral-950);
+    --card-foreground: var(--primitive-neutral-50);
+    --popover: var(--primitive-neutral-950);
+    --popover-foreground: var(--primitive-neutral-50);
+    --primary: var(--primitive-neutral-200);
+    --primary-foreground: var(--primitive-neutral-900);
+    --secondary: var(--primitive-neutral-800);
+    --secondary-foreground: var(--primitive-neutral-50);
+    --muted: var(--primitive-neutral-800);
+    --muted-foreground: var(--primitive-neutral-400);
+    --accent: var(--primitive-neutral-800);
+    --accent-foreground: var(--primitive-neutral-50);
+    --destructive: var(--primitive-red-400);
+    --border: var(--primitive-neutral-800);
+    --input: var(--primitive-neutral-800);
+    --ring: var(--primitive-indigo-400);
+    --chart-1: var(--primitive-neutral-300);
+    --chart-2: var(--primitive-neutral-500);
+    --chart-3: var(--primitive-neutral-600);
+    --chart-4: var(--primitive-neutral-700);
+    --chart-5: var(--primitive-neutral-800);
+    --sidebar: var(--primitive-neutral-950);
+    --sidebar-foreground: var(--primitive-neutral-50);
+    --sidebar-primary: var(--primitive-indigo-600);
+    --sidebar-primary-foreground: var(--primitive-neutral-50);
+    --sidebar-accent: var(--primitive-neutral-800);
+    --sidebar-accent-foreground: var(--primitive-neutral-50);
+    --sidebar-border: var(--primitive-neutral-800);
+    --sidebar-ring: var(--primitive-indigo-400);
+
+    /* ---- semantic: status (dark) — 400-step inks on Void, 950-step tints ---- */
+    --status-healthy: var(--primitive-green-400);
+    --status-healthy-foreground: var(--primitive-neutral-975);
+    --status-healthy-bg: var(--primitive-green-950);
+    --status-at-risk: var(--primitive-amber-400);
+    --status-at-risk-foreground: var(--primitive-neutral-975);
+    --status-at-risk-bg: var(--primitive-amber-950);
+    --status-breached: var(--primitive-red-400);
+    --status-breached-foreground: var(--primitive-neutral-975);
+    --status-breached-bg: var(--primitive-red-950);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+    }
+  body {
+    @apply bg-background text-foreground;
+    }
+}
+
+/* ---------------------------------------------------------------------------
+ * Composite: metric type ramp (ROB-47). Tabular figures keep ticking numbers
+ * from jittering horizontally; weight caps at 500 (Linear: no heavy weights).
+ * Sans + tabular-nums, not mono — mono reads as code, not vitals.
+ * ------------------------------------------------------------------------- */
+
+@utility text-metric-lg {
+  /* StatCard headline numbers */
+  font-size: 1.75rem;
+  line-height: 1.15;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+@utility text-metric {
+  /* dense table-cell numerics */
+  font-size: 0.875rem;
+  line-height: 1.4;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+@utility text-metric-sm {
+  /* secondary/caption numerics: deltas, "updated Xs ago" */
+  font-size: 0.75rem;
+  line-height: 1.3;
+  font-weight: 400;
+  font-variant-numeric: tabular-nums;
+}

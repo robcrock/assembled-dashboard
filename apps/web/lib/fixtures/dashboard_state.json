@@ -1,0 +1,3613 @@
+{
+  "generated_at": "2026-05-26T14:45:00Z",
+  "meta": {
+    "org": "Northwind Support",
+    "window_start": "2026-05-26T14:00:00Z",
+    "tick_interval_sec": 300,
+    "notes": "Pre-computed dashboard metrics. 'current' is the live snapshot; 'history' powers trends and can be replayed on a timer to simulate live ticks."
+  },
+  "current": {
+    "ts": "2026-05-26T14:45:00Z",
+    "summary": {
+      "sla_attainment_pct": 86,
+      "queues_total": 6,
+      "queues_breaching": 2,
+      "queues_at_risk": 1,
+      "tickets_waiting_total": 84,
+      "agents_total": 13,
+      "agents_online": 13,
+      "agents_out_of_adherence": 3
+    },
+    "queues": [
+      {
+        "queue_id": "billing",
+        "name": "Billing",
+        "sla_status": "breached",
+        "sla_target_sec": 120,
+        "longest_wait_sec": 175,
+        "sla_headroom_pct": 46,
+        "tickets_waiting": 32,
+        "agents_available": 0,
+        "agents_on_call": 3,
+        "volume_last_15m": 70,
+        "volume_forecast_next_15m": 56,
+        "volume_vs_forecast_pct": 25,
+        "wait_trend_sec": [
+          48,
+          55,
+          70,
+          88,
+          105,
+          118,
+          132,
+          150,
+          168,
+          175
+        ]
+      },
+      {
+        "queue_id": "vip",
+        "name": "VIP",
+        "sla_status": "at_risk",
+        "sla_target_sec": 300,
+        "longest_wait_sec": 250,
+        "sla_headroom_pct": -17,
+        "tickets_waiting": 9,
+        "agents_available": 0,
+        "agents_on_call": 3,
+        "volume_last_15m": 44,
+        "volume_forecast_next_15m": 42,
+        "volume_vs_forecast_pct": 5,
+        "wait_trend_sec": [
+          60,
+          65,
+          80,
+          120,
+          190,
+          260,
+          310,
+          330,
+          300,
+          250
+        ]
+      },
+      {
+        "queue_id": "tier_2",
+        "name": "Tier 2",
+        "sla_status": "healthy",
+        "sla_target_sec": 600,
+        "longest_wait_sec": 230,
+        "sla_headroom_pct": -62,
+        "tickets_waiting": 5,
+        "agents_available": 0,
+        "agents_on_call": 4,
+        "volume_last_15m": 37,
+        "volume_forecast_next_15m": 37,
+        "volume_vs_forecast_pct": 0,
+        "wait_trend_sec": [
+          180,
+          190,
+          200,
+          210,
+          230,
+          250,
+          260,
+          255,
+          240,
+          230
+        ]
+      },
+      {
+        "queue_id": "chat",
+        "name": "Live Chat",
+        "sla_status": "breached",
+        "sla_target_sec": 180,
+        "longest_wait_sec": 260,
+        "sla_headroom_pct": 44,
+        "tickets_waiting": 22,
+        "agents_available": 0,
+        "agents_on_call": 2,
+        "volume_last_15m": 80,
+        "volume_forecast_next_15m": 64,
+        "volume_vs_forecast_pct": 25,
+        "wait_trend_sec": [
+          70,
+          90,
+          120,
+          150,
+          175,
+          195,
+          210,
+          230,
+          245,
+          260
+        ]
+      },
+      {
+        "queue_id": "onboarding",
+        "name": "Onboarding",
+        "sla_status": "healthy",
+        "sla_target_sec": 1800,
+        "longest_wait_sec": 370,
+        "sla_headroom_pct": -79,
+        "tickets_waiting": 6,
+        "agents_available": 0,
+        "agents_on_call": 3,
+        "volume_last_15m": 23,
+        "volume_forecast_next_15m": 23,
+        "volume_vs_forecast_pct": 0,
+        "wait_trend_sec": [
+          240,
+          250,
+          260,
+          280,
+          300,
+          320,
+          340,
+          350,
+          360,
+          370
+        ]
+      },
+      {
+        "queue_id": "general",
+        "name": "General Support",
+        "sla_status": "healthy",
+        "sla_target_sec": 300,
+        "longest_wait_sec": 190,
+        "sla_headroom_pct": -37,
+        "tickets_waiting": 10,
+        "agents_available": 0,
+        "agents_on_call": 4,
+        "volume_last_15m": 46,
+        "volume_forecast_next_15m": 47,
+        "volume_vs_forecast_pct": -2,
+        "wait_trend_sec": [
+          120,
+          130,
+          140,
+          150,
+          160,
+          170,
+          175,
+          180,
+          185,
+          190
+        ]
+      }
+    ],
+    "agents": [
+      {
+        "agent_id": "a_11",
+        "name": "Maya R.",
+        "queues": [
+          "billing",
+          "general"
+        ],
+        "state": "on_call",
+        "state_since": "2026-05-26T14:03:00Z",
+        "state_duration_sec": 2520,
+        "adherence_status": "adherent",
+        "out_of_adherence_since": null,
+        "out_of_adherence_sec": 0
+      },
+      {
+        "agent_id": "a_19",
+        "name": "Devin K.",
+        "queues": [
+          "billing",
+          "tier_2"
+        ],
+        "state": "on_call",
+        "state_since": "2026-05-26T14:00:00Z",
+        "state_duration_sec": 2700,
+        "adherence_status": "adherent",
+        "out_of_adherence_since": null,
+        "out_of_adherence_sec": 0
+      },
+      {
+        "agent_id": "a_23",
+        "name": "Priya S.",
+        "queues": [
+          "tier_2",
+          "general"
+        ],
+        "state": "on_call",
+        "state_since": "2026-05-26T14:00:00Z",
+        "state_duration_sec": 2700,
+        "adherence_status": "adherent",
+        "out_of_adherence_since": null,
+        "out_of_adherence_sec": 0
+      },
+      {
+        "agent_id": "a_27",
+        "name": "Alex T.",
+        "queues": [
+          "vip"
+        ],
+        "state": "in_meeting",
+        "state_since": "2026-05-26T14:20:00Z",
+        "state_duration_sec": 1500,
+        "adherence_status": "out_of_adherence",
+        "out_of_adherence_since": "2026-05-26T14:20:00Z",
+        "out_of_adherence_sec": 1500
+      },
+      {
+        "agent_id": "a_34",
+        "name": "Sam W.",
+        "queues": [
+          "billing",
+          "vip"
+        ],
+        "state": "on_call",
+        "state_since": "2026-05-26T14:00:00Z",
+        "state_duration_sec": 2700,
+        "adherence_status": "adherent",
+        "out_of_adherence_since": null,
+        "out_of_adherence_sec": 0
+      },
+      {
+        "agent_id": "a_42",
+        "name": "Jordan P.",
+        "queues": [
+          "billing",
+          "tier_2"
+        ],
+        "state": "on_break",
+        "state_since": "2026-05-26T14:30:00Z",
+        "state_duration_sec": 900,
+        "adherence_status": "out_of_adherence",
+        "out_of_adherence_since": "2026-05-26T14:30:00Z",
+        "out_of_adherence_sec": 900
+      },
+      {
+        "agent_id": "a_55",
+        "name": "Noah L.",
+        "queues": [
+          "tier_2",
+          "vip"
+        ],
+        "state": "on_call",
+        "state_since": "2026-05-26T14:00:00Z",
+        "state_duration_sec": 2700,
+        "adherence_status": "adherent",
+        "out_of_adherence_since": null,
+        "out_of_adherence_sec": 0
+      },
+      {
+        "agent_id": "a_61",
+        "name": "Grace H.",
+        "queues": [
+          "vip"
+        ],
+        "state": "on_call",
+        "state_since": "2026-05-26T14:15:00Z",
+        "state_duration_sec": 1800,
+        "adherence_status": "adherent",
+        "out_of_adherence_since": null,
+        "out_of_adherence_sec": 0
+      },
+      {
+        "agent_id": "a_66",
+        "name": "Omar B.",
+        "queues": [
+          "chat"
+        ],
+        "state": "on_break",
+        "state_since": "2026-05-26T14:35:00Z",
+        "state_duration_sec": 600,
+        "adherence_status": "out_of_adherence",
+        "out_of_adherence_since": "2026-05-26T14:35:00Z",
+        "out_of_adherence_sec": 600
+      },
+      {
+        "agent_id": "a_72",
+        "name": "Lena F.",
+        "queues": [
+          "chat",
+          "onboarding"
+        ],
+        "state": "on_call",
+        "state_since": "2026-05-26T14:00:00Z",
+        "state_duration_sec": 2700,
+        "adherence_status": "adherent",
+        "out_of_adherence_since": null,
+        "out_of_adherence_sec": 0
+      },
+      {
+        "agent_id": "a_78",
+        "name": "Ravi M.",
+        "queues": [
+          "chat",
+          "general"
+        ],
+        "state": "on_call",
+        "state_since": "2026-05-26T14:00:00Z",
+        "state_duration_sec": 2700,
+        "adherence_status": "adherent",
+        "out_of_adherence_since": null,
+        "out_of_adherence_sec": 0
+      },
+      {
+        "agent_id": "a_84",
+        "name": "Ivy C.",
+        "queues": [
+          "onboarding"
+        ],
+        "state": "on_call",
+        "state_since": "2026-05-26T14:10:00Z",
+        "state_duration_sec": 2100,
+        "adherence_status": "adherent",
+        "out_of_adherence_since": null,
+        "out_of_adherence_sec": 0
+      },
+      {
+        "agent_id": "a_90",
+        "name": "Theo K.",
+        "queues": [
+          "onboarding",
+          "tier_2",
+          "general"
+        ],
+        "state": "on_call",
+        "state_since": "2026-05-26T14:00:00Z",
+        "state_duration_sec": 2700,
+        "adherence_status": "adherent",
+        "out_of_adherence_since": null,
+        "out_of_adherence_sec": 0
+      }
+    ]
+  },
+  "history": [
+    {
+      "ts": "2026-05-26T14:00:00Z",
+      "summary": {
+        "sla_attainment_pct": 98,
+        "queues_total": 6,
+        "queues_breaching": 0,
+        "queues_at_risk": 0,
+        "tickets_waiting_total": 26,
+        "agents_total": 13,
+        "agents_online": 13,
+        "agents_out_of_adherence": 0
+      },
+      "queues": [
+        {
+          "queue_id": "billing",
+          "name": "Billing",
+          "sla_status": "healthy",
+          "sla_target_sec": 120,
+          "longest_wait_sec": 48,
+          "sla_headroom_pct": -60,
+          "tickets_waiting": 9,
+          "agents_available": 1,
+          "agents_on_call": 3,
+          "volume_last_15m": 42,
+          "volume_forecast_next_15m": 40,
+          "volume_vs_forecast_pct": 5,
+          "wait_trend_sec": [
+            48
+          ]
+        },
+        {
+          "queue_id": "vip",
+          "name": "VIP",
+          "sla_status": "healthy",
+          "sla_target_sec": 300,
+          "longest_wait_sec": 60,
+          "sla_headroom_pct": -80,
+          "tickets_waiting": 2,
+          "agents_available": 1,
+          "agents_on_call": 3,
+          "volume_last_15m": 30,
+          "volume_forecast_next_15m": 28,
+          "volume_vs_forecast_pct": 7,
+          "wait_trend_sec": [
+            60
+          ]
+        },
+        {
+          "queue_id": "tier_2",
+          "name": "Tier 2",
+          "sla_status": "healthy",
+          "sla_target_sec": 600,
+          "longest_wait_sec": 180,
+          "sla_headroom_pct": -70,
+          "tickets_waiting": 3,
+          "agents_available": 0,
+          "agents_on_call": 5,
+          "volume_last_15m": 34,
+          "volume_forecast_next_15m": 32,
+          "volume_vs_forecast_pct": 6,
+          "wait_trend_sec": [
+            180
+          ]
+        },
+        {
+          "queue_id": "chat",
+          "name": "Live Chat",
+          "sla_status": "healthy",
+          "sla_target_sec": 180,
+          "longest_wait_sec": 70,
+          "sla_headroom_pct": -61,
+          "tickets_waiting": 4,
+          "agents_available": 0,
+          "agents_on_call": 3,
+          "volume_last_15m": 50,
+          "volume_forecast_next_15m": 48,
+          "volume_vs_forecast_pct": 4,
+          "wait_trend_sec": [
+            70
+          ]
+        },
+        {
+          "queue_id": "onboarding",
+          "name": "Onboarding",
+          "sla_status": "healthy",
+          "sla_target_sec": 1800,
+          "longest_wait_sec": 240,
+          "sla_headroom_pct": -87,
+          "tickets_waiting": 2,
+          "agents_available": 1,
+          "agents_on_call": 2,
+          "volume_last_15m": 18,
+          "volume_forecast_next_15m": 20,
+          "volume_vs_forecast_pct": -10,
+          "wait_trend_sec": [
+            240
+          ]
+        },
+        {
+          "queue_id": "general",
+          "name": "General Support",
+          "sla_status": "healthy",
+          "sla_target_sec": 300,
+          "longest_wait_sec": 120,
+          "sla_headroom_pct": -60,
+          "tickets_waiting": 6,
+          "agents_available": 1,
+          "agents_on_call": 3,
+          "volume_last_15m": 38,
+          "volume_forecast_next_15m": 40,
+          "volume_vs_forecast_pct": -5,
+          "wait_trend_sec": [
+            120
+          ]
+        }
+      ],
+      "agents": [
+        {
+          "agent_id": "a_11",
+          "name": "Maya R.",
+          "queues": [
+            "billing",
+            "general"
+          ],
+          "state": "available",
+          "state_since": "2026-05-26T14:00:00Z",
+          "state_duration_sec": 0,
+          "adherence_status": "adherent",
+          "out_of_adherence_since": null,
+          "out_of_adherence_sec": 0
+        },
+        {
+          "agent_id": "a_19",
+          "name": "Devin K.",
+          "queues": [
+            "billing",
+            "tier_2"
+          ],
+          "state": "on_call",
+          "state_since": "2026-05-26T14:00:00Z",
+          "state_duration_sec": 0,
+          "adherence_status": "adherent",
+          "out_of_adherence_since": null,
+          "out_of_adherence_sec": 0
+        },
+        {
+          "agent_id": "a_23",
+          "name": "Priya S.",
+          "queues": [
+            "tier_2",
+            "general"
+          ],
+          "state": "on_call",
+          "state_since": "2026-05-26T14:00:00Z",
+          "state_duration_sec": 0,
+          "adherence_status": "adherent",
+          "out_of_adherence_since": null,
+          "out_of_adherence_sec": 0
+        },
+        {
+          "agent_id": "a_27",
+          "name": "Alex T.",
+          "queues": [
+            "vip"
+          ],
+          "state": "on_call",
+          "state_since": "2026-05-26T14:00:00Z",
+          "state_duration_sec": 0,
+          "adherence_status": "adherent",
+          "out_of_adherence_since": null,
+          "out_of_adherence_sec": 0
+        },
+        {
+          "agent_id": "a_34",
+          "name": "Sam W.",
+          "queues": [
+            "billing",
+            "vip"
+          ],
+          "state": "on_call",
+          "state_since": "2026-05-26T14:00:00Z",
+          "state_duration_sec": 0,
+          "adherence_status": "adherent",
+          "out_of_adherence_since": null,
+          "out_of_adherence_sec": 0
+        },
+        {
+          "agent_id": "a_42",
+          "name": "Jordan P.",
+          "queues": [
+            "billing",
+            "tier_2"
+          ],
+          "state": "on_call",
+          "state_since": "2026-05-26T14:00:00Z",
+          "state_duration_sec": 0,
+          "adherence_status": "adherent",
+          "out_of_adherence_since": null,
+          "out_of_adherence_sec": 0
+        },
+        {
+          "agent_id": "a_55",
+          "name": "Noah L.",
+          "queues": [
+            "tier_2",
+            "vip"
+          ],
+          "state": "on_call",
+          "state_since": "2026-05-26T14:00:00Z",
+          "state_duration_sec": 0,
+          "adherence_status": "adherent",
+          "out_of_adherence_since": null,
+          "out_of_adherence_sec": 0
+        },
+        {
+          "agent_id": "a_61",
+          "name": "Grace H.",
+          "queues": [
+            "vip"
+          ],
+          "state": "available",
+          "state_since": "2026-05-26T14:00:00Z",
+          "state_duration_sec": 0,
+          "adherence_status": "adherent",
+          "out_of_adherence_since": null,
+          "out_of_adherence_sec": 0
+        },
+        {
+          "agent_id": "a_66",
+          "name": "Omar B.",
+          "queues": [
+            "chat"
+          ],
+          "state": "on_call",
+          "state_since": "2026-05-26T14:00:00Z",
+          "state_duration_sec": 0,
+          "adherence_status": "adherent",
+          "out_of_adherence_since": null,
+          "out_of_adherence_sec": 0
+        },
+        {
+          "agent_id": "a_72",
+          "name": "Lena F.",
+          "queues": [
+            "chat",
+            "onboarding"
+          ],
+          "state": "on_call",
+          "state_since": "2026-05-26T14:00:00Z",
+          "state_duration_sec": 0,
+          "adherence_status": "adherent",
+          "out_of_adherence_since": null,
+          "out_of_adherence_sec": 0
+        },
+        {
+          "agent_id": "a_78",
+          "name": "Ravi M.",
+          "queues": [
+            "chat",
+            "general"
+          ],
+          "state": "on_call",
+          "state_since": "2026-05-26T14:00:00Z",
+          "state_duration_sec": 0,
+          "adherence_status": "adherent",
+          "out_of_adherence_since": null,
+          "out_of_adherence_sec": 0
+        },
+        {
+          "agent_id": "a_84",
+          "name": "Ivy C.",
+          "queues": [
+            "onboarding"
+          ],
+          "state": "available",
+          "state_since": "2026-05-26T14:00:00Z",
+          "state_duration_sec": 0,
+          "adherence_status": "adherent",
+          "out_of_adherence_since": null,
+          "out_of_adherence_sec": 0
+        },
+        {
+          "agent_id": "a_90",
+          "name": "Theo K.",
+          "queues": [
+            "onboarding",
+            "tier_2",
+            "general"
+          ],
+          "state": "on_call",
+          "state_since": "2026-05-26T14:00:00Z",
+          "state_duration_sec": 0,
+          "adherence_status": "adherent",
+          "out_of_adherence_since": null,
+          "out_of_adherence_sec": 0
+        }
+      ]
+    },
+    {
+      "ts": "2026-05-26T14:05:00Z",
+      "summary": {
+        "sla_attainment_pct": 98,
+        "queues_total": 6,
+        "queues_breaching": 0,
+        "queues_at_risk": 0,
+        "tickets_waiting_total": 30,
+        "agents_total": 13,
+        "agents_online": 13,
+        "agents_out_of_adherence": 0
+      },
+      "queues": [
+        {
+          "queue_id": "billing",
+          "name": "Billing",
+          "sla_status": "healthy",
+          "sla_target_sec": 120,
+          "longest_wait_sec": 55,
+          "sla_headroom_pct": -54,
+          "tickets_waiting": 11,
+          "agents_available": 0,
+          "agents_on_call": 4,
+          "volume_last_15m": 46,
+          "volume_forecast_next_15m": 42,
+          "volume_vs_forecast_pct": 10,
+          "wait_trend_sec": [
+            48,
+            55
+          ]
+        },
+        {
+          "queue_id": "vip",
+          "name": "VIP",
+          "sla_status": "healthy",
+          "sla_target_sec": 300,
+          "longest_wait_sec": 65,
+          "sla_headroom_pct": -78,
+          "tickets_waiting": 2,
+          "agents_available": 1,
+          "agents_on_call": 3,
+          "volume_last_15m": 32,
+          "volume_forecast_next_15m": 30,
+          "volume_vs_forecast_pct": 7,
+          "wait_trend_sec": [
+            60,
+            65
+          ]
+        },
+        {
+          "queue_id": "tier_2",
+          "name": "Tier 2",
+          "sla_status": "healthy",
+          "sla_target_sec": 600,
+          "longest_wait_sec": 190,
+          "sla_headroom_pct": -68,
+          "tickets_waiting": 3,
+          "agents_available": 0,
+          "agents_on_call": 5,
+          "volume_last_15m": 34,
+          "volume_forecast_next_15m": 33,
+          "volume_vs_forecast_pct": 3,
+          "wait_trend_sec": [
+            180,
+            190
+          ]
+        },
+        {
+          "queue_id": "chat",
+          "name": "Live Chat",
+          "sla_status": "healthy",
+          "sla_target_sec": 180,
+          "longest_wait_sec": 90,
+          "sla_headroom_pct": -50,
+          "tickets_waiting": 6,
+          "agents_available": 0,
+          "agents_on_call": 3,
+          "volume_last_15m": 54,
+          "volume_forecast_next_15m": 50,
+          "volume_vs_forecast_pct": 8,
+          "wait_trend_sec": [
+            70,
+            90
+          ]
+        },
+        {
+          "queue_id": "onboarding",
+          "name": "Onboarding",
+          "sla_status": "healthy",
+          "sla_target_sec": 1800,
+          "longest_wait_sec": 250,
+          "sla_headroom_pct": -86,
+          "tickets_waiting": 2,
+          "agents_available": 1,
+          "agents_on_call": 2,
+          "volume_last_15m": 18,
+          "volume_forecast_next_15m": 20,
+          "volume_vs_forecast_pct": -10,
+          "wait_trend_sec": [
+            240,
+            250
+          ]
+        },
+        {
+          "queue_id": "general",
+          "name": "General Support",
+          "sla_status": "healthy",
+          "sla_target_sec": 300,
+          "longest_wait_sec": 130,
+          "sla_headroom_pct": -57,
+          "tickets_waiting": 6,
+          "agents_available": 0,
+          "agents_on_call": 4,
+          "volume_last_15m": 40,
+          "volume_forecast_next_15m": 40,
+          "volume_vs_forecast_pct": 0,
+          "wait_trend_sec": [
+            120,
+            130
+          ]
+        }
+      ],
+      "agents": [
+        {
+          "agent_id": "a_11",
+          "name": "Maya R.",
+          "queues": [
+            "billing",
+            "general"
+          ],
+          "state": "on_call",
+          "state_since": "2026-05-26T14:03:00Z",
+          "state_duration_sec": 120,
+          "adherence_status": "adherent",
+          "out_of_adherence_since": null,
+          "out_of_adherence_sec": 0
+        },
+        {
+          "agent_id": "a_19",
+          "name": "Devin K.",
+          "queues": [
+            "billing",
+            "tier_2"
+          ],
+          "state": "on_call",
+          "state_since": "2026-05-26T14:00:00Z",
+          "state_duration_sec": 300,
+          "adherence_status": "adherent",
+          "out_of_adherence_since": null,
+          "out_of_adherence_sec": 0
+        },
+        {
+          "agent_id": "a_23",
+          "name": "Priya S.",
+          "queues": [
+            "tier_2",
+            "general"
+          ],
+          "state": "on_call",
+          "state_since": "2026-05-26T14:00:00Z",
+          "state_duration_sec": 300,
+          "adherence_status": "adherent",
+          "out_of_adherence_since": null,
+          "out_of_adherence_sec": 0
+        },
+        {
+          "agent_id": "a_27",
+          "name": "Alex T.",
+          "queues": [
+            "vip"
+          ],
+          "state": "on_call",
+          "state_since": "2026-05-26T14:00:00Z",
+          "state_duration_sec": 300,
+          "adherence_status": "adherent",
+          "out_of_adherence_since": null,
+          "out_of_adherence_sec": 0
+        },
+        {
+          "agent_id": "a_34",
+          "name": "Sam W.",
+          "queues": [
+            "billing",
+            "vip"
+          ],
+          "state": "on_call",
+          "state_since": "2026-05-26T14:00:00Z",
+          "state_duration_sec": 300,
+          "adherence_status": "adherent",
+          "out_of_adherence_since": null,
+          "out_of_adherence_sec": 0
+        },
+        {
+          "agent_id": "a_42",
+          "name": "Jordan P.",
+          "queues": [
+            "billing",
+            "tier_2"
+          ],
+          "state": "on_call",
+          "state_since": "2026-05-26T14:00:00Z",
+          "state_duration_sec": 300,
+          "adherence_status": "adherent",
+          "out_of_adherence_since": null,
+          "out_of_adherence_sec": 0
+        },
+        {
+          "agent_id": "a_55",
+          "name": "Noah L.",
+          "queues": [
+            "tier_2",
+            "vip"
+          ],
+          "state": "on_call",
+          "state_since": "2026-05-26T14:00:00Z",
+          "state_duration_sec": 300,
+          "adherence_status": "adherent",
+          "out_of_adherence_since": null,
+          "out_of_adherence_sec": 0
+        },
+        {
+          "agent_id": "a_61",
+          "name": "Grace H.",
+          "queues": [
+            "vip"
+          ],
+          "state": "available",
+          "state_since": "2026-05-26T14:00:00Z",
+          "state_duration_sec": 300,
+          "adherence_status": "adherent",
+          "out_of_adherence_since": null,
+          "out_of_adherence_sec": 0
+        },
+        {
+          "agent_id": "a_66",
+          "name": "Omar B.",
+          "queues": [
+            "chat"
+          ],
+          "state": "on_call",
+          "state_since": "2026-05-26T14:00:00Z",
+          "state_duration_sec": 300,
+          "adherence_status": "adherent",
+          "out_of_adherence_since": null,
+          "out_of_adherence_sec": 0
+        },
+        {
+          "agent_id": "a_72",
+          "name": "Lena F.",
+          "queues": [
+            "chat",
+            "onboarding"
+          ],
+          "state": "on_call",
+          "state_since": "2026-05-26T14:00:00Z",
+          "state_duration_sec": 300,
+          "adherence_status": "adherent",
+          "out_of_adherence_since": null,
+          "out_of_adherence_sec": 0
+        },
+        {
+          "agent_id": "a_78",
+          "name": "Ravi M.",
+          "queues": [
+            "chat",
+            "general"
+          ],
+          "state": "on_call",
+          "state_since": "2026-05-26T14:00:00Z",
+          "state_duration_sec": 300,
+          "adherence_status": "adherent",
+          "out_of_adherence_since": null,
+          "out_of_adherence_sec": 0
+        },
+        {
+          "agent_id": "a_84",
+          "name": "Ivy C.",
+          "queues": [
+            "onboarding"
+          ],
+          "state": "available",
+          "state_since": "2026-05-26T14:00:00Z",
+          "state_duration_sec": 300,
+          "adherence_status": "adherent",
+          "out_of_adherence_since": null,
+          "out_of_adherence_sec": 0
+        },
+        {
+          "agent_id": "a_90",
+          "name": "Theo K.",
+          "queues": [
+            "onboarding",
+            "tier_2",
+            "general"
+          ],
+          "state": "on_call",
+          "state_since": "2026-05-26T14:00:00Z",
+          "state_duration_sec": 300,
+          "adherence_status": "adherent",
+          "out_of_adherence_since": null,
+          "out_of_adherence_sec": 0
+        }
+      ]
+    },
+    {
+      "ts": "2026-05-26T14:10:00Z",
+      "summary": {
+        "sla_attainment_pct": 97,
+        "queues_total": 6,
+        "queues_breaching": 0,
+        "queues_at_risk": 0,
+        "tickets_waiting_total": 38,
+        "agents_total": 13,
+        "agents_online": 13,
+        "agents_out_of_adherence": 0
+      },
+      "queues": [
+        {
+          "queue_id": "billing",
+          "name": "Billing",
+          "sla_status": "healthy",
+          "sla_target_sec": 120,
+          "longest_wait_sec": 70,
+          "sla_headroom_pct": -42,
+          "tickets_waiting": 13,
+          "agents_available": 0,
+          "agents_on_call": 4,
+          "volume_last_15m": 52,
+          "volume_forecast_next_15m": 46,
+          "volume_vs_forecast_pct": 13,
+          "wait_trend_sec": [
+            48,
+            55,
+            70
+          ]
+        },
+        {
+          "queue_id": "vip",
+          "name": "VIP",
+          "sla_status": "healthy",
+          "sla_target_sec": 300,
+          "longest_wait_sec": 80,
+          "sla_headroom_pct": -73,
+          "tickets_waiting": 3,
+          "agents_available": 1,
+          "agents_on_call": 3,
+          "volume_last_15m": 38,
+          "volume_forecast_next_15m": 34,
+          "volume_vs_forecast_pct": 12,
+          "wait_trend_sec": [
+            60,
+            65,
+            80
+          ]
+        },
+        {
+          "queue_id": "tier_2",
+          "name": "Tier 2",
+          "sla_status": "healthy",
+          "sla_target_sec": 600,
+          "longest_wait_sec": 200,
+          "sla_headroom_pct": -67,
+          "tickets_waiting": 4,
+          "agents_available": 0,
+          "agents_on_call": 5,
+          "volume_last_15m": 35,
+          "volume_forecast_next_15m": 34,
+          "volume_vs_forecast_pct": 3,
+          "wait_trend_sec": [
+            180,
+            190,
+            200
+          ]
+        },
+        {
+          "queue_id": "chat",
+          "name": "Live Chat",
+          "sla_status": "healthy",
+          "sla_target_sec": 180,
+          "longest_wait_sec": 120,
+          "sla_headroom_pct": -33,
+          "tickets_waiting": 8,
+          "agents_available": 0,
+          "agents_on_call": 3,
+          "volume_last_15m": 60,
+          "volume_forecast_next_15m": 54,
+          "volume_vs_forecast_pct": 11,
+          "wait_trend_sec": [
+            70,
+            90,
+            120
+          ]
+        },
+        {
+          "queue_id": "onboarding",
+          "name": "Onboarding",
+          "sla_status": "healthy",
+          "sla_target_sec": 1800,
+          "longest_wait_sec": 260,
+          "sla_headroom_pct": -86,
+          "tickets_waiting": 3,
+          "agents_available": 0,
+          "agents_on_call": 3,
+          "volume_last_15m": 19,
+          "volume_forecast_next_15m": 20,
+          "volume_vs_forecast_pct": -5,
+          "wait_trend_sec": [
+            240,
+            250,
+            260
+          ]
+        },
+        {
+          "queue_id": "general",
+          "name": "General Support",
+          "sla_status": "healthy",
+          "sla_target_sec": 300,
+          "longest_wait_sec": 140,
+          "sla_headroom_pct": -53,
+          "tickets_waiting": 7,
+          "agents_available": 0,
+          "agents_on_call": 4,
+          "volume_last_15m": 42,
+          "volume_forecast_next_15m": 42,
+          "volume_vs_forecast_pct": 0,
+          "wait_trend_sec": [
+            120,
+            130,
+            140
+          ]
+        }
+      ],
+      "agents": [
+        {
+          "agent_id": "a_11",
+          "name": "Maya R.",
+          "queues": [
+            "billing",
+            "general"
+          ],
+          "state": "on_call",
+          "state_since": "2026-05-26T14:03:00Z",
+          "state_duration_sec": 420,
+          "adherence_status": "adherent",
+          "out_of_adherence_since": null,
+          "out_of_adherence_sec": 0
+        },
+        {
+          "agent_id": "a_19",
+          "name": "Devin K.",
+          "queues": [
+            "billing",
+            "tier_2"
+          ],
+          "state": "on_call",
+          "state_since": "2026-05-26T14:00:00Z",
+          "state_duration_sec": 600,
+          "adherence_status": "adherent",
+          "out_of_adherence_since": null,
+          "out_of_adherence_sec": 0
+        },
+        {
+          "agent_id": "a_23",
+          "name": "Priya S.",
+          "queues": [
+            "tier_2",
+            "general"
+          ],
+          "state": "on_call",
+          "state_since": "2026-05-26T14:00:00Z",
+          "state_duration_sec": 600,
+          "adherence_status": "adherent",
+          "out_of_adherence_since": null,
+          "out_of_adherence_sec": 0
+        },
+        {
+          "agent_id": "a_27",
+          "name": "Alex T.",
+          "queues": [
+            "vip"
+          ],
+          "state": "on_call",
+          "state_since": "2026-05-26T14:00:00Z",
+          "state_duration_sec": 600,
+          "adherence_status": "adherent",
+          "out_of_adherence_since": null,
+          "out_of_adherence_sec": 0
+        },
+        {
+          "agent_id": "a_34",
+          "name": "Sam W.",
+          "queues": [
+            "billing",
+            "vip"
+          ],
+          "state": "on_call",
+          "state_since": "2026-05-26T14:00:00Z",
+          "state_duration_sec": 600,
+          "adherence_status": "adherent",
+          "out_of_adherence_since": null,
+          "out_of_adherence_sec": 0
+        },
+        {
+          "agent_id": "a_42",
+          "name": "Jordan P.",
+          "queues": [
+            "billing",
+            "tier_2"
+          ],
+          "state": "on_call",
+          "state_since": "2026-05-26T14:00:00Z",
+          "state_duration_sec": 600,
+          "adherence_status": "adherent",
+          "out_of_adherence_since": null,
+          "out_of_adherence_sec": 0
+        },
+        {
+          "agent_id": "a_55",
+          "name": "Noah L.",
+          "queues": [
+            "tier_2",
+            "vip"
+          ],
+          "state": "on_call",
+          "state_since": "2026-05-26T14:00:00Z",
+          "state_duration_sec": 600,
+          "adherence_status": "adherent",
+          "out_of_adherence_since": null,
+          "out_of_adherence_sec": 0
+        },
+        {
+          "agent_id": "a_61",
+          "name": "Grace H.",
+          "queues": [
+            "vip"
+          ],
+          "state": "available",
+          "state_since": "2026-05-26T14:00:00Z",
+          "state_duration_sec": 600,
+          "adherence_status": "adherent",
+          "out_of_adherence_since": null,
+          "out_of_adherence_sec": 0
+        },
+        {
+          "agent_id": "a_66",
+          "name": "Omar B.",
+          "queues": [
+            "chat"
+          ],
+          "state": "on_call",
+          "state_since": "2026-05-26T14:00:00Z",
+          "state_duration_sec": 600,
+          "adherence_status": "adherent",
+          "out_of_adherence_since": null,
+          "out_of_adherence_sec": 0
+        },
+        {
+          "agent_id": "a_72",
+          "name": "Lena F.",
+          "queues": [
+            "chat",
+            "onboarding"
+          ],
+          "state": "on_call",
+          "state_since": "2026-05-26T14:00:00Z",
+          "state_duration_sec": 600,
+          "adherence_status": "adherent",
+          "out_of_adherence_since": null,
+          "out_of_adherence_sec": 0
+        },
+        {
+          "agent_id": "a_78",
+          "name": "Ravi M.",
+          "queues": [
+            "chat",
+            "general"
+          ],
+          "state": "on_call",
+          "state_since": "2026-05-26T14:00:00Z",
+          "state_duration_sec": 600,
+          "adherence_status": "adherent",
+          "out_of_adherence_since": null,
+          "out_of_adherence_sec": 0
+        },
+        {
+          "agent_id": "a_84",
+          "name": "Ivy C.",
+          "queues": [
+            "onboarding"
+          ],
+          "state": "on_call",
+          "state_since": "2026-05-26T14:10:00Z",
+          "state_duration_sec": 0,
+          "adherence_status": "adherent",
+          "out_of_adherence_since": null,
+          "out_of_adherence_sec": 0
+        },
+        {
+          "agent_id": "a_90",
+          "name": "Theo K.",
+          "queues": [
+            "onboarding",
+            "tier_2",
+            "general"
+          ],
+          "state": "on_call",
+          "state_since": "2026-05-26T14:00:00Z",
+          "state_duration_sec": 600,
+          "adherence_status": "adherent",
+          "out_of_adherence_since": null,
+          "out_of_adherence_sec": 0
+        }
+      ]
+    },
+    {
+      "ts": "2026-05-26T14:15:00Z",
+      "summary": {
+        "sla_attainment_pct": 95,
+        "queues_total": 6,
+        "queues_breaching": 0,
+        "queues_at_risk": 1,
+        "tickets_waiting_total": 46,
+        "agents_total": 13,
+        "agents_online": 13,
+        "agents_out_of_adherence": 0
+      },
+      "queues": [
+        {
+          "queue_id": "billing",
+          "name": "Billing",
+          "sla_status": "healthy",
+          "sla_target_sec": 120,
+          "longest_wait_sec": 88,
+          "sla_headroom_pct": -27,
+          "tickets_waiting": 16,
+          "agents_available": 0,
+          "agents_on_call": 4,
+          "volume_last_15m": 58,
+          "volume_forecast_next_15m": 50,
+          "volume_vs_forecast_pct": 16,
+          "wait_trend_sec": [
+            48,
+            55,
+            70,
+            88
+          ]
+        },
+        {
+          "queue_id": "vip",
+          "name": "VIP",
+          "sla_status": "healthy",
+          "sla_target_sec": 300,
+          "longest_wait_sec": 120,
+          "sla_headroom_pct": -60,
+          "tickets_waiting": 5,
+          "agents_available": 0,
+          "agents_on_call": 4,
+          "volume_last_15m": 46,
+          "volume_forecast_next_15m": 38,
+          "volume_vs_forecast_pct": 21,
+          "wait_trend_sec": [
+            60,
+            65,
+            80,
+            120
+          ]
+        },
+        {
+          "queue_id": "tier_2",
+          "name": "Tier 2",
+          "sla_status": "healthy",
+          "sla_target_sec": 600,
+          "longest_wait_sec": 210,
+          "sla_headroom_pct": -65,
+          "tickets_waiting": 4,
+          "agents_available": 0,
+          "agents_on_call": 5,
+          "volume_last_15m": 36,
+          "volume_forecast_next_15m": 35,
+          "volume_vs_forecast_pct": 3,
+          "wait_trend_sec": [
+            180,
+            190,
+            200,
+            210
+          ]
+        },
+        {
+          "queue_id": "chat",
+          "name": "Live Chat",
+          "sla_status": "at_risk",
+          "sla_target_sec": 180,
+          "longest_wait_sec": 150,
+          "sla_headroom_pct": -17,
+          "tickets_waiting": 11,
+          "agents_available": 0,
+          "agents_on_call": 3,
+          "volume_last_15m": 66,
+          "volume_forecast_next_15m": 58,
+          "volume_vs_forecast_pct": 14,
+          "wait_trend_sec": [
+            70,
+            90,
+            120,
+            150
+          ]
+        },
+        {
+          "queue_id": "onboarding",
+          "name": "Onboarding",
+          "sla_status": "healthy",
+          "sla_target_sec": 1800,
+          "longest_wait_sec": 280,
+          "sla_headroom_pct": -84,
+          "tickets_waiting": 3,
+          "agents_available": 0,
+          "agents_on_call": 3,
+          "volume_last_15m": 20,
+          "volume_forecast_next_15m": 21,
+          "volume_vs_forecast_pct": -5,
+          "wait_trend_sec": [
+            240,
+            250,
+            260,
+            280
+          ]
+        },
+        {
+          "queue_id": "general",
+          "name": "General Support",
+          "sla_status": "healthy",
+          "sla_target_sec": 300,
+          "longest_wait_sec": 150,
+          "sla_headroom_pct": -50,
+          "tickets_waiting": 7,
+          "agents_available": 0,
+          "agents_on_call": 4,
+          "volume_last_15m": 44,
+          "volume_forecast_next_15m": 44,
+          "volume_vs_forecast_pct": 0,
+          "wait_trend_sec": [
+            120,
+            130,
+            140,
+            150
+          ]
+        }
+      ],
+      "agents": [
+        {
+          "agent_id": "a_11",
+          "name": "Maya R.",
+          "queues": [
+            "billing",
+            "general"
+          ],
+          "state": "on_call",
+          "state_since": "2026-05-26T14:03:00Z",
+          "state_duration_sec": 720,
+          "adherence_status": "adherent",
+          "out_of_adherence_since": null,
+          "out_of_adherence_sec": 0
+        },
+        {
+          "agent_id": "a_19",
+          "name": "Devin K.",
+          "queues": [
+            "billing",
+            "tier_2"
+          ],
+          "state": "on_call",
+          "state_since": "2026-05-26T14:00:00Z",
+          "state_duration_sec": 900,
+          "adherence_status": "adherent",
+          "out_of_adherence_since": null,
+          "out_of_adherence_sec": 0
+        },
+        {
+          "agent_id": "a_23",
+          "name": "Priya S.",
+          "queues": [
+            "tier_2",
+            "general"
+          ],
+          "state": "on_call",
+          "state_since": "2026-05-26T14:00:00Z",
+          "state_duration_sec": 900,
+          "adherence_status": "adherent",
+          "out_of_adherence_since": null,
+          "out_of_adherence_sec": 0
+        },
+        {
+          "agent_id": "a_27",
+          "name": "Alex T.",
+          "queues": [
+            "vip"
+          ],
+          "state": "on_call",
+          "state_since": "2026-05-26T14:00:00Z",
+          "state_duration_sec": 900,
+          "adherence_status": "adherent",
+          "out_of_adherence_since": null,
+          "out_of_adherence_sec": 0
+        },
+        {
+          "agent_id": "a_34",
+          "name": "Sam W.",
+          "queues": [
+            "billing",
+            "vip"
+          ],
+          "state": "on_call",
+          "state_since": "2026-05-26T14:00:00Z",
+          "state_duration_sec": 900,
+          "adherence_status": "adherent",
+          "out_of_adherence_since": null,
+          "out_of_adherence_sec": 0
+        },
+        {
+          "agent_id": "a_42",
+          "name": "Jordan P.",
+          "queues": [
+            "billing",
+            "tier_2"
+          ],
+          "state": "on_call",
+          "state_since": "2026-05-26T14:00:00Z",
+          "state_duration_sec": 900,
+          "adherence_status": "adherent",
+          "out_of_adherence_since": null,
+          "out_of_adherence_sec": 0
+        },
+        {
+          "agent_id": "a_55",
+          "name": "Noah L.",
+          "queues": [
+            "tier_2",
+            "vip"
+          ],
+          "state": "on_call",
+          "state_since": "2026-05-26T14:00:00Z",
+          "state_duration_sec": 900,
+          "adherence_status": "adherent",
+          "out_of_adherence_since": null,
+          "out_of_adherence_sec": 0
+        },
+        {
+          "agent_id": "a_61",
+          "name": "Grace H.",
+          "queues": [
+            "vip"
+          ],
+          "state": "on_call",
+          "state_since": "2026-05-26T14:15:00Z",
+          "state_duration_sec": 0,
+          "adherence_status": "adherent",
+          "out_of_adherence_since": null,
+          "out_of_adherence_sec": 0
+        },
+        {
+          "agent_id": "a_66",
+          "name": "Omar B.",
+          "queues": [
+            "chat"
+          ],
+          "state": "on_call",
+          "state_since": "2026-05-26T14:00:00Z",
+          "state_duration_sec": 900,
+          "adherence_status": "adherent",
+          "out_of_adherence_since": null,
+          "out_of_adherence_sec": 0
+        },
+        {
+          "agent_id": "a_72",
+          "name": "Lena F.",
+          "queues": [
+            "chat",
+            "onboarding"
+          ],
+          "state": "on_call",
+          "state_since": "2026-05-26T14:00:00Z",
+          "state_duration_sec": 900,
+          "adherence_status": "adherent",
+          "out_of_adherence_since": null,
+          "out_of_adherence_sec": 0
+        },
+        {
+          "agent_id": "a_78",
+          "name": "Ravi M.",
+          "queues": [
+            "chat",
+            "general"
+          ],
+          "state": "on_call",
+          "state_since": "2026-05-26T14:00:00Z",
+          "state_duration_sec": 900,
+          "adherence_status": "adherent",
+          "out_of_adherence_since": null,
+          "out_of_adherence_sec": 0
+        },
+        {
+          "agent_id": "a_84",
+          "name": "Ivy C.",
+          "queues": [
+            "onboarding"
+          ],
+          "state": "on_call",
+          "state_since": "2026-05-26T14:10:00Z",
+          "state_duration_sec": 300,
+          "adherence_status": "adherent",
+          "out_of_adherence_since": null,
+          "out_of_adherence_sec": 0
+        },
+        {
+          "agent_id": "a_90",
+          "name": "Theo K.",
+          "queues": [
+            "onboarding",
+            "tier_2",
+            "general"
+          ],
+          "state": "on_call",
+          "state_since": "2026-05-26T14:00:00Z",
+          "state_duration_sec": 900,
+          "adherence_status": "adherent",
+          "out_of_adherence_since": null,
+          "out_of_adherence_sec": 0
+        }
+      ]
+    },
+    {
+      "ts": "2026-05-26T14:20:00Z",
+      "summary": {
+        "sla_attainment_pct": 92,
+        "queues_total": 6,
+        "queues_breaching": 0,
+        "queues_at_risk": 2,
+        "tickets_waiting_total": 57,
+        "agents_total": 13,
+        "agents_online": 13,
+        "agents_out_of_adherence": 1
+      },
+      "queues": [
+        {
+          "queue_id": "billing",
+          "name": "Billing",
+          "sla_status": "at_risk",
+          "sla_target_sec": 120,
+          "longest_wait_sec": 105,
+          "sla_headroom_pct": -12,
+          "tickets_waiting": 19,
+          "agents_available": 0,
+          "agents_on_call": 4,
+          "volume_last_15m": 64,
+          "volume_forecast_next_15m": 54,
+          "volume_vs_forecast_pct": 19,
+          "wait_trend_sec": [
+            48,
+            55,
+            70,
+            88,
+            105
+          ]
+        },
+        {
+          "queue_id": "vip",
+          "name": "VIP",
+          "sla_status": "healthy",
+          "sla_target_sec": 300,
+          "longest_wait_sec": 190,
+          "sla_headroom_pct": -37,
+          "tickets_waiting": 8,
+          "agents_available": 0,
+          "agents_on_call": 3,
+          "volume_last_15m": 54,
+          "volume_forecast_next_15m": 40,
+          "volume_vs_forecast_pct": 35,
+          "wait_trend_sec": [
+            60,
+            65,
+            80,
+            120,
+            190
+          ]
+        },
+        {
+          "queue_id": "tier_2",
+          "name": "Tier 2",
+          "sla_status": "healthy",
+          "sla_target_sec": 600,
+          "longest_wait_sec": 230,
+          "sla_headroom_pct": -62,
+          "tickets_waiting": 5,
+          "agents_available": 0,
+          "agents_on_call": 5,
+          "volume_last_15m": 38,
+          "volume_forecast_next_15m": 36,
+          "volume_vs_forecast_pct": 6,
+          "wait_trend_sec": [
+            180,
+            190,
+            200,
+            210,
+            230
+          ]
+        },
+        {
+          "queue_id": "chat",
+          "name": "Live Chat",
+          "sla_status": "at_risk",
+          "sla_target_sec": 180,
+          "longest_wait_sec": 175,
+          "sla_headroom_pct": -3,
+          "tickets_waiting": 13,
+          "agents_available": 0,
+          "agents_on_call": 3,
+          "volume_last_15m": 72,
+          "volume_forecast_next_15m": 62,
+          "volume_vs_forecast_pct": 16,
+          "wait_trend_sec": [
+            70,
+            90,
+            120,
+            150,
+            175
+          ]
+        },
+        {
+          "queue_id": "onboarding",
+          "name": "Onboarding",
+          "sla_status": "healthy",
+          "sla_target_sec": 1800,
+          "longest_wait_sec": 300,
+          "sla_headroom_pct": -83,
+          "tickets_waiting": 4,
+          "agents_available": 0,
+          "agents_on_call": 3,
+          "volume_last_15m": 20,
+          "volume_forecast_next_15m": 21,
+          "volume_vs_forecast_pct": -5,
+          "wait_trend_sec": [
+            240,
+            250,
+            260,
+            280,
+            300
+          ]
+        },
+        {
+          "queue_id": "general",
+          "name": "General Support",
+          "sla_status": "healthy",
+          "sla_target_sec": 300,
+          "longest_wait_sec": 160,
+          "sla_headroom_pct": -47,
+          "tickets_waiting": 8,
+          "agents_available": 0,
+          "agents_on_call": 4,
+          "volume_last_15m": 46,
+          "volume_forecast_next_15m": 46,
+          "volume_vs_forecast_pct": 0,
+          "wait_trend_sec": [
+            120,
+            130,
+            140,
+            150,
+            160
+          ]
+        }
+      ],
+      "agents": [
+        {
+          "agent_id": "a_11",
+          "name": "Maya R.",
+          "queues": [
+            "billing",
+            "general"
+          ],
+          "state": "on_call",
+          "state_since": "2026-05-26T14:03:00Z",
+          "state_duration_sec": 1020,
+          "adherence_status": "adherent",
+          "out_of_adherence_since": null,
+          "out_of_adherence_sec": 0
+        },
+        {
+          "agent_id": "a_19",
+          "name": "Devin K.",
+          "queues": [
+            "billing",
+            "tier_2"
+          ],
+          "state": "on_call",
+          "state_since": "2026-05-26T14:00:00Z",
+          "state_duration_sec": 1200,
+          "adherence_status": "adherent",
+          "out_of_adherence_since": null,
+          "out_of_adherence_sec": 0
+        },
+        {
+          "agent_id": "a_23",
+          "name": "Priya S.",
+          "queues": [
+            "tier_2",
+            "general"
+          ],
+          "state": "on_call",
+          "state_since": "2026-05-26T14:00:00Z",
+          "state_duration_sec": 1200,
+          "adherence_status": "adherent",
+          "out_of_adherence_since": null,
+          "out_of_adherence_sec": 0
+        },
+        {
+          "agent_id": "a_27",
+          "name": "Alex T.",
+          "queues": [
+            "vip"
+          ],
+          "state": "in_meeting",
+          "state_since": "2026-05-26T14:20:00Z",
+          "state_duration_sec": 0,
+          "adherence_status": "out_of_adherence",
+          "out_of_adherence_since": "2026-05-26T14:20:00Z",
+          "out_of_adherence_sec": 0
+        },
+        {
+          "agent_id": "a_34",
+          "name": "Sam W.",
+          "queues": [
+            "billing",
+            "vip"
+          ],
+          "state": "on_call",
+          "state_since": "2026-05-26T14:00:00Z",
+          "state_duration_sec": 1200,
+          "adherence_status": "adherent",
+          "out_of_adherence_since": null,
+          "out_of_adherence_sec": 0
+        },
+        {
+          "agent_id": "a_42",
+          "name": "Jordan P.",
+          "queues": [
+            "billing",
+            "tier_2"
+          ],
+          "state": "on_call",
+          "state_since": "2026-05-26T14:00:00Z",
+          "state_duration_sec": 1200,
+          "adherence_status": "adherent",
+          "out_of_adherence_since": null,
+          "out_of_adherence_sec": 0
+        },
+        {
+          "agent_id": "a_55",
+          "name": "Noah L.",
+          "queues": [
+            "tier_2",
+            "vip"
+          ],
+          "state": "on_call",
+          "state_since": "2026-05-26T14:00:00Z",
+          "state_duration_sec": 1200,
+          "adherence_status": "adherent",
+          "out_of_adherence_since": null,
+          "out_of_adherence_sec": 0
+        },
+        {
+          "agent_id": "a_61",
+          "name": "Grace H.",
+          "queues": [
+            "vip"
+          ],
+          "state": "on_call",
+          "state_since": "2026-05-26T14:15:00Z",
+          "state_duration_sec": 300,
+          "adherence_status": "adherent",
+          "out_of_adherence_since": null,
+          "out_of_adherence_sec": 0
+        },
+        {
+          "agent_id": "a_66",
+          "name": "Omar B.",
+          "queues": [
+            "chat"
+          ],
+          "state": "on_call",
+          "state_since": "2026-05-26T14:00:00Z",
+          "state_duration_sec": 1200,
+          "adherence_status": "adherent",
+          "out_of_adherence_since": null,
+          "out_of_adherence_sec": 0
+        },
+        {
+          "agent_id": "a_72",
+          "name": "Lena F.",
+          "queues": [
+            "chat",
+            "onboarding"
+          ],
+          "state": "on_call",
+          "state_since": "2026-05-26T14:00:00Z",
+          "state_duration_sec": 1200,
+          "adherence_status": "adherent",
+          "out_of_adherence_since": null,
+          "out_of_adherence_sec": 0
+        },
+        {
+          "agent_id": "a_78",
+          "name": "Ravi M.",
+          "queues": [
+            "chat",
+            "general"
+          ],
+          "state": "on_call",
+          "state_since": "2026-05-26T14:00:00Z",
+          "state_duration_sec": 1200,
+          "adherence_status": "adherent",
+          "out_of_adherence_since": null,
+          "out_of_adherence_sec": 0
+        },
+        {
+          "agent_id": "a_84",
+          "name": "Ivy C.",
+          "queues": [
+            "onboarding"
+          ],
+          "state": "on_call",
+          "state_since": "2026-05-26T14:10:00Z",
+          "state_duration_sec": 600,
+          "adherence_status": "adherent",
+          "out_of_adherence_since": null,
+          "out_of_adherence_sec": 0
+        },
+        {
+          "agent_id": "a_90",
+          "name": "Theo K.",
+          "queues": [
+            "onboarding",
+            "tier_2",
+            "general"
+          ],
+          "state": "on_call",
+          "state_since": "2026-05-26T14:00:00Z",
+          "state_duration_sec": 1200,
+          "adherence_status": "adherent",
+          "out_of_adherence_since": null,
+          "out_of_adherence_sec": 0
+        }
+      ]
+    },
+    {
+      "ts": "2026-05-26T14:25:00Z",
+      "summary": {
+        "sla_attainment_pct": 88,
+        "queues_total": 6,
+        "queues_breaching": 1,
+        "queues_at_risk": 2,
+        "tickets_waiting_total": 65,
+        "agents_total": 13,
+        "agents_online": 13,
+        "agents_out_of_adherence": 1
+      },
+      "queues": [
+        {
+          "queue_id": "billing",
+          "name": "Billing",
+          "sla_status": "at_risk",
+          "sla_target_sec": 120,
+          "longest_wait_sec": 118,
+          "sla_headroom_pct": -2,
+          "tickets_waiting": 22,
+          "agents_available": 0,
+          "agents_on_call": 4,
+          "volume_last_15m": 70,
+          "volume_forecast_next_15m": 56,
+          "volume_vs_forecast_pct": 25,
+          "wait_trend_sec": [
+            48,
+            55,
+            70,
+            88,
+            105,
+            118
+          ]
+        },
+        {
+          "queue_id": "vip",
+          "name": "VIP",
+          "sla_status": "at_risk",
+          "sla_target_sec": 300,
+          "longest_wait_sec": 260,
+          "sla_headroom_pct": -13,
+          "tickets_waiting": 11,
+          "agents_available": 0,
+          "agents_on_call": 3,
+          "volume_last_15m": 60,
+          "volume_forecast_next_15m": 40,
+          "volume_vs_forecast_pct": 50,
+          "wait_trend_sec": [
+            60,
+            65,
+            80,
+            120,
+            190,
+            260
+          ]
+        },
+        {
+          "queue_id": "tier_2",
+          "name": "Tier 2",
+          "sla_status": "healthy",
+          "sla_target_sec": 600,
+          "longest_wait_sec": 250,
+          "sla_headroom_pct": -58,
+          "tickets_waiting": 5,
+          "agents_available": 0,
+          "agents_on_call": 5,
+          "volume_last_15m": 38,
+          "volume_forecast_next_15m": 37,
+          "volume_vs_forecast_pct": 3,
+          "wait_trend_sec": [
+            180,
+            190,
+            200,
+            210,
+            230,
+            250
+          ]
+        },
+        {
+          "queue_id": "chat",
+          "name": "Live Chat",
+          "sla_status": "breached",
+          "sla_target_sec": 180,
+          "longest_wait_sec": 195,
+          "sla_headroom_pct": 8,
+          "tickets_waiting": 15,
+          "agents_available": 0,
+          "agents_on_call": 3,
+          "volume_last_15m": 78,
+          "volume_forecast_next_15m": 64,
+          "volume_vs_forecast_pct": 22,
+          "wait_trend_sec": [
+            70,
+            90,
+            120,
+            150,
+            175,
+            195
+          ]
+        },
+        {
+          "queue_id": "onboarding",
+          "name": "Onboarding",
+          "sla_status": "healthy",
+          "sla_target_sec": 1800,
+          "longest_wait_sec": 320,
+          "sla_headroom_pct": -82,
+          "tickets_waiting": 4,
+          "agents_available": 0,
+          "agents_on_call": 3,
+          "volume_last_15m": 21,
+          "volume_forecast_next_15m": 22,
+          "volume_vs_forecast_pct": -5,
+          "wait_trend_sec": [
+            240,
+            250,
+            260,
+            280,
+            300,
+            320
+          ]
+        },
+        {
+          "queue_id": "general",
+          "name": "General Support",
+          "sla_status": "healthy",
+          "sla_target_sec": 300,
+          "longest_wait_sec": 170,
+          "sla_headroom_pct": -43,
+          "tickets_waiting": 8,
+          "agents_available": 0,
+          "agents_on_call": 4,
+          "volume_last_15m": 47,
+          "volume_forecast_next_15m": 48,
+          "volume_vs_forecast_pct": -2,
+          "wait_trend_sec": [
+            120,
+            130,
+            140,
+            150,
+            160,
+            170
+          ]
+        }
+      ],
+      "agents": [
+        {
+          "agent_id": "a_11",
+          "name": "Maya R.",
+          "queues": [
+            "billing",
+            "general"
+          ],
+          "state": "on_call",
+          "state_since": "2026-05-26T14:03:00Z",
+          "state_duration_sec": 1320,
+          "adherence_status": "adherent",
+          "out_of_adherence_since": null,
+          "out_of_adherence_sec": 0
+        },
+        {
+          "agent_id": "a_19",
+          "name": "Devin K.",
+          "queues": [
+            "billing",
+            "tier_2"
+          ],
+          "state": "on_call",
+          "state_since": "2026-05-26T14:00:00Z",
+          "state_duration_sec": 1500,
+          "adherence_status": "adherent",
+          "out_of_adherence_since": null,
+          "out_of_adherence_sec": 0
+        },
+        {
+          "agent_id": "a_23",
+          "name": "Priya S.",
+          "queues": [
+            "tier_2",
+            "general"
+          ],
+          "state": "on_call",
+          "state_since": "2026-05-26T14:00:00Z",
+          "state_duration_sec": 1500,
+          "adherence_status": "adherent",
+          "out_of_adherence_since": null,
+          "out_of_adherence_sec": 0
+        },
+        {
+          "agent_id": "a_27",
+          "name": "Alex T.",
+          "queues": [
+            "vip"
+          ],
+          "state": "in_meeting",
+          "state_since": "2026-05-26T14:20:00Z",
+          "state_duration_sec": 300,
+          "adherence_status": "out_of_adherence",
+          "out_of_adherence_since": "2026-05-26T14:20:00Z",
+          "out_of_adherence_sec": 300
+        },
+        {
+          "agent_id": "a_34",
+          "name": "Sam W.",
+          "queues": [
+            "billing",
+            "vip"
+          ],
+          "state": "on_call",
+          "state_since": "2026-05-26T14:00:00Z",
+          "state_duration_sec": 1500,
+          "adherence_status": "adherent",
+          "out_of_adherence_since": null,
+          "out_of_adherence_sec": 0
+        },
+        {
+          "agent_id": "a_42",
+          "name": "Jordan P.",
+          "queues": [
+            "billing",
+            "tier_2"
+          ],
+          "state": "on_call",
+          "state_since": "2026-05-26T14:00:00Z",
+          "state_duration_sec": 1500,
+          "adherence_status": "adherent",
+          "out_of_adherence_since": null,
+          "out_of_adherence_sec": 0
+        },
+        {
+          "agent_id": "a_55",
+          "name": "Noah L.",
+          "queues": [
+            "tier_2",
+            "vip"
+          ],
+          "state": "on_call",
+          "state_since": "2026-05-26T14:00:00Z",
+          "state_duration_sec": 1500,
+          "adherence_status": "adherent",
+          "out_of_adherence_since": null,
+          "out_of_adherence_sec": 0
+        },
+        {
+          "agent_id": "a_61",
+          "name": "Grace H.",
+          "queues": [
+            "vip"
+          ],
+          "state": "on_call",
+          "state_since": "2026-05-26T14:15:00Z",
+          "state_duration_sec": 600,
+          "adherence_status": "adherent",
+          "out_of_adherence_since": null,
+          "out_of_adherence_sec": 0
+        },
+        {
+          "agent_id": "a_66",
+          "name": "Omar B.",
+          "queues": [
+            "chat"
+          ],
+          "state": "on_call",
+          "state_since": "2026-05-26T14:00:00Z",
+          "state_duration_sec": 1500,
+          "adherence_status": "adherent",
+          "out_of_adherence_since": null,
+          "out_of_adherence_sec": 0
+        },
+        {
+          "agent_id": "a_72",
+          "name": "Lena F.",
+          "queues": [
+            "chat",
+            "onboarding"
+          ],
+          "state": "on_call",
+          "state_since": "2026-05-26T14:00:00Z",
+          "state_duration_sec": 1500,
+          "adherence_status": "adherent",
+          "out_of_adherence_since": null,
+          "out_of_adherence_sec": 0
+        },
+        {
+          "agent_id": "a_78",
+          "name": "Ravi M.",
+          "queues": [
+            "chat",
+            "general"
+          ],
+          "state": "on_call",
+          "state_since": "2026-05-26T14:00:00Z",
+          "state_duration_sec": 1500,
+          "adherence_status": "adherent",
+          "out_of_adherence_since": null,
+          "out_of_adherence_sec": 0
+        },
+        {
+          "agent_id": "a_84",
+          "name": "Ivy C.",
+          "queues": [
+            "onboarding"
+          ],
+          "state": "on_call",
+          "state_since": "2026-05-26T14:10:00Z",
+          "state_duration_sec": 900,
+          "adherence_status": "adherent",
+          "out_of_adherence_since": null,
+          "out_of_adherence_sec": 0
+        },
+        {
+          "agent_id": "a_90",
+          "name": "Theo K.",
+          "queues": [
+            "onboarding",
+            "tier_2",
+            "general"
+          ],
+          "state": "on_call",
+          "state_since": "2026-05-26T14:00:00Z",
+          "state_duration_sec": 1500,
+          "adherence_status": "adherent",
+          "out_of_adherence_since": null,
+          "out_of_adherence_sec": 0
+        }
+      ]
+    },
+    {
+      "ts": "2026-05-26T14:30:00Z",
+      "summary": {
+        "sla_attainment_pct": 85,
+        "queues_total": 6,
+        "queues_breaching": 3,
+        "queues_at_risk": 0,
+        "tickets_waiting_total": 75,
+        "agents_total": 13,
+        "agents_online": 13,
+        "agents_out_of_adherence": 2
+      },
+      "queues": [
+        {
+          "queue_id": "billing",
+          "name": "Billing",
+          "sla_status": "breached",
+          "sla_target_sec": 120,
+          "longest_wait_sec": 132,
+          "sla_headroom_pct": 10,
+          "tickets_waiting": 25,
+          "agents_available": 0,
+          "agents_on_call": 3,
+          "volume_last_15m": 74,
+          "volume_forecast_next_15m": 58,
+          "volume_vs_forecast_pct": 28,
+          "wait_trend_sec": [
+            48,
+            55,
+            70,
+            88,
+            105,
+            118,
+            132
+          ]
+        },
+        {
+          "queue_id": "vip",
+          "name": "VIP",
+          "sla_status": "breached",
+          "sla_target_sec": 300,
+          "longest_wait_sec": 310,
+          "sla_headroom_pct": 3,
+          "tickets_waiting": 13,
+          "agents_available": 0,
+          "agents_on_call": 3,
+          "volume_last_15m": 62,
+          "volume_forecast_next_15m": 40,
+          "volume_vs_forecast_pct": 55,
+          "wait_trend_sec": [
+            60,
+            65,
+            80,
+            120,
+            190,
+            260,
+            310
+          ]
+        },
+        {
+          "queue_id": "tier_2",
+          "name": "Tier 2",
+          "sla_status": "healthy",
+          "sla_target_sec": 600,
+          "longest_wait_sec": 260,
+          "sla_headroom_pct": -57,
+          "tickets_waiting": 6,
+          "agents_available": 0,
+          "agents_on_call": 4,
+          "volume_last_15m": 39,
+          "volume_forecast_next_15m": 38,
+          "volume_vs_forecast_pct": 3,
+          "wait_trend_sec": [
+            180,
+            190,
+            200,
+            210,
+            230,
+            250,
+            260
+          ]
+        },
+        {
+          "queue_id": "chat",
+          "name": "Live Chat",
+          "sla_status": "breached",
+          "sla_target_sec": 180,
+          "longest_wait_sec": 210,
+          "sla_headroom_pct": 17,
+          "tickets_waiting": 17,
+          "agents_available": 0,
+          "agents_on_call": 3,
+          "volume_last_15m": 82,
+          "volume_forecast_next_15m": 66,
+          "volume_vs_forecast_pct": 24,
+          "wait_trend_sec": [
+            70,
+            90,
+            120,
+            150,
+            175,
+            195,
+            210
+          ]
+        },
+        {
+          "queue_id": "onboarding",
+          "name": "Onboarding",
+          "sla_status": "healthy",
+          "sla_target_sec": 1800,
+          "longest_wait_sec": 340,
+          "sla_headroom_pct": -81,
+          "tickets_waiting": 5,
+          "agents_available": 0,
+          "agents_on_call": 3,
+          "volume_last_15m": 21,
+          "volume_forecast_next_15m": 22,
+          "volume_vs_forecast_pct": -5,
+          "wait_trend_sec": [
+            240,
+            250,
+            260,
+            280,
+            300,
+            320,
+            340
+          ]
+        },
+        {
+          "queue_id": "general",
+          "name": "General Support",
+          "sla_status": "healthy",
+          "sla_target_sec": 300,
+          "longest_wait_sec": 175,
+          "sla_headroom_pct": -42,
+          "tickets_waiting": 9,
+          "agents_available": 0,
+          "agents_on_call": 4,
+          "volume_last_15m": 48,
+          "volume_forecast_next_15m": 48,
+          "volume_vs_forecast_pct": 0,
+          "wait_trend_sec": [
+            120,
+            130,
+            140,
+            150,
+            160,
+            170,
+            175
+          ]
+        }
+      ],
+      "agents": [
+        {
+          "agent_id": "a_11",
+          "name": "Maya R.",
+          "queues": [
+            "billing",
+            "general"
+          ],
+          "state": "on_call",
+          "state_since": "2026-05-26T14:03:00Z",
+          "state_duration_sec": 1620,
+          "adherence_status": "adherent",
+          "out_of_adherence_since": null,
+          "out_of_adherence_sec": 0
+        },
+        {
+          "agent_id": "a_19",
+          "name": "Devin K.",
+          "queues": [
+            "billing",
+            "tier_2"
+          ],
+          "state": "on_call",
+          "state_since": "2026-05-26T14:00:00Z",
+          "state_duration_sec": 1800,
+          "adherence_status": "adherent",
+          "out_of_adherence_since": null,
+          "out_of_adherence_sec": 0
+        },
+        {
+          "agent_id": "a_23",
+          "name": "Priya S.",
+          "queues": [
+            "tier_2",
+            "general"
+          ],
+          "state": "on_call",
+          "state_since": "2026-05-26T14:00:00Z",
+          "state_duration_sec": 1800,
+          "adherence_status": "adherent",
+          "out_of_adherence_since": null,
+          "out_of_adherence_sec": 0
+        },
+        {
+          "agent_id": "a_27",
+          "name": "Alex T.",
+          "queues": [
+            "vip"
+          ],
+          "state": "in_meeting",
+          "state_since": "2026-05-26T14:20:00Z",
+          "state_duration_sec": 600,
+          "adherence_status": "out_of_adherence",
+          "out_of_adherence_since": "2026-05-26T14:20:00Z",
+          "out_of_adherence_sec": 600
+        },
+        {
+          "agent_id": "a_34",
+          "name": "Sam W.",
+          "queues": [
+            "billing",
+            "vip"
+          ],
+          "state": "on_call",
+          "state_since": "2026-05-26T14:00:00Z",
+          "state_duration_sec": 1800,
+          "adherence_status": "adherent",
+          "out_of_adherence_since": null,
+          "out_of_adherence_sec": 0
+        },
+        {
+          "agent_id": "a_42",
+          "name": "Jordan P.",
+          "queues": [
+            "billing",
+            "tier_2"
+          ],
+          "state": "on_break",
+          "state_since": "2026-05-26T14:30:00Z",
+          "state_duration_sec": 0,
+          "adherence_status": "out_of_adherence",
+          "out_of_adherence_since": "2026-05-26T14:30:00Z",
+          "out_of_adherence_sec": 0
+        },
+        {
+          "agent_id": "a_55",
+          "name": "Noah L.",
+          "queues": [
+            "tier_2",
+            "vip"
+          ],
+          "state": "on_call",
+          "state_since": "2026-05-26T14:00:00Z",
+          "state_duration_sec": 1800,
+          "adherence_status": "adherent",
+          "out_of_adherence_since": null,
+          "out_of_adherence_sec": 0
+        },
+        {
+          "agent_id": "a_61",
+          "name": "Grace H.",
+          "queues": [
+            "vip"
+          ],
+          "state": "on_call",
+          "state_since": "2026-05-26T14:15:00Z",
+          "state_duration_sec": 900,
+          "adherence_status": "adherent",
+          "out_of_adherence_since": null,
+          "out_of_adherence_sec": 0
+        },
+        {
+          "agent_id": "a_66",
+          "name": "Omar B.",
+          "queues": [
+            "chat"
+          ],
+          "state": "on_call",
+          "state_since": "2026-05-26T14:00:00Z",
+          "state_duration_sec": 1800,
+          "adherence_status": "adherent",
+          "out_of_adherence_since": null,
+          "out_of_adherence_sec": 0
+        },
+        {
+          "agent_id": "a_72",
+          "name": "Lena F.",
+          "queues": [
+            "chat",
+            "onboarding"
+          ],
+          "state": "on_call",
+          "state_since": "2026-05-26T14:00:00Z",
+          "state_duration_sec": 1800,
+          "adherence_status": "adherent",
+          "out_of_adherence_since": null,
+          "out_of_adherence_sec": 0
+        },
+        {
+          "agent_id": "a_78",
+          "name": "Ravi M.",
+          "queues": [
+            "chat",
+            "general"
+          ],
+          "state": "on_call",
+          "state_since": "2026-05-26T14:00:00Z",
+          "state_duration_sec": 1800,
+          "adherence_status": "adherent",
+          "out_of_adherence_since": null,
+          "out_of_adherence_sec": 0
+        },
+        {
+          "agent_id": "a_84",
+          "name": "Ivy C.",
+          "queues": [
+            "onboarding"
+          ],
+          "state": "on_call",
+          "state_since": "2026-05-26T14:10:00Z",
+          "state_duration_sec": 1200,
+          "adherence_status": "adherent",
+          "out_of_adherence_since": null,
+          "out_of_adherence_sec": 0
+        },
+        {
+          "agent_id": "a_90",
+          "name": "Theo K.",
+          "queues": [
+            "onboarding",
+            "tier_2",
+            "general"
+          ],
+          "state": "on_call",
+          "state_since": "2026-05-26T14:00:00Z",
+          "state_duration_sec": 1800,
+          "adherence_status": "adherent",
+          "out_of_adherence_since": null,
+          "out_of_adherence_sec": 0
+        }
+      ]
+    },
+    {
+      "ts": "2026-05-26T14:35:00Z",
+      "summary": {
+        "sla_attainment_pct": 83,
+        "queues_total": 6,
+        "queues_breaching": 3,
+        "queues_at_risk": 0,
+        "tickets_waiting_total": 81,
+        "agents_total": 13,
+        "agents_online": 13,
+        "agents_out_of_adherence": 3
+      },
+      "queues": [
+        {
+          "queue_id": "billing",
+          "name": "Billing",
+          "sla_status": "breached",
+          "sla_target_sec": 120,
+          "longest_wait_sec": 150,
+          "sla_headroom_pct": 25,
+          "tickets_waiting": 28,
+          "agents_available": 0,
+          "agents_on_call": 3,
+          "volume_last_15m": 76,
+          "volume_forecast_next_15m": 58,
+          "volume_vs_forecast_pct": 31,
+          "wait_trend_sec": [
+            48,
+            55,
+            70,
+            88,
+            105,
+            118,
+            132,
+            150
+          ]
+        },
+        {
+          "queue_id": "vip",
+          "name": "VIP",
+          "sla_status": "breached",
+          "sla_target_sec": 300,
+          "longest_wait_sec": 330,
+          "sla_headroom_pct": 10,
+          "tickets_waiting": 14,
+          "agents_available": 0,
+          "agents_on_call": 3,
+          "volume_last_15m": 58,
+          "volume_forecast_next_15m": 40,
+          "volume_vs_forecast_pct": 45,
+          "wait_trend_sec": [
+            60,
+            65,
+            80,
+            120,
+            190,
+            260,
+            310,
+            330
+          ]
+        },
+        {
+          "queue_id": "tier_2",
+          "name": "Tier 2",
+          "sla_status": "healthy",
+          "sla_target_sec": 600,
+          "longest_wait_sec": 255,
+          "sla_headroom_pct": -57,
+          "tickets_waiting": 6,
+          "agents_available": 0,
+          "agents_on_call": 4,
+          "volume_last_15m": 39,
+          "volume_forecast_next_15m": 38,
+          "volume_vs_forecast_pct": 3,
+          "wait_trend_sec": [
+            180,
+            190,
+            200,
+            210,
+            230,
+            250,
+            260,
+            255
+          ]
+        },
+        {
+          "queue_id": "chat",
+          "name": "Live Chat",
+          "sla_status": "breached",
+          "sla_target_sec": 180,
+          "longest_wait_sec": 230,
+          "sla_headroom_pct": 28,
+          "tickets_waiting": 19,
+          "agents_available": 0,
+          "agents_on_call": 2,
+          "volume_last_15m": 84,
+          "volume_forecast_next_15m": 66,
+          "volume_vs_forecast_pct": 27,
+          "wait_trend_sec": [
+            70,
+            90,
+            120,
+            150,
+            175,
+            195,
+            210,
+            230
+          ]
+        },
+        {
+          "queue_id": "onboarding",
+          "name": "Onboarding",
+          "sla_status": "healthy",
+          "sla_target_sec": 1800,
+          "longest_wait_sec": 350,
+          "sla_headroom_pct": -81,
+          "tickets_waiting": 5,
+          "agents_available": 0,
+          "agents_on_call": 3,
+          "volume_last_15m": 22,
+          "volume_forecast_next_15m": 22,
+          "volume_vs_forecast_pct": 0,
+          "wait_trend_sec": [
+            240,
+            250,
+            260,
+            280,
+            300,
+            320,
+            340,
+            350
+          ]
+        },
+        {
+          "queue_id": "general",
+          "name": "General Support",
+          "sla_status": "healthy",
+          "sla_target_sec": 300,
+          "longest_wait_sec": 180,
+          "sla_headroom_pct": -40,
+          "tickets_waiting": 9,
+          "agents_available": 0,
+          "agents_on_call": 4,
+          "volume_last_15m": 48,
+          "volume_forecast_next_15m": 48,
+          "volume_vs_forecast_pct": 0,
+          "wait_trend_sec": [
+            120,
+            130,
+            140,
+            150,
+            160,
+            170,
+            175,
+            180
+          ]
+        }
+      ],
+      "agents": [
+        {
+          "agent_id": "a_11",
+          "name": "Maya R.",
+          "queues": [
+            "billing",
+            "general"
+          ],
+          "state": "on_call",
+          "state_since": "2026-05-26T14:03:00Z",
+          "state_duration_sec": 1920,
+          "adherence_status": "adherent",
+          "out_of_adherence_since": null,
+          "out_of_adherence_sec": 0
+        },
+        {
+          "agent_id": "a_19",
+          "name": "Devin K.",
+          "queues": [
+            "billing",
+            "tier_2"
+          ],
+          "state": "on_call",
+          "state_since": "2026-05-26T14:00:00Z",
+          "state_duration_sec": 2100,
+          "adherence_status": "adherent",
+          "out_of_adherence_since": null,
+          "out_of_adherence_sec": 0
+        },
+        {
+          "agent_id": "a_23",
+          "name": "Priya S.",
+          "queues": [
+            "tier_2",
+            "general"
+          ],
+          "state": "on_call",
+          "state_since": "2026-05-26T14:00:00Z",
+          "state_duration_sec": 2100,
+          "adherence_status": "adherent",
+          "out_of_adherence_since": null,
+          "out_of_adherence_sec": 0
+        },
+        {
+          "agent_id": "a_27",
+          "name": "Alex T.",
+          "queues": [
+            "vip"
+          ],
+          "state": "in_meeting",
+          "state_since": "2026-05-26T14:20:00Z",
+          "state_duration_sec": 900,
+          "adherence_status": "out_of_adherence",
+          "out_of_adherence_since": "2026-05-26T14:20:00Z",
+          "out_of_adherence_sec": 900
+        },
+        {
+          "agent_id": "a_34",
+          "name": "Sam W.",
+          "queues": [
+            "billing",
+            "vip"
+          ],
+          "state": "on_call",
+          "state_since": "2026-05-26T14:00:00Z",
+          "state_duration_sec": 2100,
+          "adherence_status": "adherent",
+          "out_of_adherence_since": null,
+          "out_of_adherence_sec": 0
+        },
+        {
+          "agent_id": "a_42",
+          "name": "Jordan P.",
+          "queues": [
+            "billing",
+            "tier_2"
+          ],
+          "state": "on_break",
+          "state_since": "2026-05-26T14:30:00Z",
+          "state_duration_sec": 300,
+          "adherence_status": "out_of_adherence",
+          "out_of_adherence_since": "2026-05-26T14:30:00Z",
+          "out_of_adherence_sec": 300
+        },
+        {
+          "agent_id": "a_55",
+          "name": "Noah L.",
+          "queues": [
+            "tier_2",
+            "vip"
+          ],
+          "state": "on_call",
+          "state_since": "2026-05-26T14:00:00Z",
+          "state_duration_sec": 2100,
+          "adherence_status": "adherent",
+          "out_of_adherence_since": null,
+          "out_of_adherence_sec": 0
+        },
+        {
+          "agent_id": "a_61",
+          "name": "Grace H.",
+          "queues": [
+            "vip"
+          ],
+          "state": "on_call",
+          "state_since": "2026-05-26T14:15:00Z",
+          "state_duration_sec": 1200,
+          "adherence_status": "adherent",
+          "out_of_adherence_since": null,
+          "out_of_adherence_sec": 0
+        },
+        {
+          "agent_id": "a_66",
+          "name": "Omar B.",
+          "queues": [
+            "chat"
+          ],
+          "state": "on_break",
+          "state_since": "2026-05-26T14:35:00Z",
+          "state_duration_sec": 0,
+          "adherence_status": "out_of_adherence",
+          "out_of_adherence_since": "2026-05-26T14:35:00Z",
+          "out_of_adherence_sec": 0
+        },
+        {
+          "agent_id": "a_72",
+          "name": "Lena F.",
+          "queues": [
+            "chat",
+            "onboarding"
+          ],
+          "state": "on_call",
+          "state_since": "2026-05-26T14:00:00Z",
+          "state_duration_sec": 2100,
+          "adherence_status": "adherent",
+          "out_of_adherence_since": null,
+          "out_of_adherence_sec": 0
+        },
+        {
+          "agent_id": "a_78",
+          "name": "Ravi M.",
+          "queues": [
+            "chat",
+            "general"
+          ],
+          "state": "on_call",
+          "state_since": "2026-05-26T14:00:00Z",
+          "state_duration_sec": 2100,
+          "adherence_status": "adherent",
+          "out_of_adherence_since": null,
+          "out_of_adherence_sec": 0
+        },
+        {
+          "agent_id": "a_84",
+          "name": "Ivy C.",
+          "queues": [
+            "onboarding"
+          ],
+          "state": "on_call",
+          "state_since": "2026-05-26T14:10:00Z",
+          "state_duration_sec": 1500,
+          "adherence_status": "adherent",
+          "out_of_adherence_since": null,
+          "out_of_adherence_sec": 0
+        },
+        {
+          "agent_id": "a_90",
+          "name": "Theo K.",
+          "queues": [
+            "onboarding",
+            "tier_2",
+            "general"
+          ],
+          "state": "on_call",
+          "state_since": "2026-05-26T14:00:00Z",
+          "state_duration_sec": 2100,
+          "adherence_status": "adherent",
+          "out_of_adherence_since": null,
+          "out_of_adherence_sec": 0
+        }
+      ]
+    },
+    {
+      "ts": "2026-05-26T14:40:00Z",
+      "summary": {
+        "sla_attainment_pct": 84,
+        "queues_total": 6,
+        "queues_breaching": 2,
+        "queues_at_risk": 1,
+        "tickets_waiting_total": 83,
+        "agents_total": 13,
+        "agents_online": 13,
+        "agents_out_of_adherence": 3
+      },
+      "queues": [
+        {
+          "queue_id": "billing",
+          "name": "Billing",
+          "sla_status": "breached",
+          "sla_target_sec": 120,
+          "longest_wait_sec": 168,
+          "sla_headroom_pct": 40,
+          "tickets_waiting": 31,
+          "agents_available": 0,
+          "agents_on_call": 3,
+          "volume_last_15m": 74,
+          "volume_forecast_next_15m": 58,
+          "volume_vs_forecast_pct": 28,
+          "wait_trend_sec": [
+            48,
+            55,
+            70,
+            88,
+            105,
+            118,
+            132,
+            150,
+            168
+          ]
+        },
+        {
+          "queue_id": "vip",
+          "name": "VIP",
+          "sla_status": "at_risk",
+          "sla_target_sec": 300,
+          "longest_wait_sec": 300,
+          "sla_headroom_pct": 0,
+          "tickets_waiting": 12,
+          "agents_available": 0,
+          "agents_on_call": 3,
+          "volume_last_15m": 50,
+          "volume_forecast_next_15m": 42,
+          "volume_vs_forecast_pct": 19,
+          "wait_trend_sec": [
+            60,
+            65,
+            80,
+            120,
+            190,
+            260,
+            310,
+            330,
+            300
+          ]
+        },
+        {
+          "queue_id": "tier_2",
+          "name": "Tier 2",
+          "sla_status": "healthy",
+          "sla_target_sec": 600,
+          "longest_wait_sec": 240,
+          "sla_headroom_pct": -60,
+          "tickets_waiting": 5,
+          "agents_available": 0,
+          "agents_on_call": 4,
+          "volume_last_15m": 38,
+          "volume_forecast_next_15m": 38,
+          "volume_vs_forecast_pct": 0,
+          "wait_trend_sec": [
+            180,
+            190,
+            200,
+            210,
+            230,
+            250,
+            260,
+            255,
+            240
+          ]
+        },
+        {
+          "queue_id": "chat",
+          "name": "Live Chat",
+          "sla_status": "breached",
+          "sla_target_sec": 180,
+          "longest_wait_sec": 245,
+          "sla_headroom_pct": 36,
+          "tickets_waiting": 21,
+          "agents_available": 0,
+          "agents_on_call": 2,
+          "volume_last_15m": 82,
+          "volume_forecast_next_15m": 66,
+          "volume_vs_forecast_pct": 24,
+          "wait_trend_sec": [
+            70,
+            90,
+            120,
+            150,
+            175,
+            195,
+            210,
+            230,
+            245
+          ]
+        },
+        {
+          "queue_id": "onboarding",
+          "name": "Onboarding",
+          "sla_status": "healthy",
+          "sla_target_sec": 1800,
+          "longest_wait_sec": 360,
+          "sla_headroom_pct": -80,
+          "tickets_waiting": 5,
+          "agents_available": 0,
+          "agents_on_call": 3,
+          "volume_last_15m": 22,
+          "volume_forecast_next_15m": 23,
+          "volume_vs_forecast_pct": -4,
+          "wait_trend_sec": [
+            240,
+            250,
+            260,
+            280,
+            300,
+            320,
+            340,
+            350,
+            360
+          ]
+        },
+        {
+          "queue_id": "general",
+          "name": "General Support",
+          "sla_status": "healthy",
+          "sla_target_sec": 300,
+          "longest_wait_sec": 185,
+          "sla_headroom_pct": -38,
+          "tickets_waiting": 9,
+          "agents_available": 0,
+          "agents_on_call": 4,
+          "volume_last_15m": 47,
+          "volume_forecast_next_15m": 48,
+          "volume_vs_forecast_pct": -2,
+          "wait_trend_sec": [
+            120,
+            130,
+            140,
+            150,
+            160,
+            170,
+            175,
+            180,
+            185
+          ]
+        }
+      ],
+      "agents": [
+        {
+          "agent_id": "a_11",
+          "name": "Maya R.",
+          "queues": [
+            "billing",
+            "general"
+          ],
+          "state": "on_call",
+          "state_since": "2026-05-26T14:03:00Z",
+          "state_duration_sec": 2220,
+          "adherence_status": "adherent",
+          "out_of_adherence_since": null,
+          "out_of_adherence_sec": 0
+        },
+        {
+          "agent_id": "a_19",
+          "name": "Devin K.",
+          "queues": [
+            "billing",
+            "tier_2"
+          ],
+          "state": "on_call",
+          "state_since": "2026-05-26T14:00:00Z",
+          "state_duration_sec": 2400,
+          "adherence_status": "adherent",
+          "out_of_adherence_since": null,
+          "out_of_adherence_sec": 0
+        },
+        {
+          "agent_id": "a_23",
+          "name": "Priya S.",
+          "queues": [
+            "tier_2",
+            "general"
+          ],
+          "state": "on_call",
+          "state_since": "2026-05-26T14:00:00Z",
+          "state_duration_sec": 2400,
+          "adherence_status": "adherent",
+          "out_of_adherence_since": null,
+          "out_of_adherence_sec": 0
+        },
+        {
+          "agent_id": "a_27",
+          "name": "Alex T.",
+          "queues": [
+            "vip"
+          ],
+          "state": "in_meeting",
+          "state_since": "2026-05-26T14:20:00Z",
+          "state_duration_sec": 1200,
+          "adherence_status": "out_of_adherence",
+          "out_of_adherence_since": "2026-05-26T14:20:00Z",
+          "out_of_adherence_sec": 1200
+        },
+        {
+          "agent_id": "a_34",
+          "name": "Sam W.",
+          "queues": [
+            "billing",
+            "vip"
+          ],
+          "state": "on_call",
+          "state_since": "2026-05-26T14:00:00Z",
+          "state_duration_sec": 2400,
+          "adherence_status": "adherent",
+          "out_of_adherence_since": null,
+          "out_of_adherence_sec": 0
+        },
+        {
+          "agent_id": "a_42",
+          "name": "Jordan P.",
+          "queues": [
+            "billing",
+            "tier_2"
+          ],
+          "state": "on_break",
+          "state_since": "2026-05-26T14:30:00Z",
+          "state_duration_sec": 600,
+          "adherence_status": "out_of_adherence",
+          "out_of_adherence_since": "2026-05-26T14:30:00Z",
+          "out_of_adherence_sec": 600
+        },
+        {
+          "agent_id": "a_55",
+          "name": "Noah L.",
+          "queues": [
+            "tier_2",
+            "vip"
+          ],
+          "state": "on_call",
+          "state_since": "2026-05-26T14:00:00Z",
+          "state_duration_sec": 2400,
+          "adherence_status": "adherent",
+          "out_of_adherence_since": null,
+          "out_of_adherence_sec": 0
+        },
+        {
+          "agent_id": "a_61",
+          "name": "Grace H.",
+          "queues": [
+            "vip"
+          ],
+          "state": "on_call",
+          "state_since": "2026-05-26T14:15:00Z",
+          "state_duration_sec": 1500,
+          "adherence_status": "adherent",
+          "out_of_adherence_since": null,
+          "out_of_adherence_sec": 0
+        },
+        {
+          "agent_id": "a_66",
+          "name": "Omar B.",
+          "queues": [
+            "chat"
+          ],
+          "state": "on_break",
+          "state_since": "2026-05-26T14:35:00Z",
+          "state_duration_sec": 300,
+          "adherence_status": "out_of_adherence",
+          "out_of_adherence_since": "2026-05-26T14:35:00Z",
+          "out_of_adherence_sec": 300
+        },
+        {
+          "agent_id": "a_72",
+          "name": "Lena F.",
+          "queues": [
+            "chat",
+            "onboarding"
+          ],
+          "state": "on_call",
+          "state_since": "2026-05-26T14:00:00Z",
+          "state_duration_sec": 2400,
+          "adherence_status": "adherent",
+          "out_of_adherence_since": null,
+          "out_of_adherence_sec": 0
+        },
+        {
+          "agent_id": "a_78",
+          "name": "Ravi M.",
+          "queues": [
+            "chat",
+            "general"
+          ],
+          "state": "on_call",
+          "state_since": "2026-05-26T14:00:00Z",
+          "state_duration_sec": 2400,
+          "adherence_status": "adherent",
+          "out_of_adherence_since": null,
+          "out_of_adherence_sec": 0
+        },
+        {
+          "agent_id": "a_84",
+          "name": "Ivy C.",
+          "queues": [
+            "onboarding"
+          ],
+          "state": "on_call",
+          "state_since": "2026-05-26T14:10:00Z",
+          "state_duration_sec": 1800,
+          "adherence_status": "adherent",
+          "out_of_adherence_since": null,
+          "out_of_adherence_sec": 0
+        },
+        {
+          "agent_id": "a_90",
+          "name": "Theo K.",
+          "queues": [
+            "onboarding",
+            "tier_2",
+            "general"
+          ],
+          "state": "on_call",
+          "state_since": "2026-05-26T14:00:00Z",
+          "state_duration_sec": 2400,
+          "adherence_status": "adherent",
+          "out_of_adherence_since": null,
+          "out_of_adherence_sec": 0
+        }
+      ]
+    },
+    {
+      "ts": "2026-05-26T14:45:00Z",
+      "summary": {
+        "sla_attainment_pct": 86,
+        "queues_total": 6,
+        "queues_breaching": 2,
+        "queues_at_risk": 1,
+        "tickets_waiting_total": 84,
+        "agents_total": 13,
+        "agents_online": 13,
+        "agents_out_of_adherence": 3
+      },
+      "queues": [
+        {
+          "queue_id": "billing",
+          "name": "Billing",
+          "sla_status": "breached",
+          "sla_target_sec": 120,
+          "longest_wait_sec": 175,
+          "sla_headroom_pct": 46,
+          "tickets_waiting": 32,
+          "agents_available": 0,
+          "agents_on_call": 3,
+          "volume_last_15m": 70,
+          "volume_forecast_next_15m": 56,
+          "volume_vs_forecast_pct": 25,
+          "wait_trend_sec": [
+            48,
+            55,
+            70,
+            88,
+            105,
+            118,
+            132,
+            150,
+            168,
+            175
+          ]
+        },
+        {
+          "queue_id": "vip",
+          "name": "VIP",
+          "sla_status": "at_risk",
+          "sla_target_sec": 300,
+          "longest_wait_sec": 250,
+          "sla_headroom_pct": -17,
+          "tickets_waiting": 9,
+          "agents_available": 0,
+          "agents_on_call": 3,
+          "volume_last_15m": 44,
+          "volume_forecast_next_15m": 42,
+          "volume_vs_forecast_pct": 5,
+          "wait_trend_sec": [
+            60,
+            65,
+            80,
+            120,
+            190,
+            260,
+            310,
+            330,
+            300,
+            250
+          ]
+        },
+        {
+          "queue_id": "tier_2",
+          "name": "Tier 2",
+          "sla_status": "healthy",
+          "sla_target_sec": 600,
+          "longest_wait_sec": 230,
+          "sla_headroom_pct": -62,
+          "tickets_waiting": 5,
+          "agents_available": 0,
+          "agents_on_call": 4,
+          "volume_last_15m": 37,
+          "volume_forecast_next_15m": 37,
+          "volume_vs_forecast_pct": 0,
+          "wait_trend_sec": [
+            180,
+            190,
+            200,
+            210,
+            230,
+            250,
+            260,
+            255,
+            240,
+            230
+          ]
+        },
+        {
+          "queue_id": "chat",
+          "name": "Live Chat",
+          "sla_status": "breached",
+          "sla_target_sec": 180,
+          "longest_wait_sec": 260,
+          "sla_headroom_pct": 44,
+          "tickets_waiting": 22,
+          "agents_available": 0,
+          "agents_on_call": 2,
+          "volume_last_15m": 80,
+          "volume_forecast_next_15m": 64,
+          "volume_vs_forecast_pct": 25,
+          "wait_trend_sec": [
+            70,
+            90,
+            120,
+            150,
+            175,
+            195,
+            210,
+            230,
+            245,
+            260
+          ]
+        },
+        {
+          "queue_id": "onboarding",
+          "name": "Onboarding",
+          "sla_status": "healthy",
+          "sla_target_sec": 1800,
+          "longest_wait_sec": 370,
+          "sla_headroom_pct": -79,
+          "tickets_waiting": 6,
+          "agents_available": 0,
+          "agents_on_call": 3,
+          "volume_last_15m": 23,
+          "volume_forecast_next_15m": 23,
+          "volume_vs_forecast_pct": 0,
+          "wait_trend_sec": [
+            240,
+            250,
+            260,
+            280,
+            300,
+            320,
+            340,
+            350,
+            360,
+            370
+          ]
+        },
+        {
+          "queue_id": "general",
+          "name": "General Support",
+          "sla_status": "healthy",
+          "sla_target_sec": 300,
+          "longest_wait_sec": 190,
+          "sla_headroom_pct": -37,
+          "tickets_waiting": 10,
+          "agents_available": 0,
+          "agents_on_call": 4,
+          "volume_last_15m": 46,
+          "volume_forecast_next_15m": 47,
+          "volume_vs_forecast_pct": -2,
+          "wait_trend_sec": [
+            120,
+            130,
+            140,
+            150,
+            160,
+            170,
+            175,
+            180,
+            185,
+            190
+          ]
+        }
+      ],
+      "agents": [
+        {
+          "agent_id": "a_11",
+          "name": "Maya R.",
+          "queues": [
+            "billing",
+            "general"
+          ],
+          "state": "on_call",
+          "state_since": "2026-05-26T14:03:00Z",
+          "state_duration_sec": 2520,
+          "adherence_status": "adherent",
+          "out_of_adherence_since": null,
+          "out_of_adherence_sec": 0
+        },
+        {
+          "agent_id": "a_19",
+          "name": "Devin K.",
+          "queues": [
+            "billing",
+            "tier_2"
+          ],
+          "state": "on_call",
+          "state_since": "2026-05-26T14:00:00Z",
+          "state_duration_sec": 2700,
+          "adherence_status": "adherent",
+          "out_of_adherence_since": null,
+          "out_of_adherence_sec": 0
+        },
+        {
+          "agent_id": "a_23",
+          "name": "Priya S.",
+          "queues": [
+            "tier_2",
+            "general"
+          ],
+          "state": "on_call",
+          "state_since": "2026-05-26T14:00:00Z",
+          "state_duration_sec": 2700,
+          "adherence_status": "adherent",
+          "out_of_adherence_since": null,
+          "out_of_adherence_sec": 0
+        },
+        {
+          "agent_id": "a_27",
+          "name": "Alex T.",
+          "queues": [
+            "vip"
+          ],
+          "state": "in_meeting",
+          "state_since": "2026-05-26T14:20:00Z",
+          "state_duration_sec": 1500,
+          "adherence_status": "out_of_adherence",
+          "out_of_adherence_since": "2026-05-26T14:20:00Z",
+          "out_of_adherence_sec": 1500
+        },
+        {
+          "agent_id": "a_34",
+          "name": "Sam W.",
+          "queues": [
+            "billing",
+            "vip"
+          ],
+          "state": "on_call",
+          "state_since": "2026-05-26T14:00:00Z",
+          "state_duration_sec": 2700,
+          "adherence_status": "adherent",
+          "out_of_adherence_since": null,
+          "out_of_adherence_sec": 0
+        },
+        {
+          "agent_id": "a_42",
+          "name": "Jordan P.",
+          "queues": [
+            "billing",
+            "tier_2"
+          ],
+          "state": "on_break",
+          "state_since": "2026-05-26T14:30:00Z",
+          "state_duration_sec": 900,
+          "adherence_status": "out_of_adherence",
+          "out_of_adherence_since": "2026-05-26T14:30:00Z",
+          "out_of_adherence_sec": 900
+        },
+        {
+          "agent_id": "a_55",
+          "name": "Noah L.",
+          "queues": [
+            "tier_2",
+            "vip"
+          ],
+          "state": "on_call",
+          "state_since": "2026-05-26T14:00:00Z",
+          "state_duration_sec": 2700,
+          "adherence_status": "adherent",
+          "out_of_adherence_since": null,
+          "out_of_adherence_sec": 0
+        },
+        {
+          "agent_id": "a_61",
+          "name": "Grace H.",
+          "queues": [
+            "vip"
+          ],
+          "state": "on_call",
+          "state_since": "2026-05-26T14:15:00Z",
+          "state_duration_sec": 1800,
+          "adherence_status": "adherent",
+          "out_of_adherence_since": null,
+          "out_of_adherence_sec": 0
+        },
+        {
+          "agent_id": "a_66",
+          "name": "Omar B.",
+          "queues": [
+            "chat"
+          ],
+          "state": "on_break",
+          "state_since": "2026-05-26T14:35:00Z",
+          "state_duration_sec": 600,
+          "adherence_status": "out_of_adherence",
+          "out_of_adherence_since": "2026-05-26T14:35:00Z",
+          "out_of_adherence_sec": 600
+        },
+        {
+          "agent_id": "a_72",
+          "name": "Lena F.",
+          "queues": [
+            "chat",
+            "onboarding"
+          ],
+          "state": "on_call",
+          "state_since": "2026-05-26T14:00:00Z",
+          "state_duration_sec": 2700,
+          "adherence_status": "adherent",
+          "out_of_adherence_since": null,
+          "out_of_adherence_sec": 0
+        },
+        {
+          "agent_id": "a_78",
+          "name": "Ravi M.",
+          "queues": [
+            "chat",
+            "general"
+          ],
+          "state": "on_call",
+          "state_since": "2026-05-26T14:00:00Z",
+          "state_duration_sec": 2700,
+          "adherence_status": "adherent",
+          "out_of_adherence_since": null,
+          "out_of_adherence_sec": 0
+        },
+        {
+          "agent_id": "a_84",
+          "name": "Ivy C.",
+          "queues": [
+            "onboarding"
+          ],
+          "state": "on_call",
+          "state_since": "2026-05-26T14:10:00Z",
+          "state_duration_sec": 2100,
+          "adherence_status": "adherent",
+          "out_of_adherence_since": null,
+          "out_of_adherence_sec": 0
+        },
+        {
+          "agent_id": "a_90",
+          "name": "Theo K.",
+          "queues": [
+            "onboarding",
+            "tier_2",
+            "general"
+          ],
+          "state": "on_call",
+          "state_since": "2026-05-26T14:00:00Z",
+          "state_duration_sec": 2700,
+          "adherence_status": "adherent",
+          "out_of_adherence_since": null,
+          "out_of_adherence_sec": 0
+        }
+      ]
+    }
+  ]
+}
