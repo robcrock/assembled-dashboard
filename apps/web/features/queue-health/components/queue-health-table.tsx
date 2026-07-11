@@ -1,7 +1,7 @@
 "use client"
 
 // The heart of the page: queues sorted by trouble. Composes DataTable +
-// StatusBadge + Meter + Sparkline + MetricDelta + Duration over Queue[].
+// StatusBadge + Meter + SparkBars + MetricDelta + Duration over Queue[].
 //
 // Judgment calls this slice owns:
 // - Never rank raw wait seconds — headroom sorts by pressure against each
@@ -11,14 +11,16 @@
 //   collapsing hides what a manager still scans; dimming keeps the fire loud
 //   and the calm visible-but-quiet.
 // - Breached rows say HOW FAR past the promise, in the status badge itself.
-// - Trend direction (↑ climbing / ↓ recovering) is a rendered annotation
-//   only — never a sort key; the triage order is severity + headroom.
+// - Wait trend renders as bars judged against the queue's OWN SLA target:
+//   over-target samples light up, the rest stay neutral. That makes "how
+//   often did we cross the promise" legible without a directional arrow —
+//   and it's a rendered annotation only, never a sort key; the triage order
+//   is severity + headroom.
 // - Each row expands to its "who can help" coverage roster (recover the
 //   out-of-adherence agent first, then shift a cross-trained one), derived
 //   from the SAME agent pool the adherence table reads.
 
 import { useMemo } from "react"
-import { TrendingDown, TrendingUp } from "lucide-react"
 
 import { Duration } from "@workspace/ui/components/duration"
 import {
@@ -27,7 +29,7 @@ import {
 } from "@workspace/ui/components/data-table"
 import { Meter } from "@workspace/ui/components/meter"
 import { MetricDelta } from "@workspace/ui/components/metric-delta"
-import { Sparkline } from "@workspace/ui/components/sparkline"
+import { SparkBars } from "@workspace/ui/components/spark-bars"
 import { StatusBadge } from "@workspace/ui/components/status-badge"
 import type { Feed } from "@workspace/ui/lib/feed"
 import { formatDurationSec } from "@workspace/ui/lib/duration"
@@ -41,7 +43,6 @@ import {
 import {
   compareQueuesBySeverity,
   queueSeverityRank,
-  waitTrendDirection,
   type Queue,
 } from "@/features/queue-health/model/queue"
 
@@ -162,33 +163,14 @@ export function QueueHealthTable({
       {
         key: "trend",
         header: "Wait trend",
-        cell: (q) => {
-          const direction = waitTrendDirection(q.wait_trend_sec)
-          return (
-            <span className="inline-flex items-center gap-1.5">
-              <Sparkline
-                points={q.wait_trend_sec}
-                status={q.sla_status === "healthy" ? undefined : q.sla_status}
-                label={`Longest wait trend for ${q.name}, from ${q.wait_trend_sec[0] ?? 0}s to ${q.wait_trend_sec[q.wait_trend_sec.length - 1] ?? 0}s`}
-              />
-              {direction === "rising" ? (
-                <TrendingUp
-                  aria-label="Wait climbing"
-                  role="img"
-                  className="text-status-breached size-3.5"
-                />
-              ) : direction === "falling" ? (
-                <TrendingDown
-                  aria-label="Wait recovering"
-                  role="img"
-                  className="text-status-healthy size-3.5"
-                />
-              ) : (
-                <span aria-hidden className="size-3.5" />
-              )}
-            </span>
-          )
-        },
+        cell: (q) => (
+          <SparkBars
+            points={q.wait_trend_sec}
+            threshold={q.sla_target_sec}
+            status={q.sla_status === "healthy" ? "at_risk" : q.sla_status}
+            label={`Longest wait trend for ${q.name}: ${q.wait_trend_sec.filter((s) => s > q.sla_target_sec).length} of ${q.wait_trend_sec.length} samples over the ${formatDurationSec(q.sla_target_sec)} target`}
+          />
+        ),
         align: "right",
       },
     ],
