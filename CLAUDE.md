@@ -214,12 +214,19 @@ compositions wire them to this dashboard's data and live in `apps/web` feature s
   not a `renderTrend` prop). Handles loading/empty/error/stale internally via one `feed` prop.
 - `MetricDelta` — signed value + unit, rendered **colorless**: an arrow glyph carries direction,
   muted ink keeps it an annotation. No `invert` prop, no verdict color (that lives on the status
-  surfaces; red is reserved for breach).
+  surfaces; red is reserved for breach). One sanctioned exception: the queue table's headroom
+  percent retints it with `statusTextClass` via `className` — that cell is a status surface, and
+  its ink always agrees with the badge and bar beside it.
 - `Sparkline` — line trend (used in the summary strip); `status`-tinted, accessible aria-label.
 - `SparkBars` — bar trend for `wait_trend_sec` in the queue table; bars past a `threshold` take
   the reserved breach accent, the rest stay muted (the tint is not overridable).
-- `Meter` — normalized fill for SLA headroom / utilization; tint from the one canonical
+- `Meter` — normalized 0→max fill for utilization-type saturation; tint from the one canonical
   `statusFillClass` (never a fourth severity color).
+- `DeviationBar` — signed deviation around a center baseline dot (the target): over extends
+  right, under extends left, sign IS the direction (no `invert` prop). Same canonical
+  `statusFillClass` tint, `range` clamp per half, no rendered number (the exact figure rides
+  beside it). This is the queue table's headroom visualization; contrast with `Meter`, which
+  answers saturation, not distance-from-target.
 - `DataTable` — dense, sortable, keyboard-navigable; queues and agents via generic column config.
   Owns loading/empty/error/stale. Optional expandable rows (`getExpandedContent` + `expandLabel`,
   `aria-controls`-linked). A single component, not compound — the only shared state is one sort tuple.

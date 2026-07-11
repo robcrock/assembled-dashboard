@@ -114,6 +114,7 @@ together as one value object rather than a param clump. The essentials:
 | `StatCard` | `label`, `value`, `delta` + trend as **ReactNode slots**, and one `feed` object (`{ status, lastUpdatedAt?, onRetry? }`) | card-level color/status (a vital's alarm is its content — tinted cards would compete with the queue table); internal number formatting; navigation |
 | `MetricDelta` | raw signed `value`, `unit` → **colorless** arrow glyph + signed number | color (deltas are annotations, not verdicts — verdict color lives on the status surfaces; the palette's red is reserved for breach); an `invert` prop (there is no good/bad to flip when it's colorless); pre-formatted strings |
 | `Meter` | normalized `value`/`max`, `label`, optional `status` tint (from the one canonical `statusFillClass`) | magnitude labels (the meter shows *saturation*; the number that says how far over rides beside it in a `MetricDelta`); a fourth severity color |
+| `DeviationBar` | signed `value` (± % around a center baseline dot), `label`, optional `status` tint (same canonical `statusFillClass`), `range` clamp per half | a direction/`invert` prop (the sign IS the direction — over extends right past the dot, under extends left); a rendered number (the exact figure rides beside it); per-call color; threshold markers |
 | `Sparkline` | `points`, optional `status` tint, computed a11y label with override | chart deps, axes, tooltips, animation (snaps on tick) |
 | `SparkBars` | `points`, `threshold` (bars past it take the reserved breach accent, others muted), computed a11y label | a configurable tint (the breach accent is not overridable — a red bar always means "over threshold") |
 | `DataTable<Row>` | generic column config (`key/header/cell/sortValue/align`), required sr-only `caption`, `rowTone` de-emphasis, optional expandable rows (`getExpandedContent` + `expandLabel`, `aria-controls`-linked), `defaultSort`, one `feed` object | compound/context API (only shared state is one sort tuple); pagination/virtualization (~19 rows total); selection; **row navigation** (rows expand to an inline detail panel, they don't link out) |
@@ -127,6 +128,11 @@ an agent out of adherence (an agent-side *schedule* breach) both take it;
 `--status-breached` is a semantic alias of `--sla-breach` so it can't drift.
 Everything else — deltas, trends, healthy/at-risk — leans on glyphs and calmer
 inks, so a red pixel anywhere on the page reads as "a promise is broken."
+One sanctioned exception: the queue table's **headroom percent** takes status
+ink (`statusTextClass` via `className`) — that cell is a status surface (a
+diverging `DeviationBar` against the SLA target sits right under it), and its
+tint always agrees with the badge and bar beside it. The `MetricDelta`
+primitive itself stays colorless everywhere else (e.g. "Vs forecast").
 
 Also deliberately **not built**: `RelativeTime` (zero consumers — inventory,
 not a primitive).
