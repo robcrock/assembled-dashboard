@@ -9,7 +9,7 @@
 // at a time, and no other consumer needs summary history, so the slice owns
 // its own small ring buffer rather than widening the store's API.
 
-import { useEffect, useState } from "react"
+import { useRef } from "react"
 
 import { MetricDelta } from "@workspace/ui/components/metric-delta"
 import { Sparkline } from "@workspace/ui/components/sparkline"
@@ -34,24 +34,23 @@ interface SummaryBarProps {
 }
 
 export function SummaryBar({ summary, ts, feed }: SummaryBarProps) {
-  const [entries, setEntries] = useState<SummaryEntry[]>([])
-
-  useEffect(() => {
-    if (!summary || !ts) return
-    setEntries((prev) =>
-      prev[prev.length - 1]?.ts === ts
-        ? prev
-        : [
-            ...prev.slice(-19),
-            {
-              ts,
-              attainment: summary.sla_attainment_pct,
-              waiting: summary.tickets_waiting_total,
-              outOfAdherence: summary.agents_out_of_adherence,
-            },
-          ],
-    )
-  }, [summary, ts])
+  // History accumulates across renders in a ref, appended during render when a
+  // new tick (`ts`) arrives — a pure function of the tick sequence, so no
+  // effect and no setState-in-effect cascade. The last-ts guard makes the
+  // append idempotent (repeat renders / StrictMode double-invoke never dup).
+  const entriesRef = useRef<SummaryEntry[]>([])
+  if (summary && ts && entriesRef.current[entriesRef.current.length - 1]?.ts !== ts) {
+    entriesRef.current = [
+      ...entriesRef.current.slice(-19),
+      {
+        ts,
+        attainment: summary.sla_attainment_pct,
+        waiting: summary.tickets_waiting_total,
+        outOfAdherence: summary.agents_out_of_adherence,
+      },
+    ]
+  }
+  const entries = entriesRef.current
 
   // Last entry from a different tick = the previous tick's vitals.
   const previous = [...entries].reverse().find((e) => e.ts !== ts)

@@ -1,1 +1,1 @@
-export { SparkBars } from "./spark-bars"
+export * from "./spark-bars"
