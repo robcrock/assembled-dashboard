@@ -76,6 +76,19 @@ export const Stale: Story = {
   },
 }
 
+// Plain variant: divider-separated KPI row — the row owns the separation,
+// so sibling stats take dividers instead of card chrome.
+export const PlainRow: Story = {
+  args: { label: "", variant: "plain" },
+  render: () => (
+    <div className="grid w-xl grid-cols-3">
+      <StatCard variant="plain" className="pr-6" label="SLA attainment" value="86%" />
+      <StatCard variant="plain" className="border-l px-6" label="Queues breaching" value="2" />
+      <StatCard variant="plain" className="border-l pl-6" label="Tickets waiting" value="84" />
+    </div>
+  ),
+}
+
 // Density: the summary strip shape — four vitals side by side.
 export const Strip: Story = {
   args: { label: "" },

@@ -1,12 +1,16 @@
 "use client"
 
 // The heart of the page: queues sorted by trouble. Composes DataTable +
-// StatusBadge + Meter + SparkBars + MetricDelta + Duration over Queue[].
+// StatusBadge + DeviationBar + SparkBars + MetricDelta + Duration over Queue[].
 //
 // Judgment calls this slice owns:
 // - Never rank raw wait seconds — headroom sorts by pressure against each
 //   queue's OWN target (Onboarding's 370s is healthy vs a 30-min promise;
 //   VIP's 250s is scary vs 5).
+// - Headroom renders as a DIVERGING bar around the target: over-target crosses
+//   right past the baseline dot, headroom extends left. Its percent takes
+//   status ink — the one sanctioned tinted delta, because this cell IS a
+//   status surface (the MetricDelta primitive itself stays colorless).
 // - Healthy tail is DIMMED, not collapsed: six queues fit on one screen, and
 //   collapsing hides what a manager still scans; dimming keeps the fire loud
 //   and the calm visible-but-quiet.
@@ -27,10 +31,13 @@ import {
   DataTable,
   type DataTableColumn,
 } from "@workspace/ui/components/data-table"
-import { Meter } from "@workspace/ui/components/meter"
+import { DeviationBar } from "@workspace/ui/components/deviation-bar"
 import { MetricDelta } from "@workspace/ui/components/metric-delta"
 import { SparkBars } from "@workspace/ui/components/spark-bars"
-import { StatusBadge } from "@workspace/ui/components/status-badge"
+import {
+  StatusBadge,
+  statusTextClass,
+} from "@workspace/ui/components/status-badge"
 import type { Feed } from "@workspace/ui/lib/feed"
 import { formatDurationSec } from "@workspace/ui/lib/duration"
 
@@ -104,21 +111,26 @@ export function QueueHealthTable({
       {
         key: "headroom",
         header: "Headroom",
+        // WHOOP-style: context line (absolutes left, tinted percent right)
+        // over a diverging bar whose baseline dot is the target itself.
         cell: (q) => (
-          <div className="flex flex-col items-end gap-1">
-            <div className="flex items-center gap-2">
-              <Meter
-                value={q.longest_wait_sec}
-                max={q.sla_target_sec}
-                status={q.sla_status}
-                label={`${q.name}: longest wait ${formatDurationSec(q.longest_wait_sec)} against a ${formatDurationSec(q.sla_target_sec)} target`}
+          <div className="ml-auto flex w-36 flex-col gap-1.5">
+            <div className="flex items-baseline justify-between gap-2">
+              <span className="text-muted-foreground text-metric-sm">
+                <Duration seconds={q.longest_wait_sec} /> /{" "}
+                <Duration seconds={q.sla_target_sec} />
+              </span>
+              <MetricDelta
+                value={q.sla_headroom_pct}
+                className={statusTextClass(q.sla_status)}
               />
-              <MetricDelta value={q.sla_headroom_pct} />
             </div>
-            <span className="text-muted-foreground text-metric-sm">
-              <Duration seconds={q.longest_wait_sec} /> /{" "}
-              <Duration seconds={q.sla_target_sec} />
-            </span>
+            <DeviationBar
+              value={q.sla_headroom_pct}
+              status={q.sla_status}
+              label={`${q.name}: longest wait ${formatDurationSec(q.longest_wait_sec)} against a ${formatDurationSec(q.sla_target_sec)} target`}
+              className="w-full"
+            />
           </div>
         ),
         // Pressure vs. the queue's own target — never raw seconds.
