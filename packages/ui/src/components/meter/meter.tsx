@@ -1,21 +1,15 @@
 import {
+  statusFillClass,
   type Status,
 } from "@workspace/ui/components/status-badge"
 import { cn } from "@workspace/ui/lib/utils"
 
 // Normalized fill against a bound — SLA pressure, utilization. The fill is
-// tinted only through the canonical status scale (neutral when untinted), so
-// meters can never invent a fourth severity color. Overflow (value > max)
-// caps the fill at 100%; the number that says HOW far over lives beside it
-// in a MetricDelta — the meter shows saturation, not magnitude.
-
-const STATUS_FILL: Record<Status, string> = {
-  healthy: "bg-status-healthy",
-  at_risk: "bg-status-at-risk",
-  breached: "bg-status-breached",
-  adherent: "bg-adherence-ok",
-  out_of_adherence: "bg-adherence-out",
-}
+// tinted only through the canonical status scale (neutral when untinted) via
+// statusFillClass, so meters can never invent a fourth severity color or drift
+// from the badges. Overflow (value > max) caps the fill at 100%; the number
+// that says HOW far over lives beside it in a MetricDelta — the meter shows
+// saturation, not magnitude.
 
 interface MeterProps {
   /** Current value, in the same unit as `max`. */
@@ -46,7 +40,7 @@ function Meter({ value, max, label, status, className }: MeterProps) {
       <div
         className={cn(
           "h-full rounded-full",
-          status ? STATUS_FILL[status] : "bg-muted-foreground",
+          status ? statusFillClass(status) : "bg-muted-foreground",
         )}
         style={{ width: `${fillPct}%` }}
       />

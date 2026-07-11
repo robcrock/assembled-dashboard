@@ -62,6 +62,12 @@ interface DataTableProps<Row> {
    * Return null for rows with nothing to expand (their toggle is omitted).
    */
   getExpandedContent?: (row: Row) => React.ReactNode
+  /**
+   * Row-specific accessible name for the expand toggle, so a screen-reader
+   * user hears "Expand Billing coverage" rather than six identical "Expand
+   * details". Falls back to "details" when omitted.
+   */
+  expandLabel?: (row: Row) => string
   defaultSort?: { key: string; direction: "asc" | "desc" }
   skeletonRows?: number
   className?: string
@@ -82,6 +88,7 @@ function DataTable<Row>({
   emptyDescription,
   rowTone,
   getExpandedContent,
+  expandLabel,
   defaultSort,
   skeletonRows = 5,
   className,
@@ -236,9 +243,10 @@ function DataTable<Row>({
                             type="button"
                             onClick={() => toggleExpanded(key)}
                             aria-expanded={isExpanded}
-                            aria-label={
-                              isExpanded ? "Collapse details" : "Expand details"
-                            }
+                            aria-controls={`${key}-detail`}
+                            aria-label={`${isExpanded ? "Collapse" : "Expand"} ${
+                              expandLabel?.(row) ?? "details"
+                            }`}
                             className="focus-visible:ring-ring/50 hover:text-foreground text-muted-foreground inline-flex size-6 items-center justify-center rounded-sm focus-visible:ring-[3px] focus-visible:outline-none"
                           >
                             {isExpanded ? (
@@ -265,7 +273,11 @@ function DataTable<Row>({
                   </TableRow>
                   {isExpanded && (
                     <TableRow className="bg-muted/40 hover:bg-muted/40">
-                      <TableCell colSpan={colSpan} className="px-4 py-3">
+                      <TableCell
+                        id={`${key}-detail`}
+                        colSpan={colSpan}
+                        className="px-4 py-3"
+                      >
                         {expandedContent}
                       </TableCell>
                     </TableRow>

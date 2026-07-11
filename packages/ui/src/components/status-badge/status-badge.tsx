@@ -27,33 +27,42 @@ export type Status =
   | "adherent"
   | "out_of_adherence"
 
+// The single place a status value becomes icon + label + color classes:
+// `ink` (status-colored text/glyph), `badge` (tinted pill), and `fill` (solid
+// accent, for meters/bars). Every status surface derives from this one map so
+// nothing drifts — StatusBadge, Meter (via statusFillClass), and Sparkline
+// (via statusTextClass) all read from here.
 const STATUS_META: Record<
   Status,
-  { label: string; icon: LucideIcon; ink: string; badge: string }
+  { label: string; icon: LucideIcon; ink: string; badge: string; fill: string }
 > = {
   healthy: {
     label: "Healthy",
     icon: CircleCheck,
     ink: "text-status-healthy",
     badge: "bg-status-healthy-bg text-status-healthy",
+    fill: "bg-status-healthy",
   },
   at_risk: {
     label: "At risk",
     icon: Clock,
     ink: "text-status-at-risk",
     badge: "bg-status-at-risk-bg text-status-at-risk",
+    fill: "bg-status-at-risk",
   },
   breached: {
     label: "Breached",
     icon: CircleAlert,
     ink: "text-sla-breach",
     badge: "bg-sla-breach-bg text-sla-breach",
+    fill: "bg-sla-breach",
   },
   adherent: {
     label: "Adherent",
     icon: CircleCheck,
     ink: "text-adherence-ok",
     badge: "bg-adherence-ok-bg text-adherence-ok",
+    fill: "bg-adherence-ok",
   },
   // An agent off their planned state IS the agent-side breach — the schedule
   // is the promise. Same glyph, same reserved accent as a queue breach, so
@@ -63,12 +72,18 @@ const STATUS_META: Record<
     icon: CircleAlert,
     ink: "text-sla-breach",
     badge: "bg-sla-breach-bg text-sla-breach",
+    fill: "bg-sla-breach",
   },
 }
 
-/** Canonical status → ink text class, for primitives that tint via currentColor (SparkBars). */
+/** Canonical status → ink text class, for primitives that tint via currentColor (Sparkline). */
 function statusTextClass(status: Status): string {
   return STATUS_META[status].ink
+}
+
+/** Canonical status → solid fill class, for meters/bars that fill a track. */
+function statusFillClass(status: Status): string {
+  return STATUS_META[status].fill
 }
 
 interface StatusDotProps {
@@ -114,4 +129,4 @@ function StatusBadge({ status, children, className }: StatusBadgeProps) {
   )
 }
 
-export { StatusBadge, StatusDot, statusTextClass }
+export { StatusBadge, StatusDot, statusTextClass, statusFillClass }

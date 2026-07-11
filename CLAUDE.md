@@ -185,9 +185,14 @@ its own per-theme raw colors.
   `input`, `ring`, `chart-1…5`, and the `--radius` scale. The surface/`-foreground` pairing is
   the rule: a surface token sets the background, its `-foreground` sets text/icon on it.
 - **Domain tokens we add** (the ubiquitous language becomes CSS):
+  - Reserved accent: `--sla-breach` (+ `-foreground` + `-bg`) — the palette's one loud color,
+    spent on exactly one meaning: a broken promise. `--status-breached` is a semantic **alias**
+    of `--sla-breach`, and `out_of_adherence` (the agent-side schedule breach) resolves to it
+    too — so a red pixel anywhere on the page reads as "a promise is broken," and breach can't
+    drift. Everything else leans on glyphs + calmer inks; deltas are colorless.
   - Status: `--status-healthy`, `--status-at-risk`, `--status-breached` (+ `-foreground` and a
     subtle `-bg` tint each) — one canonical scale used by *every* status surface (badges,
-    cards, rows, meters) so nothing drifts.
+    cards, rows, meters, bars) so nothing drifts.
   - Adherence: `--adherence-ok`, `--adherence-out`.
   - A small type ramp with **tabular figures** (`font-variant-numeric: tabular-nums`) for dense,
     ticking metrics.
@@ -200,20 +205,26 @@ Primitives are domain-agnostic and live in `@workspace/ui` (aim for ~8–10, not
 compositions wire them to this dashboard's data and live in `apps/web` feature slices.
 
 **Primitives — `packages/ui`:**
-- `StatusBadge` / `StatusDot` — `status: healthy | at_risk | breached` (+ an adherence variant).
-  Canonical color mapping, **no per-call color props** — consistency is the point.
+- `StatusBadge` / `StatusDot` — `status: healthy | at_risk | breached` (+ the adherence pair).
+  One canonical `STATUS_META` map turns a status into glyph + label + color (`ink`, `badge`,
+  `fill`); every status surface derives from it (`statusTextClass`, `statusFillClass`) so nothing
+  drifts. Status reads by **glyph shape first, color second**. `StatusDot` renders the standalone
+  glyph. **No per-call color props.**
 - `StatCard` — headline number + label + optional `delta` + optional trend slot (via children,
-  not a `renderTrend` prop). Handles loading/empty/error/stale internally.
-- `MetricDelta` — signed value vs. target/forecast, semantic direction color, with an `invert`
-  prop (over-forecast is bad, but framing differs elsewhere).
-- `Sparkline` / `TrendLine` — renders `wait_trend_sec` inline; accessible (aria-label summary,
-  not a bare SVG).
-- `Meter` / `ProgressBar` — SLA headroom / utilization, with at-risk/breached thresholds.
-- `DataTable` — dense, sortable, keyboard-navigable; used for both queues and agents via column
-  config. Owns its loading/empty/error/stale rendering. A candidate compound component with
-  shared context — only where the shared state justifies it.
-- `Duration` / `RelativeTime` — formats `state_duration_sec`, `out_of_adherence_sec`,
-  `state_since`; can live-tick.
+  not a `renderTrend` prop). Handles loading/empty/error/stale internally via one `feed` prop.
+- `MetricDelta` — signed value + unit, rendered **colorless**: an arrow glyph carries direction,
+  muted ink keeps it an annotation. No `invert` prop, no verdict color (that lives on the status
+  surfaces; red is reserved for breach).
+- `Sparkline` — line trend (used in the summary strip); `status`-tinted, accessible aria-label.
+- `SparkBars` — bar trend for `wait_trend_sec` in the queue table; bars past a `threshold` take
+  the reserved breach accent, the rest stay muted (the tint is not overridable).
+- `Meter` — normalized fill for SLA headroom / utilization; tint from the one canonical
+  `statusFillClass` (never a fourth severity color).
+- `DataTable` — dense, sortable, keyboard-navigable; queues and agents via generic column config.
+  Owns loading/empty/error/stale. Optional expandable rows (`getExpandedContent` + `expandLabel`,
+  `aria-controls`-linked). A single component, not compound — the only shared state is one sort tuple.
+- `Duration` — formats `state_duration_sec` / `out_of_adherence_sec` as a semantic `<time>`.
+  (`RelativeTime` deliberately not built; `StaleIndicator` is the only wall-clock surface.)
 - State primitives: `Skeleton`, `EmptyState`, `ErrorState`, `StaleIndicator` (last-updated +
   degraded styling).
 - `ThemeToggle`.
@@ -263,6 +274,9 @@ Design for triage, not completeness. Lead with what's wrong; let the healthy maj
 - Volume vs. forecast as a first-class signal (over-forecast is the leading indicator of the
   next breach).
 - Out-of-adherence agents surfaced directly, with how long they've been out.
+- Each queue row **expands to a coverage panel** (`features/queue-health/model/coverage.ts` +
+  `queue-coverage.tsx`): who can help *this* queue — recoverable out-of-adherence agents skilled
+  here, plus adherent cross-trained agents who could shift in. Show the lever, not just the fire.
 - Make the fixture's narrative (billing + chat breached, vip recovering, healthy tail calm,
   three named agents out of adherence — each explaining a breach) tell clearly.
 - Write down what you deliberately left out (drill-downs, historical reports, scheduling) and why.

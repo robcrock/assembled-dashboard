@@ -196,6 +196,7 @@ export function QueueHealthTable({
           <QueueCoveragePanel queueName={q.name} coverage={coverage} />
         ) : null
       }}
+      expandLabel={(q) => `${q.name} coverage`}
       defaultSort={{ key: "status", direction: "asc" }}
       skeletonRows={6}
     />

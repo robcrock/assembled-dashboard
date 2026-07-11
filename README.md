@@ -28,7 +28,7 @@ Chat breaches mid-replay and jumps to the top; the final frame shows Billing
 | State | How to demo it |
 |---|---|
 | Loading | visit `/?delay=4000` — skeletons mirror the final layout |
-| Error | visit `/?fail=1` — every surface degrades independently with a Retry |
+| Error | click **Simulate error** in the header's Demo controls (or visit `/?fail=1`) — every surface degrades independently with a Retry |
 | **Stale** | press **`p`** — replay pauses; ~8s later the page shows "Stale · updated Xs ago", dims, and keeps the data rendered (stale never blanks) |
 | Dark mode | press **`d`** or use the header toggle |
 
@@ -86,12 +86,14 @@ composite / component ──▶ semantic ──▶ primitive
   Defined in `:root` only, **never in `@theme`** — Tailwind generates no
   utilities for them, so components structurally cannot consume raw values.
 - **Semantic**: the shadcn roles plus the domain scale —
-  `--status-healthy/-at-risk/-breached` (each with `-foreground` and a `-bg`
-  tint) and `--adherence-ok/-out` (aliases of the status scale; out maps to
-  amber — red is reserved for breach, the customer-facing harm). Light/dark
-  remaps happen **only** at this tier. All pairs AA-verified numerically
-  (breached is red-700, not red-600, because red-600 fails 4.5:1 on its own
-  tint — `destructive` is an action color, `breached` is an information color).
+  `--status-healthy/-at-risk` and `--adherence-ok/-out` (each with `-foreground`
+  and a `-bg` tint), and the reserved **`--sla-breach`** accent. Breach is the
+  palette's one loud color: `--status-breached` is a semantic *alias* of
+  `--sla-breach`, and `out_of_adherence` (the agent-side schedule breach) takes
+  it too, so red can never drift from "a promise is broken." Light/dark remaps
+  happen **only** at this tier. All pairs AA-verified numerically (breach is
+  red-700 light / red-400 dark, kept distinct from `destructive`, which is an
+  action color).
 - **Component**: minted only when two consumers need different values for the
   same role. **Zero exist** — a knob nobody overrides is dead weight.
 - **Composite**: `shadow-hairline` (Linear's elevation-by-border principle)
@@ -108,18 +110,26 @@ together as one value object rather than a param clump. The essentials:
 
 | Primitive | Exposed | Deliberately omitted (why) |
 |---|---|---|
-| `StatusBadge` / `StatusDot` | `status` (one five-value union covering SLA + adherence), detail `children` that **augment, never replace** the canonical label | color/variant props (the canonical mapping isn't per-call negotiable); size; onClick; icons |
+| `StatusBadge` / `StatusDot` | `status` (one five-value union covering SLA + adherence) → canonical **glyph + label** (`StatusDot` renders the standalone status glyph); detail `children` that **augment, never replace** the label | color/variant props (the canonical mapping isn't per-call negotiable); size; onClick |
 | `StatCard` | `label`, `value`, `delta` + trend as **ReactNode slots**, and one `feed` object (`{ status, lastUpdatedAt?, onRetry? }`) | card-level color/status (a vital's alarm is its content — tinted cards would compete with the queue table); internal number formatting; navigation |
-| `MetricDelta` | raw signed `value`, `unit`, `invert` (over-forecast is bad; framing is the consumer's call) | pre-formatted strings (each call site would invent its own formatting); a third good/bad color scale (reuses status inks) |
-| `Sparkline` | `points`, optional `status` tint, computed a11y label with override | chart deps, axes, tooltips, animation (snaps on tick — a wall of morphing sparklines is noise) |
-| `DataTable<Row>` | generic column config (`key/header/cell/sortValue/align`), required sr-only `caption`, `rowTone` de-emphasis callback, `defaultSort`, one `feed` object for its loading/empty/error/stale rendering | compound/context API (only shared state is one sort tuple); pagination/virtualization (~19 rows total); selection; row clicks; roving row focus (rows carry no actions — focus belongs to the sort buttons) |
+| `MetricDelta` | raw signed `value`, `unit` → **colorless** arrow glyph + signed number | color (deltas are annotations, not verdicts — verdict color lives on the status surfaces; the palette's red is reserved for breach); an `invert` prop (there is no good/bad to flip when it's colorless); pre-formatted strings |
+| `Meter` | normalized `value`/`max`, `label`, optional `status` tint (from the one canonical `statusFillClass`) | magnitude labels (the meter shows *saturation*; the number that says how far over rides beside it in a `MetricDelta`); a fourth severity color |
+| `Sparkline` | `points`, optional `status` tint, computed a11y label with override | chart deps, axes, tooltips, animation (snaps on tick) |
+| `SparkBars` | `points`, `threshold` (bars past it take the reserved breach accent, others muted), computed a11y label | a configurable tint (the breach accent is not overridable — a red bar always means "over threshold") |
+| `DataTable<Row>` | generic column config (`key/header/cell/sortValue/align`), required sr-only `caption`, `rowTone` de-emphasis, optional expandable rows (`getExpandedContent` + `expandLabel`, `aria-controls`-linked), `defaultSort`, one `feed` object | compound/context API (only shared state is one sort tuple); pagination/virtualization (~19 rows total); selection; **row navigation** (rows expand to an inline detail panel, they don't link out) |
 | `Duration` | `seconds` → semantic `<time>` | live ticking (compressed replay time would contradict the wall clock — `StaleIndicator` is the only wall-clock surface) |
 | `EmptyState` / `ErrorState` / `StaleIndicator` | title/description/action slot; optional `onRetry`; self-ticking `lastUpdatedAt` + `tone` | icons; auto-derived staleness (the hook is the single owner of that logic) |
 | `ThemeToggle` | — (no props) | light/dark/system menu (binary flip suffices) |
 
+**Colorless deltas + reserved red.** The palette spends its one loud color,
+`--sla-breach`, on exactly one meaning: a broken promise. Queue SLA breach and
+an agent out of adherence (an agent-side *schedule* breach) both take it;
+`--status-breached` is a semantic alias of `--sla-breach` so it can't drift.
+Everything else — deltas, trends, healthy/at-risk — leans on glyphs and calmer
+inks, so a red pixel anywhere on the page reads as "a promise is broken."
+
 Also deliberately **not built**: `RelativeTime` (zero consumers — inventory,
-not a primitive) and `Meter` (SLA pressure already renders three ways in a
-queue row; a bar would be a fourth encoding of the same fact).
+not a primitive).
 
 ## Product tradeoffs
 
@@ -127,8 +137,13 @@ queue row; a bar would be a fourth encoding of the same fact).
   healthy last — and the healthy tail **dims** rather than collapses (six
   queues fit on screen; hiding rows a manager still scans costs more than it
   saves). Re-sorting is allowed; severity is a default, not a cage.
-- **Volume vs. forecast is a first-class column** (inverted delta — over
-  forecast is red): it's the leading indicator of the next breach.
+- **Volume vs. forecast is a first-class column**: it's the leading indicator
+  of the next breach. It reads as a signed delta (over-forecast shows an up
+  arrow) rather than in color — red stays reserved for actual breach.
+- **Each queue row expands** to a "who can help" coverage panel: the
+  out-of-adherence agents skilled on that queue (recoverable capacity) and the
+  adherent cross-trained agents who could shift in, so the manager sees the
+  lever, not just the problem.
 - **Only out-of-adherence agents get rows**; the adherent majority is a
   one-line count. Queue membership in that table is the cause→symptom link
   (Jordan → Billing).

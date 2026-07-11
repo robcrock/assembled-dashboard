@@ -1,7 +1,8 @@
 // Canonical signed-delta semantics — MetricDelta renders it.
 //
-// A delta has a magnitude and a semantic direction; whether "up" is good or
-// bad belongs to the consumer (MetricDelta's `invert`), never to the value.
+// A delta has a magnitude and a signed direction; MetricDelta renders it as a
+// colorless arrow + number — direction is shown, never judged as good or bad
+// (verdict color is reserved for the status surfaces).
 
 export type DeltaDirection = "up" | "down" | "flat"
 

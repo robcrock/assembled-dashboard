@@ -27,3 +27,17 @@ export const Flat: Story = {
 export const CustomUnit: Story = {
   args: { value: 55, unit: "s" },
 }
+
+// Density: a column of deltas stays quiet — tabular figures, no color noise.
+export const Density: Story = {
+  args: { value: 0 },
+  render: () => (
+    <div className="flex flex-col items-end gap-1">
+      <MetricDelta value={25} />
+      <MetricDelta value={-8} />
+      <MetricDelta value={0} />
+      <MetricDelta value={3} />
+      <MetricDelta value={-12} />
+    </div>
+  ),
+}
