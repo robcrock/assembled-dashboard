@@ -2,7 +2,6 @@ import type * as React from "react"
 import {
   CircleAlert,
   CircleCheck,
-  CircleMinus,
   Clock,
   type LucideIcon,
 } from "lucide-react"
@@ -56,11 +55,14 @@ const STATUS_META: Record<
     ink: "text-adherence-ok",
     badge: "bg-adherence-ok-bg text-adherence-ok",
   },
+  // An agent off their planned state IS the agent-side breach — the schedule
+  // is the promise. Same glyph, same reserved accent as a queue breach, so
+  // "red alert icon" reads identically across both tables.
   out_of_adherence: {
     label: "Out of adherence",
-    icon: CircleMinus,
-    ink: "text-adherence-out",
-    badge: "bg-adherence-out-bg text-adherence-out",
+    icon: CircleAlert,
+    ink: "text-sla-breach",
+    badge: "bg-sla-breach-bg text-sla-breach",
   },
 }
 

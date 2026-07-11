@@ -10,21 +10,14 @@ const meta = {
 export default meta
 type Story = StoryObj<typeof meta>
 
-export const UpGood: Story = {
+// Deltas are colorless annotations: the thin arrow carries direction, and
+// good/bad verdicts belong to the status surfaces (badges, meters, bars).
+export const Up: Story = {
   args: { value: 4 },
 }
 
-export const DownBad: Story = {
+export const Down: Story = {
   args: { value: -12 },
-}
-
-// Volume over forecast: up is bad — the leading indicator of the next breach.
-export const UpBadInverted: Story = {
-  args: { value: 25, invert: true },
-}
-
-export const DownGoodInverted: Story = {
-  args: { value: -8, invert: true },
 }
 
 export const Flat: Story = {
@@ -32,5 +25,5 @@ export const Flat: Story = {
 }
 
 export const CustomUnit: Story = {
-  args: { value: 55, unit: "s", invert: true },
+  args: { value: 55, unit: "s" },
 }

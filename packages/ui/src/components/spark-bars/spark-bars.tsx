@@ -17,6 +17,13 @@ interface SparkBarsProps {
    * neutral. Omit for an all-neutral series.
    */
   threshold?: number
+  /**
+   * The rolling window: the chart always reserves exactly this many bar
+   * slots and shows the LAST `bands` points. Fewer points leave empty slots
+   * on the LEFT — the newest sample always sits flush against the right
+   * edge, so bar width never jumps as the window fills.
+   */
+  bands?: number
   width?: number
   height?: number
   /** Accessible summary; defaults to a computed "N of M above threshold". */
@@ -39,6 +46,7 @@ function defaultLabel(points: number[], threshold: number | undefined): string {
 function SparkBars({
   points,
   threshold,
+  bands = 10,
   width = 64,
   height = 20,
   label,
@@ -48,24 +56,28 @@ function SparkBars({
   const gap = 2
   const innerW = width - pad * 2
   const innerH = height - pad
-  // Scale to the series itself, NOT the threshold: a healthy queue's waits
-  // can sit at 5% of a 30-minute promise, and threshold-scaling would crush
-  // every bar to the floor. Height carries the trend SHAPE; the tint alone
-  // carries the threshold story.
-  const scaleMax = Math.max(...points, 1)
-  const barW =
-    points.length > 0 ? (innerW - gap * (points.length - 1)) / points.length : 0
+  // Rolling window: only the last `bands` samples render, and geometry is
+  // computed from the SLOT count, not the sample count — bar width is stable
+  // and the series always terminates at the right edge (the "now" edge).
+  const visible = points.slice(-bands)
+  const offset = bands - visible.length
+  // Scale to the visible series itself, NOT the threshold: a healthy queue's
+  // waits can sit at 5% of a 30-minute promise, and threshold-scaling would
+  // crush every bar to the floor. Height carries the trend SHAPE; the tint
+  // alone carries the threshold story.
+  const scaleMax = Math.max(...visible, 1)
+  const barW = (innerW - gap * (bands - 1)) / bands
 
   return (
     <svg
       role="img"
-      aria-label={label ?? defaultLabel(points, threshold)}
+      aria-label={label ?? defaultLabel(visible, threshold)}
       viewBox={`0 0 ${width} ${height}`}
       width={width}
       height={height}
       className={cn("shrink-0", className)}
     >
-      {points.length === 0 ? (
+      {visible.length === 0 ? (
         <line
           x1={pad}
           y1={height / 2}
@@ -78,14 +90,14 @@ function SparkBars({
           opacity="0.5"
         />
       ) : (
-        points.map((value, i) => {
+        visible.map((value, i) => {
           // 1.5px floor keeps near-zero samples visible
           const h = Math.max((value / scaleMax) * innerH, 1.5)
           const over = threshold !== undefined && value > threshold
           return (
             <rect
               key={i}
-              x={pad + i * (barW + gap)}
+              x={pad + (offset + i) * (barW + gap)}
               y={height - h}
               width={barW}
               height={h}

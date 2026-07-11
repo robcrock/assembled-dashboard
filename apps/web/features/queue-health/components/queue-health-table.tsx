@@ -113,7 +113,7 @@ export function QueueHealthTable({
                 status={q.sla_status}
                 label={`${q.name}: longest wait ${formatDurationSec(q.longest_wait_sec)} against a ${formatDurationSec(q.sla_target_sec)} target`}
               />
-              <MetricDelta value={q.sla_headroom_pct} invert />
+              <MetricDelta value={q.sla_headroom_pct} />
             </div>
             <span className="text-muted-foreground text-metric-sm">
               <Duration seconds={q.longest_wait_sec} /> /{" "}
@@ -144,8 +144,10 @@ export function QueueHealthTable({
                 {q.agents_on_call}
                 <span className="text-muted-foreground"> on call</span>
               </span>
+              {/* recoverability is GOOD news (capacity you can get back), so
+                  it reads in the calm muted ink, not a warning tint */}
               {recoverable > 0 && (
-                <span className="text-adherence-out text-metric-sm">
+                <span className="text-muted-foreground text-metric-sm">
                   {recoverable} recoverable
                 </span>
               )}
@@ -158,7 +160,7 @@ export function QueueHealthTable({
       {
         key: "forecast",
         header: "Vs forecast",
-        cell: (q) => <MetricDelta value={q.volume_vs_forecast_pct} invert />,
+        cell: (q) => <MetricDelta value={q.volume_vs_forecast_pct} />,
         sortValue: (q) => q.volume_vs_forecast_pct,
         align: "right",
       },
