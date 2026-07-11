@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { ArrowDown, ArrowUp } from "lucide-react"
+import { ArrowDown, ArrowUp, ChevronDown, ChevronRight } from "lucide-react"
 
 import { EmptyState } from "@workspace/ui/components/empty-state"
 import { ErrorState } from "@workspace/ui/components/error-state"
@@ -55,6 +55,13 @@ interface DataTableProps<Row> {
    * consumers mute their healthy tail ("muted"), the table just renders it.
    */
   rowTone?: (row: Row) => "default" | "muted"
+  /**
+   * Presence adds an expander column; each row toggles an inline detail panel
+   * rendered from this callback. The idiomatic exception to "children over
+   * renderX" — the content is row-dependent, so a callback is the honest API.
+   * Return null for rows with nothing to expand (their toggle is omitted).
+   */
+  getExpandedContent?: (row: Row) => React.ReactNode
   defaultSort?: { key: string; direction: "asc" | "desc" }
   skeletonRows?: number
   className?: string
@@ -74,6 +81,7 @@ function DataTable<Row>({
   emptyTitle = "Nothing to show",
   emptyDescription,
   rowTone,
+  getExpandedContent,
   defaultSort,
   skeletonRows = 5,
   className,
@@ -83,6 +91,21 @@ function DataTable<Row>({
     key: string
     direction: "asc" | "desc"
   } | null>(defaultSort ?? null)
+  const [expandedKeys, setExpandedKeys] = React.useState<Set<string>>(
+    () => new Set(),
+  )
+
+  const expandable = Boolean(getExpandedContent)
+  const colSpan = columns.length + (expandable ? 1 : 0)
+
+  function toggleExpanded(key: string) {
+    setExpandedKeys((prev) => {
+      const next = new Set(prev)
+      if (next.has(key)) next.delete(key)
+      else next.add(key)
+      return next
+    })
+  }
 
   const sortedRows = React.useMemo(() => {
     if (!sort) return rows
@@ -112,6 +135,11 @@ function DataTable<Row>({
         <caption className="sr-only">{caption}</caption>
         <TableHeader>
           <TableRow className="hover:bg-transparent">
+            {expandable && (
+              <TableHead className="w-8">
+                <span className="sr-only">Expand row</span>
+              </TableHead>
+            )}
             {columns.map((column) => {
               const sortable = Boolean(column.sortValue)
               const active = sort?.key === column.key
@@ -160,6 +188,7 @@ function DataTable<Row>({
           {status === "loading" ? (
             Array.from({ length: skeletonRows }, (_, i) => (
               <TableRow key={i}>
+                {expandable && <TableCell className="w-8" />}
                 {columns.map((column) => (
                   <TableCell key={column.key} className={column.className}>
                     <Skeleton className="h-4 w-full max-w-24" />
@@ -169,7 +198,7 @@ function DataTable<Row>({
             ))
           ) : status === "error" ? (
             <TableRow className="hover:bg-transparent">
-              <TableCell colSpan={columns.length}>
+              <TableCell colSpan={colSpan}>
                 <ErrorState
                   title="Couldn't load this table"
                   onRetry={onRetry}
@@ -179,7 +208,7 @@ function DataTable<Row>({
             </TableRow>
           ) : sortedRows.length === 0 ? (
             <TableRow className="hover:bg-transparent">
-              <TableCell colSpan={columns.length}>
+              <TableCell colSpan={colSpan}>
                 <EmptyState
                   title={emptyTitle}
                   description={emptyDescription}
@@ -190,26 +219,58 @@ function DataTable<Row>({
           ) : (
             sortedRows.map((row) => {
               const tone = rowTone?.(row) ?? "default"
+              const key = rowKey(row)
+              const expandedContent = getExpandedContent?.(row) ?? null
+              const isExpanded = expandedContent !== null && expandedKeys.has(key)
               return (
-                <TableRow
-                  key={rowKey(row)}
-                  // de-emphasis is color-only: muted-foreground keeps AA
-                  // contrast; stacking opacity on top would crush it (~2.2:1)
-                  className={cn(tone === "muted" && "text-muted-foreground")}
-                >
-                  {columns.map((column) => (
-                    <TableCell
-                      key={column.key}
-                      className={cn(
-                        "text-metric font-normal",
-                        column.align === "right" && "text-right",
-                        column.className,
-                      )}
-                    >
-                      {column.cell(row)}
-                    </TableCell>
-                  ))}
-                </TableRow>
+                <React.Fragment key={key}>
+                  <TableRow
+                    // de-emphasis is color-only: muted-foreground keeps AA
+                    // contrast; stacking opacity on top would crush it (~2.2:1)
+                    className={cn(tone === "muted" && "text-muted-foreground")}
+                  >
+                    {expandable && (
+                      <TableCell className="w-8 py-1">
+                        {expandedContent !== null && (
+                          <button
+                            type="button"
+                            onClick={() => toggleExpanded(key)}
+                            aria-expanded={isExpanded}
+                            aria-label={
+                              isExpanded ? "Collapse details" : "Expand details"
+                            }
+                            className="focus-visible:ring-ring/50 hover:text-foreground text-muted-foreground inline-flex size-6 items-center justify-center rounded-sm focus-visible:ring-[3px] focus-visible:outline-none"
+                          >
+                            {isExpanded ? (
+                              <ChevronDown aria-hidden className="size-4" />
+                            ) : (
+                              <ChevronRight aria-hidden className="size-4" />
+                            )}
+                          </button>
+                        )}
+                      </TableCell>
+                    )}
+                    {columns.map((column) => (
+                      <TableCell
+                        key={column.key}
+                        className={cn(
+                          "text-metric font-normal",
+                          column.align === "right" && "text-right",
+                          column.className,
+                        )}
+                      >
+                        {column.cell(row)}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                  {isExpanded && (
+                    <TableRow className="bg-muted/40 hover:bg-muted/40">
+                      <TableCell colSpan={colSpan} className="px-4 py-3">
+                        {expandedContent}
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </React.Fragment>
               )
             })
           )}

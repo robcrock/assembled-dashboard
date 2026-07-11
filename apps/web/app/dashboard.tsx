@@ -4,14 +4,18 @@
 // { data, status } down — no section fetches on its own. Everything below is
 // the eye's travel: summary strip → queues by trouble → missing capacity.
 //
-// Demo levers (the failure story, demonstrable without extra chrome):
-//   /?fail=1      → error state with retry (route returns 500)
-//   /?delay=4000  → loading skeletons for 4s (route injects latency)
-//   press "p"     → pause replay; ~8s later ticks are "late" and the page
-//                   degrades to stale (mirrors the "d" theme hotkey)
+// Demo levers (the failure story, demonstrable from the toolbar or by hand):
+//   Pause button / "p" → pause replay; ~8s later ticks are "late" and the
+//                        page degrades to stale
+//   Error button       → refetch hits ?fail=1 (route returns 500) → every
+//                        section shows ErrorState with retry; toggle off to
+//                        recover
+//   /?fail=1, /?delay=4000 → same failure paths, URL-driven
 
 import { useEffect, useMemo, useState } from "react"
+import { CircleAlert, Pause, Play } from "lucide-react"
 
+import { Button } from "@workspace/ui/components/button"
 import { StaleIndicator } from "@workspace/ui/components/stale-indicator"
 
 import { AgentAdherenceTable } from "@/features/agent-adherence/components/agent-adherence-table"
@@ -31,7 +35,8 @@ function isTypingTarget(target: EventTarget | null) {
 
 export function Dashboard() {
   const [paused, setPaused] = useState(false)
-  const { data, feed } = useDashboardData({ paused })
+  const [injectError, setInjectError] = useState(false)
+  const { data, feed } = useDashboardData({ paused, fail: injectError })
 
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
@@ -55,16 +60,40 @@ export function Dashboard() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex items-center justify-end gap-3">
+      <div className="flex flex-wrap items-center justify-end gap-3">
         {paused && (
           <span className="text-muted-foreground text-metric-sm">
-            replay paused · press p to resume
+            replay paused · goes stale when the next tick is late
           </span>
         )}
         <StaleIndicator
           lastUpdatedAt={feed.lastUpdatedAt ?? null}
           tone={feed.status === "stale" ? "stale" : "live"}
         />
+        <div className="flex items-center gap-2" role="group" aria-label="Demo controls">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setPaused((p) => !p)}
+            aria-pressed={paused}
+          >
+            {paused ? (
+              <Play aria-hidden className="size-3.5" />
+            ) : (
+              <Pause aria-hidden className="size-3.5" />
+            )}
+            {paused ? "Resume replay" : "Pause replay"}
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setInjectError((e) => !e)}
+            aria-pressed={injectError}
+          >
+            <CircleAlert aria-hidden className="size-3.5" />
+            {injectError ? "Clear error" : "Inject error"}
+          </Button>
+        </div>
       </div>
 
       <SummaryBar
@@ -77,7 +106,11 @@ export function Dashboard() {
         <h2 id="queues-heading" className="text-sm font-medium">
           Queues
         </h2>
-        <QueueHealthTable queues={data?.queues ?? []} feed={feed} />
+        <QueueHealthTable
+          queues={data?.queues ?? []}
+          agents={data?.agents ?? []}
+          feed={feed}
+        />
       </section>
 
       <section aria-labelledby="agents-heading" className="flex flex-col gap-2">

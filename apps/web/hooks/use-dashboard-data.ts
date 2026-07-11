@@ -33,6 +33,12 @@ export interface UseDashboardDataOptions {
   staleAfterMs?: number
   /** Stops replay ticks from arriving — the "late data" demo. Data stays rendered. */
   paused?: boolean
+  /**
+   * Makes the next fetch hit the route handler's failure path (?fail=1) — the
+   * inject-error demo control. While true, retry re-fails; flipping it off
+   * refetches and recovers.
+   */
+  fail?: boolean
 }
 
 export interface UseDashboardDataResult {
@@ -42,13 +48,14 @@ export interface UseDashboardDataResult {
 }
 
 /** Forward only the route handler's demo params, never arbitrary query noise. */
-function demoParams(search: string): string {
+function demoParams(search: string, forceFail: boolean): string {
   const src = new URLSearchParams(search)
   const out = new URLSearchParams()
   for (const key of ["fail", "delay"]) {
     const value = src.get(key)
     if (value) out.set(key, value)
   }
+  if (forceFail) out.set("fail", "1")
   const qs = out.toString()
   return qs ? `?${qs}` : ""
 }
@@ -64,7 +71,7 @@ function framesOf(payload: DashboardPayload): DashboardFrame[] {
 export function useDashboardData(
   options: UseDashboardDataOptions = {},
 ): UseDashboardDataResult {
-  const { tickMs = 3000, paused = false } = options
+  const { tickMs = 3000, paused = false, fail = false } = options
   const staleAfterMs = options.staleAfterMs ?? tickMs * 2.5
 
   const [payload, setPayload] = useState<DashboardPayload | null>(null)
@@ -81,7 +88,7 @@ export function useDashboardData(
       setError(null)
       try {
         const res = await fetch(
-          `/api/dashboard${demoParams(window.location.search)}`,
+          `/api/dashboard${demoParams(window.location.search, fail)}`,
           { signal: controller.signal, cache: "no-store" },
         )
         if (!res.ok) throw new Error(`Dashboard API responded ${res.status}`)
@@ -97,7 +104,7 @@ export function useDashboardData(
     }
     void load()
     return () => controller.abort()
-  }, [attempt])
+  }, [attempt, fail])
 
   // Replay ticks. At the end of history this keeps firing as a heartbeat:
   // the frame stops advancing but arrival keeps refreshing (still live).

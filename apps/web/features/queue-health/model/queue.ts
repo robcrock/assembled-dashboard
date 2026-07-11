@@ -53,3 +53,24 @@ export function compareQueuesBySeverity(a: Queue, b: Queue): number {
     a.name.localeCompare(b.name)
   )
 }
+
+export type TrendDirection = "rising" | "falling" | "flat"
+
+/**
+ * Direction of the wait trend, derived from the tail of `wait_trend_sec` —
+ * a rendered ANNOTATION only (↑ climbing / ↓ recovering), never a sort key
+ * (the triage order is severity + headroom; see queueSeverityRank).
+ *
+ * Compares the last sample against one three ticks back (15 fixture-minutes),
+ * so a single noisy tick doesn't flip the arrow. Changes within ±5% of the
+ * older sample read as flat.
+ */
+export function waitTrendDirection(trend: number[]): TrendDirection {
+  const last = trend[trend.length - 1]
+  const prior = trend[Math.max(0, trend.length - 4)]
+  if (last === undefined || prior === undefined) return "flat"
+  const tolerance = Math.abs(prior) * 0.05
+  if (last > prior + tolerance) return "rising"
+  if (last < prior - tolerance) return "falling"
+  return "flat"
+}
