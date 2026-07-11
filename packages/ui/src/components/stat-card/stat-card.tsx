@@ -11,6 +11,12 @@ import { cn } from "@workspace/ui/lib/utils"
 // consumers just forward the store's feed — the skeleton mirrors the final
 // layout (label line, value block) so nothing shifts on resolve. Stale keeps
 // the value rendered and dims it; it never blanks.
+//
+// Two presentations, one content contract:
+// - "card"  — a standalone bordered card (the default).
+// - "plain" — bare content, for divider-separated KPI rows where the row's
+//   container owns the separation (whitespace/dividers beat card chrome for
+//   sibling stats in a shared context).
 
 interface StatCardProps {
   label: string
@@ -20,6 +26,8 @@ interface StatCardProps {
   delta?: React.ReactNode
   /** Feed condition; defaults to live. Drives loading/empty/error/stale. */
   feed?: Feed
+  /** Presentation: standalone bordered card, or bare content for divider rows. */
+  variant?: "card" | "plain"
   /** Trend slot (e.g. a <Sparkline>), rendered under the value. */
   children?: React.ReactNode
   className?: string
@@ -30,13 +38,17 @@ function StatCard({
   value,
   delta,
   feed = { status: "live" },
+  variant = "card",
   children,
   className,
 }: StatCardProps) {
   const { status, lastUpdatedAt = null, onRetry } = feed
-  return (
-    <Card size="sm" className={cn("min-w-32 gap-1 px-3", className)}>
-      <span className="text-muted-foreground text-xs font-medium">{label}</span>
+
+  const content = (
+    <>
+      <div className="text-muted-foreground truncate text-xs font-medium">
+        {label}
+      </div>
 
       {status === "loading" ? (
         <>
@@ -57,9 +69,9 @@ function StatCard({
               status === "stale" && "opacity-60",
             )}
           >
-            <span className="text-metric-lg text-foreground">
+            <div className="text-metric-lg text-foreground">
               {value ?? <span className="text-muted-foreground">—</span>}
-            </span>
+            </div>
             {delta}
           </div>
           {children && (
@@ -72,6 +84,20 @@ function StatCard({
           )}
         </>
       )}
+    </>
+  )
+
+  if (variant === "plain") {
+    return (
+      <div className={cn("flex min-w-0 flex-col gap-1", className)}>
+        {content}
+      </div>
+    )
+  }
+
+  return (
+    <Card size="sm" className={cn("min-w-32 gap-1 px-3", className)}>
+      {content}
     </Card>
   )
 }

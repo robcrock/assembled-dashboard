@@ -43,6 +43,12 @@ export interface UseDashboardDataOptions {
 
 export interface UseDashboardDataResult {
   data: DashboardFrame | null
+  /**
+   * The tenant operating this dashboard (`meta.org` from the feed) — the UI
+   * is whitelabel, so the operating company's identity always arrives as
+   * data, never as hardcoded branding. Null until the first payload lands.
+   */
+  org: string | null
   /** Feed condition + how to recover, threaded to every section as one value. */
   feed: Feed
 }
@@ -148,5 +154,5 @@ export function useDashboardData(
     [status, lastUpdatedAt, retry],
   )
 
-  return { data, feed }
+  return { data, org: payload?.meta.org ?? null, feed }
 }
