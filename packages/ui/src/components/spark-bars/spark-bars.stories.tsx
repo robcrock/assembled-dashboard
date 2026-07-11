@@ -15,14 +15,15 @@ const meta = {
 export default meta
 type Story = StoryObj<typeof meta>
 
-// Breach story: the last bars cross the 120s promise and light up.
+// Breach story: the last bars cross the 120s promise and take the reserved
+// SLA-breach accent — the only place red exists, so the tint is fixed.
 export const BreachedTail: Story = {
-  args: { points: BILLING_RISING, threshold: 120, status: "breached" },
+  args: { points: BILLING_RISING, threshold: 120 },
 }
 
 // Recovery story: the middle spiked over, the tail is coming back down.
 export const RecoveringSpike: Story = {
-  args: { points: VIP_RECOVERING, threshold: 300, status: "at_risk" },
+  args: { points: VIP_RECOVERING, threshold: 300 },
 }
 
 // All under the promise — every bar stays neutral.
@@ -47,7 +48,6 @@ export const CustomLabel: Story = {
   args: {
     points: BILLING_RISING,
     threshold: 120,
-    status: "breached",
     label: "Longest wait crossed the 2m SLA in the last 3 samples",
   },
 }
@@ -57,8 +57,8 @@ export const Density: Story = {
   args: { points: TIER2_STEADY },
   render: () => (
     <div className="flex flex-col gap-2">
-      <SparkBars points={BILLING_RISING} threshold={120} status="breached" />
-      <SparkBars points={VIP_RECOVERING} threshold={300} status="at_risk" />
+      <SparkBars points={BILLING_RISING} threshold={120} />
+      <SparkBars points={VIP_RECOVERING} threshold={300} />
       <SparkBars points={TIER2_STEADY} threshold={600} />
       <SparkBars points={TIER2_STEADY} />
     </div>

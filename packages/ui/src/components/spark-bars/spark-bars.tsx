@@ -1,16 +1,13 @@
-import {
-  statusTextClass,
-  type Status,
-} from "@workspace/ui/components/status-badge"
 import { cn } from "@workspace/ui/lib/utils"
 
 // Inline trend bars — a hand-rolled SVG column series. Ten-ish points need
 // no chart dependency. Bars grow from a ZERO baseline (honest magnitude,
 // unlike a min/max-normalized line), and only bars EXCEEDING the threshold
-// take the status tint — the rest stay neutral, so "how often did we cross
-// the promise" is readable at a glance without a directional arrow.
-// Bars SNAP on data updates (no height morphing): a wall of animating
-// charts every tick reads as noise, not signal.
+// take the reserved SLA-breach accent — a sample past the promise IS a
+// breach, so the tint is not configurable. The rest stay neutral, making
+// "how often did we cross the promise" readable at a glance without a
+// directional arrow. Bars SNAP on data updates (no height morphing): a wall
+// of animating charts every tick reads as noise, not signal.
 
 interface SparkBarsProps {
   points: number[]
@@ -20,8 +17,6 @@ interface SparkBarsProps {
    * neutral. Omit for an all-neutral series.
    */
   threshold?: number
-  /** Tint for over-threshold bars, from the canonical status scale. */
-  status?: Status
   width?: number
   height?: number
   /** Accessible summary; defaults to a computed "N of M above threshold". */
@@ -44,7 +39,6 @@ function defaultLabel(points: number[], threshold: number | undefined): string {
 function SparkBars({
   points,
   threshold,
-  status = "breached",
   width = 64,
   height = 20,
   label,
@@ -98,7 +92,7 @@ function SparkBars({
               rx={Math.min(1.5, barW / 2)}
               fill="currentColor"
               className={cn(
-                over ? statusTextClass(status) : "text-muted-foreground/60",
+                over ? "text-sla-breach" : "text-muted-foreground/60",
               )}
             />
           )

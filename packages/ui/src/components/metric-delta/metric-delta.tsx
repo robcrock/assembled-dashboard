@@ -6,6 +6,8 @@ import { cn } from "@workspace/ui/lib/utils"
 // on the page reads identically. Good/bad framing is the consumer's call via
 // `invert` (volume over forecast is bad; SLA attainment over target is good).
 // Direction color reuses the canonical status inks — one scale, no drift.
+// An unfavorable delta is a WARNING (amber), never the reserved SLA-breach
+// red: the arrow glyph carries direction, color only carries mood.
 
 interface MetricDeltaProps {
   /** Raw signed value (e.g. 25 for +25%). */
@@ -29,7 +31,7 @@ function MetricDelta({
       ? "text-muted-foreground"
       : (direction === "up") !== invert
         ? "text-status-healthy"
-        : "text-status-breached"
+        : "text-status-at-risk"
 
   return (
     <span

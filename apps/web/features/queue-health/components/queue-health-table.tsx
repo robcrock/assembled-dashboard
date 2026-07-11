@@ -73,6 +73,15 @@ export function QueueHealthTable({
 
   const columns = useMemo<DataTableColumn<Queue>[]>(
     () => [
+      // Queue name leads: it's a queue table, so the entity being ranked is
+      // the first thing the eye lands on; the status verdict reads second.
+      {
+        key: "queue",
+        header: "Queue",
+        // inherits row color so rowTone's de-emphasis reaches the name
+        cell: (q) => <span className="font-medium">{q.name}</span>,
+        sortValue: (q) => q.name,
+      },
       {
         key: "status",
         header: "Status",
@@ -91,13 +100,6 @@ export function QueueHealthTable({
         // The model's single triage key — shared with the pre-sort comparator
         // so the two orderings can't drift.
         sortValue: (q) => queueSeverityRank(q),
-      },
-      {
-        key: "queue",
-        header: "Queue",
-        // inherits row color so rowTone's de-emphasis reaches the name
-        cell: (q) => <span className="font-medium">{q.name}</span>,
-        sortValue: (q) => q.name,
       },
       {
         key: "headroom",
@@ -167,7 +169,6 @@ export function QueueHealthTable({
           <SparkBars
             points={q.wait_trend_sec}
             threshold={q.sla_target_sec}
-            status={q.sla_status === "healthy" ? "at_risk" : q.sla_status}
             label={`Longest wait trend for ${q.name}: ${q.wait_trend_sec.filter((s) => s > q.sla_target_sec).length} of ${q.wait_trend_sec.length} samples over the ${formatDurationSec(q.sla_target_sec)} target`}
           />
         ),
