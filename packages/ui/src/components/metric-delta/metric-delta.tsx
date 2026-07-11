@@ -1,47 +1,38 @@
+import { ArrowDown, ArrowUp } from "lucide-react"
+
 import { deltaDirection, formatSigned } from "@workspace/ui/lib/delta"
 import { cn } from "@workspace/ui/lib/utils"
 
-// Signed value vs. a target/forecast with semantic direction color. The value
-// is a raw signed number — the component owns sign/arrow/color so every delta
-// on the page reads identically. Good/bad framing is the consumer's call via
-// `invert` (volume over forecast is bad; SLA attainment over target is good).
-// Direction color reuses the canonical status inks — one scale, no drift.
+// Signed value vs. a target/forecast. The value is a raw signed number — the
+// component owns sign + arrow so every delta on the page reads identically.
+// Deltas are deliberately COLORLESS: a thin arrow glyph carries direction and
+// the muted ink keeps them annotations, not verdicts. Whether a move is good
+// or bad already lives in the status surfaces (badges, meters, bars) — and
+// the palette's loud red stays reserved for SLA breach alone.
 
 interface MetricDeltaProps {
   /** Raw signed value (e.g. 25 for +25%). */
   value: number
   /** Rendered after the number; deltas here are percentages by default. */
   unit?: string
-  /** Set when "up" is bad (over forecast). Default: up is good. */
-  invert?: boolean
   className?: string
 }
 
-function MetricDelta({
-  value,
-  unit = "%",
-  invert = false,
-  className,
-}: MetricDeltaProps) {
+function MetricDelta({ value, unit = "%", className }: MetricDeltaProps) {
   const direction = deltaDirection(value)
-  const tone =
-    direction === "flat"
-      ? "text-muted-foreground"
-      : (direction === "up") !== invert
-        ? "text-status-healthy"
-        : "text-status-breached"
 
   return (
     <span
       className={cn(
-        "text-metric-sm inline-flex items-center gap-0.5",
-        tone,
+        "text-metric-sm text-muted-foreground inline-flex items-center gap-0.5",
         className,
       )}
     >
-      {direction !== "flat" && (
-        <span aria-hidden>{direction === "up" ? "▲" : "▼"}</span>
-      )}
+      {direction === "up" ? (
+        <ArrowUp aria-hidden className="size-3" />
+      ) : direction === "down" ? (
+        <ArrowDown aria-hidden className="size-3" />
+      ) : null}
       {formatSigned(value, unit)}
     </span>
   )

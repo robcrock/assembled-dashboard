@@ -40,11 +40,11 @@ export const WithTrend: Story = {
   },
 }
 
-export const InvertedDelta: Story = {
+export const ForecastDelta: Story = {
   args: {
     label: "Volume vs forecast",
     value: "+25%",
-    delta: <MetricDelta value={25} invert />,
+    delta: <MetricDelta value={25} />,
   },
 }
 
@@ -93,7 +93,7 @@ export const Strip: Story = {
       <StatCard
         label="Out of adherence"
         value="3"
-        delta={<MetricDelta value={1} invert />}
+        delta={<MetricDelta value={1} />}
       />
     </div>
   ),

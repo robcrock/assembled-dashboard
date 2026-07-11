@@ -133,6 +133,24 @@ export const Stale: Story = {
   },
 }
 
+// Expandable rows: troubled rows carry an inline detail panel; healthy rows
+// return null and get no toggle. Tab to a chevron, Enter/Space toggles.
+export const ExpandableRows: Story = {
+  args: {
+    ...baseArgs,
+    defaultSort: { key: "status", direction: "asc" },
+    getExpandedContent: (row) =>
+      row.status === "healthy" ? null : (
+        <div className="text-sm">
+          <span className="font-medium">{row.name}</span>{" "}
+          <span className="text-muted-foreground">
+            — {row.waiting} waiting, {row.overForecastPct}% vs forecast
+          </span>
+        </div>
+      ),
+  },
+}
+
 // 18 rows: keyboard-sort the columns (Tab to a header, Enter/Space toggles).
 export const Dense: Story = {
   args: {

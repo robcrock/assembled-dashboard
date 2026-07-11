@@ -112,7 +112,6 @@ export function SummaryBar({ summary, ts, feed }: SummaryBarProps) {
             <MetricDelta
               value={summary.tickets_waiting_total - previous.waiting}
               unit=""
-              invert
             />
           ) : undefined
         }
@@ -127,7 +126,6 @@ export function SummaryBar({ summary, ts, feed }: SummaryBarProps) {
             <MetricDelta
               value={summary.agents_out_of_adherence - previous.outOfAdherence}
               unit=""
-              invert
             />
           ) : undefined
         }

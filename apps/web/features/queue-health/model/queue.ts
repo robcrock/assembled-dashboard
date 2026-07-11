@@ -53,3 +53,4 @@ export function compareQueuesBySeverity(a: Queue, b: Queue): number {
     a.name.localeCompare(b.name)
   )
 }
+

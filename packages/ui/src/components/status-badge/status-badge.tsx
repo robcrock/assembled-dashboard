@@ -1,4 +1,10 @@
 import type * as React from "react"
+import {
+  CircleAlert,
+  CircleCheck,
+  Clock,
+  type LucideIcon,
+} from "lucide-react"
 
 import { Badge } from "@workspace/ui/components/badge"
 import { cn } from "@workspace/ui/lib/utils"
@@ -6,11 +12,13 @@ import { cn } from "@workspace/ui/lib/utils"
 // The canonical status surface. One component covers both value scales of the
 // domain language (SLA status and adherence) because they share optics by
 // design — the token layer aliases adherence onto the status scale, and this
-// map is the single place a status value becomes color + label.
+// map is the single place a status value becomes icon + color + label.
 //
-// Status is always conveyed by more than color: the badge renders its
-// canonical label text; the dot carries an sr-only label unless explicitly
-// marked decorative (i.e. adjacent text already names the status).
+// Status is conveyed by ICON SHAPE first (check / clock / alert), color
+// second: the palette's loud red is reserved for SLA breach alone, so every
+// non-breach status must stay legible through its glyph even if its ink
+// reads as calm. The icon carries an sr-only label unless explicitly marked
+// decorative (i.e. adjacent text already names the status).
 
 export type Status =
   | "healthy"
@@ -19,45 +27,48 @@ export type Status =
   | "adherent"
   | "out_of_adherence"
 
-const STATUS_META: Record<Status, { label: string; dot: string; badge: string }> = {
+const STATUS_META: Record<
+  Status,
+  { label: string; icon: LucideIcon; ink: string; badge: string }
+> = {
   healthy: {
     label: "Healthy",
-    dot: "bg-status-healthy",
+    icon: CircleCheck,
+    ink: "text-status-healthy",
     badge: "bg-status-healthy-bg text-status-healthy",
   },
   at_risk: {
     label: "At risk",
-    dot: "bg-status-at-risk",
+    icon: Clock,
+    ink: "text-status-at-risk",
     badge: "bg-status-at-risk-bg text-status-at-risk",
   },
   breached: {
     label: "Breached",
-    dot: "bg-status-breached",
-    badge: "bg-status-breached-bg text-status-breached",
+    icon: CircleAlert,
+    ink: "text-sla-breach",
+    badge: "bg-sla-breach-bg text-sla-breach",
   },
   adherent: {
     label: "Adherent",
-    dot: "bg-adherence-ok",
+    icon: CircleCheck,
+    ink: "text-adherence-ok",
     badge: "bg-adherence-ok-bg text-adherence-ok",
   },
+  // An agent off their planned state IS the agent-side breach — the schedule
+  // is the promise. Same glyph, same reserved accent as a queue breach, so
+  // "red alert icon" reads identically across both tables.
   out_of_adherence: {
     label: "Out of adherence",
-    dot: "bg-adherence-out",
-    badge: "bg-adherence-out-bg text-adherence-out",
+    icon: CircleAlert,
+    ink: "text-sla-breach",
+    badge: "bg-sla-breach-bg text-sla-breach",
   },
 }
 
-const STATUS_TEXT: Record<Status, string> = {
-  healthy: "text-status-healthy",
-  at_risk: "text-status-at-risk",
-  breached: "text-status-breached",
-  adherent: "text-adherence-ok",
-  out_of_adherence: "text-adherence-out",
-}
-
-/** Canonical status → ink text class, for primitives that tint via currentColor (Sparkline). */
+/** Canonical status → ink text class, for primitives that tint via currentColor (SparkBars). */
 function statusTextClass(status: Status): string {
-  return STATUS_TEXT[status]
+  return STATUS_META[status].ink
 }
 
 interface StatusDotProps {
@@ -67,16 +78,17 @@ interface StatusDotProps {
   className?: string
 }
 
+/**
+ * Kept its historical name, but renders the status GLYPH — shape does the
+ * talking so color stays free to mean only "breach".
+ */
 function StatusDot({ status, decorative = false, className }: StatusDotProps) {
+  const meta = STATUS_META[status]
+  const Icon = meta.icon
   return (
     <span className={cn("inline-flex items-center", className)}>
-      <span
-        aria-hidden
-        className={cn("size-2 rounded-full", STATUS_META[status].dot)}
-      />
-      {!decorative && (
-        <span className="sr-only">{STATUS_META[status].label}</span>
-      )}
+      <Icon aria-hidden className={cn("size-3.5", meta.ink)} />
+      {!decorative && <span className="sr-only">{meta.label}</span>}
     </span>
   )
 }

@@ -77,6 +77,13 @@
     --font-sans: var(--font-sans);
     /* composite: hairline elevation — surfaces separate by border, not shadow */
     --shadow-hairline: inset 0 0 0 1px var(--border);
+    /* semantic: SLA breach — THE reserved accent. The palette's single loud
+       color, spent on exactly one meaning: a broken SLA promise. Nothing
+       else may be red; every other status leans on iconography + calmer
+       inks, so a red pixel anywhere on the page IS a breach. */
+    --color-sla-breach: var(--sla-breach);
+    --color-sla-breach-foreground: var(--sla-breach-foreground);
+    --color-sla-breach-bg: var(--sla-breach-bg);
     /* semantic: status + adherence (ROB-47) — one canonical scale for every
        status surface (badges, dots, rows, meters) so nothing drifts */
     --color-status-healthy: var(--status-healthy);
@@ -180,6 +187,13 @@
     --sidebar-border: var(--primitive-neutral-200);
     --sidebar-ring: var(--primitive-indigo-500);
 
+    /* ---- semantic: SLA breach (light) — the reserved accent. Red belongs
+       to this token alone; --status-breached is an ALIAS of it, so "breached"
+       and "the accent color" cannot drift apart. ---- */
+    --sla-breach: var(--primitive-red-700);
+    --sla-breach-foreground: var(--primitive-neutral-0);
+    --sla-breach-bg: var(--primitive-red-100);
+
     /* ---- semantic: status (light) ----
        ink doubles as text-on-page, text-on-tint, and solid fill; -foreground
        sits on the solid fill; -bg is the subtle tint. AA verified (ROB-47). */
@@ -189,9 +203,9 @@
     --status-at-risk: var(--primitive-amber-700);
     --status-at-risk-foreground: var(--primitive-neutral-0);
     --status-at-risk-bg: var(--primitive-amber-100);
-    --status-breached: var(--primitive-red-700);
-    --status-breached-foreground: var(--primitive-neutral-0);
-    --status-breached-bg: var(--primitive-red-100);
+    --status-breached: var(--sla-breach);
+    --status-breached-foreground: var(--sla-breach-foreground);
+    --status-breached-bg: var(--sla-breach-bg);
 
     /* ---- semantic: adherence — aliases of the status scale (same optics,
        own names so the ubiquitous language survives and can diverge later
@@ -241,16 +255,22 @@
     --sidebar-border: var(--primitive-neutral-800);
     --sidebar-ring: var(--primitive-indigo-400);
 
-    /* ---- semantic: status (dark) — 400-step inks on Void, 950-step tints ---- */
+    /* ---- semantic: SLA breach (dark) — the reserved accent ---- */
+    --sla-breach: var(--primitive-red-400);
+    --sla-breach-foreground: var(--primitive-neutral-975);
+    --sla-breach-bg: var(--primitive-red-950);
+
+    /* ---- semantic: status (dark) — 400-step inks on Void, 950-step tints;
+       breached stays an alias of the reserved accent ---- */
     --status-healthy: var(--primitive-green-400);
     --status-healthy-foreground: var(--primitive-neutral-975);
     --status-healthy-bg: var(--primitive-green-950);
     --status-at-risk: var(--primitive-amber-400);
     --status-at-risk-foreground: var(--primitive-neutral-975);
     --status-at-risk-bg: var(--primitive-amber-950);
-    --status-breached: var(--primitive-red-400);
-    --status-breached-foreground: var(--primitive-neutral-975);
-    --status-breached-bg: var(--primitive-red-950);
+    --status-breached: var(--sla-breach);
+    --status-breached-foreground: var(--sla-breach-foreground);
+    --status-breached-bg: var(--sla-breach-bg);
 }
 
 @layer base {
