@@ -14,6 +14,8 @@ Vendored shadcn/ui Button on Base UI (style \`base-nova\`), kept as-shipped with
 In this system it is composed by \`ErrorState\` (the retry affordance) and \`ThemeToggle\` in the library, and by the dashboard template's demo controls (pause replay / inject error) in the app.
 
 All colors route through semantic tokens; the Braun radius scale clamps its \`rounded-*\` utilities.
+
+Known deviation (see system/brand): the stock \`destructive\` variant's tinted line pairs the breach ink with a 10% tint of itself and measures 4.09:1 over the page concrete — under AA, unshipped by any consumer, and kept stock rather than forked.
 `,
       },
     },

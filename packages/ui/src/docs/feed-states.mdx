@@ -48,6 +48,12 @@ replaces content with a spinner — it dims by exactly `stale-dim` (a token, so 
 fifth surface can't pick its own opacity), shows "Stale · updated Xs ago", and
 keeps every number readable. Degrade honestly rather than lie about liveness.
 
+One deliberate contrast call rides on this: dimmed stale data drops below AA
+(axe flags the DataTable stale story), the same way disabled controls are exempt
+from contrast requirements — stale IS the muted register, and the AA-compliant
+`StaleIndicator` beside it carries the semantic signal. Live data is always AA;
+only the degraded state trades contrast for honesty.
+
 ## Demonstrating states
 
 Every owner has a story per state in this catalog. On the live dashboard: **p**
