@@ -125,10 +125,11 @@ export function QueueHealthTable({
           const overSec = q.longest_wait_sec - q.sla_target_sec
           return (
             <StatusBadge status={q.sla_status}>
+              {/* full-alpha ink: dimming tinted text stacks opacity on color —
+                  the exact contrast hazard the muted-row comment warns about;
+                  the middot already de-emphasizes */}
               {q.sla_status === "breached" && overSec > 0 && (
-                <span className="opacity-80">
-                  · {formatDurationSec(overSec)} over
-                </span>
+                <span>· {formatDurationSec(overSec)} over</span>
               )}
             </StatusBadge>
           )

@@ -209,14 +209,19 @@
 
     /* ---- semantic: adherence — aliases of the status scale (same optics,
        own names so the ubiquitous language survives and can diverge later
-       without touching components). Aliases resolve through .dark remaps
-       automatically, so they are defined once here. ---- */
+       without touching components). Naming translation from the domain enum:
+       adherent → ok, out_of_adherence → out. An agent off their schedule IS
+       the agent-side breach, so `out` resolves to the reserved breach accent
+       (matching STATUS_META and CLAUDE.md), NOT to at-risk amber. Aliases
+       resolve through .dark remaps automatically, so they are defined once
+       here. The -foreground steps pair text with a solid fill; no consumer
+       yet. ---- */
     --adherence-ok: var(--status-healthy);
     --adherence-ok-foreground: var(--status-healthy-foreground);
     --adherence-ok-bg: var(--status-healthy-bg);
-    --adherence-out: var(--status-at-risk);
-    --adherence-out-foreground: var(--status-at-risk-foreground);
-    --adherence-out-bg: var(--status-at-risk-bg);
+    --adherence-out: var(--sla-breach);
+    --adherence-out-foreground: var(--sla-breach-foreground);
+    --adherence-out-bg: var(--sla-breach-bg);
 }
 
 .dark {
@@ -286,7 +291,23 @@
  * Composite: metric type ramp (ROB-47). Tabular figures keep ticking numbers
  * from jittering horizontally; weight caps at 500 (Linear: no heavy weights).
  * Sans + tabular-nums, not mono — mono reads as code, not vitals.
+ *
+ * Prose ramp (the documented rule — stock utilities, no composites needed):
+ *   text-xs   captions & labels (paired with font-medium + muted ink)
+ *   text-sm   body copy & descriptions
+ *   text-base section headings (h2, font-semibold)
+ *   text-2xl  the page title (h1 / OrgIdentity)
+ * Numerics never use the prose ramp — they use text-metric-* (tabular).
  * ------------------------------------------------------------------------- */
+
+@utility text-metric-xl {
+  /* overview hero counts (the gauge center, lg stat cards); tracking stays
+     default — matches the shipped hero exactly */
+  font-size: 2.25rem;
+  line-height: 2.5rem;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
 
 @utility text-metric-lg {
   /* StatCard headline numbers */
@@ -298,10 +319,10 @@
 }
 
 @utility text-metric {
-  /* dense table-cell numerics */
+  /* dense table-cell numerics; weight deliberately unset — consumers choose
+     emphasis (DataTable cells read normal, add font-medium where numbers lead) */
   font-size: 0.875rem;
   line-height: 1.4;
-  font-weight: 500;
   font-variant-numeric: tabular-nums;
 }
 
@@ -311,4 +332,21 @@
   line-height: 1.3;
   font-weight: 400;
   font-variant-numeric: tabular-nums;
+}
+
+@utility stale-dim {
+  /* THE stale-degradation strength — every stale surface dims by exactly
+     this; a fifth surface can't silently pick another number */
+  opacity: 0.6;
+}
+
+@utility focus-ring {
+  /* composite: the one keyboard-focus treatment (tier-4) — 3px half-alpha
+     ring in the ring token, no outline. Matches the halo of the vendored
+     button's focus recipe (minus its border-ring, which only applies to
+     bordered controls). */
+  &:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px color-mix(in oklab, var(--color-ring) 50%, transparent);
+  }
 }

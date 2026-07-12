@@ -22,7 +22,11 @@
 // Agent satisfies it) rather than importing agent-adherence's model: slices
 // never import each other's models; the composition root passes the rows.
 
-import type { Queue, SlaStatus } from "@/features/queue-health/model/queue"
+import {
+  SLA_SEVERITY,
+  type Queue,
+  type SlaStatus,
+} from "@/features/queue-health/model/queue"
 
 export type CoverageAgentState =
   | "available"
@@ -77,16 +81,15 @@ function pulledFromFor(
     .filter((q): q is PulledFrom => q !== null)
 }
 
-/** Worst severity among the queues a candidate would be pulled from (lower = worse). */
+/**
+ * Worst severity among the queues a candidate would be pulled from (lower =
+ * worse). Uses the model's ONE triage ordering (SLA_SEVERITY) so coverage
+ * sorting can never drift from table sorting.
+ */
 function pulledFromSeverity(pulledFrom: PulledFrom[]): number {
-  const SEVERITY: Record<SlaStatus, number> = {
-    breached: 0,
-    at_risk: 1,
-    healthy: 2,
-  }
   return pulledFrom.length === 0
     ? 3 // single-skilled: helping here costs nothing
-    : Math.min(...pulledFrom.map((q) => SEVERITY[q.sla_status]))
+    : Math.min(...pulledFrom.map((q) => SLA_SEVERITY[q.sla_status]))
 }
 
 /**

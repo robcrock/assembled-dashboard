@@ -76,7 +76,7 @@ export function AttainmentOverview({
     <div
       className={cn(
         "flex shrink-0 flex-col items-center gap-1",
-        status === "stale" && "opacity-60",
+        status === "stale" && "stale-dim",
         className,
       )}
     >
@@ -84,7 +84,7 @@ export function AttainmentOverview({
         value={summary?.sla_attainment_pct ?? 0}
         label={`SLA attainment ${summary ? `${summary.sla_attainment_pct}%` : "unavailable"}`}
       >
-        <div className="text-4xl font-medium tabular-nums">
+        <div className="text-metric-xl">
           {summary ? (
             `${summary.sla_attainment_pct}%`
           ) : (

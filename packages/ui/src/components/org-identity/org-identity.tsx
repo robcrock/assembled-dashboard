@@ -17,7 +17,7 @@ interface OrgIdentityProps {
   name: string | null
   /** Muted line under the name (e.g. what this page is). */
   tagline?: string
-  /** Where the identity links; every identity block is a home link. */
+  /** Where the identity links; every identity block is a home link. No consumer overrides it yet — kept for multi-page whitelabel shells (the debt it prevents). */
   href?: string
   className?: string
 }

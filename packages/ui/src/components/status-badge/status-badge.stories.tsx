@@ -37,12 +37,14 @@ export const OutOfAdherence: Story = {
   args: { status: "out_of_adherence" },
 }
 
-// --- Detail suffix: children augment the canonical label, never replace it ---
+// --- Detail suffix: children augment the canonical label, never replace it.
+// Full-alpha ink deliberately: dimming tinted text stacks opacity on color,
+// which crushes contrast — the middot already de-emphasizes. ---
 
 export const WithDetail: Story = {
   args: {
     status: "breached",
-    children: <span className="opacity-80">· 55s over</span>,
+    children: <span>· 55s over</span>,
   },
 }
 

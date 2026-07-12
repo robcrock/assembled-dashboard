@@ -53,9 +53,11 @@ const STATUS_META: Record<
   breached: {
     label: "Breached",
     icon: CircleAlert,
-    ink: "text-sla-breach",
-    badge: "bg-sla-breach-bg text-sla-breach",
-    fill: "bg-sla-breach",
+    // the status ALIAS of the reserved accent — each name used for its own
+    // meaning (raw --sla-breach is for non-status surfaces like ErrorState)
+    ink: "text-status-breached",
+    badge: "bg-status-breached-bg text-status-breached",
+    fill: "bg-status-breached",
   },
   adherent: {
     label: "Adherent",
@@ -66,13 +68,15 @@ const STATUS_META: Record<
   },
   // An agent off their planned state IS the agent-side breach — the schedule
   // is the promise. Same glyph, same reserved accent as a queue breach, so
-  // "red alert icon" reads identically across both tables.
+  // the alert glyph + accent read identically across both tables. Consumed
+  // via the adherence alias (which resolves to --sla-breach in the token
+  // layer) so the ubiquitous-language token is the one actually used.
   out_of_adherence: {
     label: "Out of adherence",
     icon: CircleAlert,
-    ink: "text-sla-breach",
-    badge: "bg-sla-breach-bg text-sla-breach",
-    fill: "bg-sla-breach",
+    ink: "text-adherence-out",
+    badge: "bg-adherence-out-bg text-adherence-out",
+    fill: "bg-adherence-out",
   },
 }
 
@@ -120,7 +124,9 @@ function StatusBadge({ status, children, className }: StatusBadgeProps) {
   return (
     <Badge
       variant="outline"
-      className={cn("gap-1.5 border-transparent", meta.badge, className)}
+      // canonical tint merged LAST: className can adjust layout but can
+      // never re-tint a status surface (same seal as StatusDot/SparkBars)
+      className={cn("gap-1.5 border-transparent", className, meta.badge)}
     >
       <StatusDot status={status} decorative />
       {meta.label}
