@@ -35,8 +35,30 @@
  * chromatic accent is the spec's utility orange (#D95600); amber stays for
  * the at-risk middle of the urgency ramp (grey → amber → orange) — the one
  * documented deviation from the spec's single-accent rule, paid for triage
- * scanning. Steps beyond the anchors exist only where a semantic role
- * consumes one.
+ * scanning. Red and teal exist as sentiment reserves (inspiration-derived,
+ * off-spec — see the deviations register in docs/brand.mdx); copper and
+ * olive from the same inspiration palette were rejected: four chromatic
+ * hues is the budget's ceiling.
+ *
+ * Primitive ramps are UNIFORM: every hue ships the full 11-step 50–950
+ * scale (Tailwind numbering), OKLab-generated, even where no semantic role
+ * consumes a step yet. Uniform scales are never used directly (the @theme
+ * exclusion enforces that structurally); semantic roles pick steps from the
+ * usage bands below, so the first consumer of a step is a token pick, not
+ * a mint.
+ *
+ * Usage bands (all 50–950 ramps; light theme reads left→right, dark theme
+ * mirrors — roughly Primer's bg/border/text bands mapped to our numbering):
+ *   50–200   tints & badge/row backgrounds (light); dark-theme -bg steps
+ *            come from 900–950 instead.
+ *   200–300  hairlines & structure (border/input); dark-theme structure
+ *            uses 800.
+ *   400–500  brand anchors, fills, large-type/non-text color, dark-theme
+ *            text inks. NEVER light-theme body ink (anchors measure ~3–4:1).
+ *   600–800  light-theme text inks — the AA-solved band (≥4.5:1 on
+ *            --background and --card).
+ *   900–950  near-ink solids; dark-theme tints (-bg) and light-theme
+ *            high-contrast fills.
  * ------------------------------------------------------------------------- */
 
 @theme inline {
@@ -113,6 +135,15 @@
     --color-adherence-out: var(--adherence-out);
     --color-adherence-out-foreground: var(--adherence-out-foreground);
     --color-adherence-out-bg: var(--adherence-out-bg);
+    /* semantic: sentiment — the reserved annotation register (color-law);
+       minted ahead of consumption so the first consumer is a token pick,
+       not a mint. No component uses these yet. */
+    --color-sentiment-positive: var(--sentiment-positive);
+    --color-sentiment-positive-foreground: var(--sentiment-positive-foreground);
+    --color-sentiment-positive-bg: var(--sentiment-positive-bg);
+    --color-sentiment-negative: var(--sentiment-negative);
+    --color-sentiment-negative-foreground: var(--sentiment-negative-foreground);
+    --color-sentiment-negative-bg: var(--sentiment-negative-bg);
 }
 
 :root {
@@ -135,28 +166,91 @@
     --primitive-concrete-900: oklch(0.243 0.006 249.8);
     --primitive-concrete-950: oklch(0.176 0.005 248.1);
 
-    /* ---- primitive: orange (Braun utility accent) ----
-       500 is the DESIGN.md tertiary #D95600, spec-literal — at 3.15:1 on the
-       page it is a fill/large-type value, never body ink. 700 is the solved
-       light-theme text ink (4.70:1 on the page, 4.92:1 on its own tint);
-       400 the solved dark-theme ink; 100/950 the badge tints. */
+    /* ---- primitive: orange (the reserved breach accent) ----
+       Anchor: #D95600 = 500 (DESIGN.md tertiary, spec-literal) — at 3.15:1 on
+       the page it is a fill/large-type value, never body ink. Hue 43.6 held
+       constant. 700 is the solved light-theme text ink (4.70:1 on the page,
+       4.92:1 on its own tint); 400 the solved dark-theme ink; 100/950 the
+       badge tints. Filled steps 50/200/300/600/800/900 are OKLab-interpolated
+       between the kept anchors (50 extrapolated to the cross-ramp near-white)
+       and are currently unconsumed. This ladder runs darker than stock
+       Tailwind orange in the 200–400 band — deliberate: the kept anchors
+       (spec-literal 500, solved 400/700) pin it there. */
+    --primitive-orange-50: oklch(0.975 0.013 43.6);
     --primitive-orange-100: oklch(0.94 0.032 43.6);
+    --primitive-orange-200: oklch(0.843 0.082 43.6);
+    --primitive-orange-300: oklch(0.747 0.131 43.6);
     --primitive-orange-400: oklch(0.65 0.181 43.6);
     --primitive-orange-500: oklch(0.616 0.181 43.6);
+    --primitive-orange-600: oklch(0.568 0.165 43.6);
     --primitive-orange-700: oklch(0.519 0.152 43.6);
+    --primitive-orange-800: oklch(0.411 0.117 43.6);
+    --primitive-orange-900: oklch(0.304 0.082 43.6);
     --primitive-orange-950: oklch(0.25 0.065 43.6);
 
-    /* ---- primitive: amber (at-risk) — Tailwind v4 oklch values at sparse
-       steps. 800 minted because at-risk ink needs it: amber-700 measures
-       4.01:1 on the Braun page (it passed on the old white canvas). ---- */
+    /* ---- primitive: amber (at-risk) ----
+       Anchor: Tailwind v4 stock amber, adopted verbatim (provenance:
+       node_modules/tailwindcss/theme.css). 800 is the solved light-theme
+       at-risk ink: amber-700 measures 4.01:1 on the Braun page (it passed on
+       the old white canvas). 400 the dark-theme ink; 100/950 the tints.
+       Filled steps 50/200/900 are the remaining stock values, currently
+       unconsumed (amber-50 ships a hair outside sRGB upstream; browsers
+       clamp). */
+    --primitive-amber-50: oklch(0.987 0.022 95.277);
     --primitive-amber-100: oklch(0.962 0.059 95.617);
+    --primitive-amber-200: oklch(0.924 0.12 95.746);
     --primitive-amber-300: oklch(0.879 0.169 91.605);
     --primitive-amber-400: oklch(0.828 0.189 84.429);
     --primitive-amber-500: oklch(0.769 0.188 70.08);
     --primitive-amber-600: oklch(0.666 0.179 58.318);
     --primitive-amber-700: oklch(0.555 0.163 48.998);
     --primitive-amber-800: oklch(0.473 0.137 46.201);
+    --primitive-amber-900: oklch(0.414 0.112 45.904);
     --primitive-amber-950: oklch(0.279 0.077 45.635);
+
+    /* ---- primitive: red (negative-sentiment reserve) ----
+       Anchor: #C0392B = 500 = oklch(0.543 0.174 29.7) exactly (inspiration
+       palette, off-spec — see docs/brand.mdx deviations). Hue 29.7 held
+       constant — a full hue-step from breach orange (43.6) so the registers
+       can't blur. L ladder: the amber spine affinely re-anchored at 500;
+       chroma: stock-red shape scaled to the anchor, peak capped at 500.
+       600 is the light-theme AA ink (5.58:1 page / 6.22:1 card; the 500
+       anchor measures 4.32:1 on the page — fill/large-type only); 400 the
+       dark-theme ink (4.81:1 on its own 950 tint). Consumed by
+       --sentiment-negative only; every other step unconsumed. */
+    --primitive-red-50: oklch(0.975 0.01 29.7);
+    --primitive-red-100: oklch(0.925 0.023 29.7);
+    --primitive-red-200: oklch(0.85 0.046 29.7);
+    --primitive-red-300: oklch(0.761 0.084 29.7);
+    --primitive-red-400: oklch(0.66 0.14 29.7);
+    --primitive-red-500: oklch(0.543 0.174 29.7);
+    --primitive-red-600: oklch(0.484 0.174 29.7);
+    --primitive-red-700: oklch(0.42 0.156 29.7);
+    --primitive-red-800: oklch(0.372 0.13 29.7);
+    --primitive-red-900: oklch(0.338 0.104 29.7);
+    --primitive-red-950: oklch(0.26 0.068 29.7);
+
+    /* ---- primitive: teal (positive-sentiment reserve) ----
+       Anchor: #5F9EA0 = 500 = oklch(0.658 0.065 198.3) exactly (inspiration
+       palette, off-spec — see docs/brand.mdx deviations). Hue 198.3 held
+       constant. Same construction as red: amber L-spine re-anchored at 500,
+       stock-cyan chroma shape scaled to the anchor. The anchor is quiet
+       (C 0.065) so the whole ramp stays low-chroma — a murmur next to the
+       alarm hues, which is the point. 700 is the light-theme AA ink (4.98:1
+       page / 5.56:1 card; the 500 anchor measures 3.05:1 on cream — never
+       ink); 400 the dark-theme ink. Consumed by --sentiment-positive only;
+       every other step unconsumed. */
+    --primitive-teal-50: oklch(0.975 0.009 198.3);
+    --primitive-teal-100: oklch(0.939 0.02 198.3);
+    --primitive-teal-200: oklch(0.883 0.036 198.3);
+    --primitive-teal-300: oklch(0.818 0.058 198.3);
+    --primitive-teal-400: oklch(0.744 0.065 198.3);
+    --primitive-teal-500: oklch(0.658 0.065 198.3);
+    --primitive-teal-600: oklch(0.574 0.057 198.3);
+    --primitive-teal-700: oklch(0.484 0.048 198.3);
+    --primitive-teal-800: oklch(0.417 0.039 198.3);
+    --primitive-teal-900: oklch(0.37 0.032 198.3);
+    --primitive-teal-950: oklch(0.26 0.025 198.3);
 
     /* ---- semantic (light) ----
        Braun inversion: the PAGE is the darker neutral (#E7E5E1) and cards sit
@@ -239,6 +333,21 @@
     --adherence-out: var(--sla-breach);
     --adherence-out-foreground: var(--sla-breach-foreground);
     --adherence-out-bg: var(--sla-breach-bg);
+
+    /* ---- semantic: sentiment (light) — RESERVED, UNSPENT (see the color-law
+       doc). The annotation register: positive/negative VALENCE, distinct from
+       the status verdict scale. Negative is red, NOT orange — orange stays
+       the one alarm. No component consumes these yet; deltas remain
+       colorless. AA contract: ink ≥4.5:1 on --background, --card, and its
+       own -bg, per theme; -foreground ≥4.5:1 on the ink as a fill. Inks are
+       AA-solved 600/700-band steps — the 500 anchors measure 4.32:1 / 3.05:1
+       on the page (fills only, never ink), same pattern as orange. ---- */
+    --sentiment-positive: var(--primitive-teal-700);
+    --sentiment-positive-foreground: var(--primitive-concrete-50);
+    --sentiment-positive-bg: var(--primitive-teal-100);
+    --sentiment-negative: var(--primitive-red-600);
+    --sentiment-negative-foreground: var(--primitive-concrete-50);
+    --sentiment-negative-bg: var(--primitive-red-100);
 }
 
 .dark {
@@ -287,6 +396,15 @@
     --status-at-risk: var(--primitive-amber-400);
     --status-at-risk-foreground: var(--primitive-concrete-950);
     --status-at-risk-bg: var(--primitive-amber-950);
+
+    /* ---- semantic: sentiment (dark) — 400-band inks on 950 tints,
+       mirroring the breach accent's dark solve. ---- */
+    --sentiment-positive: var(--primitive-teal-400);
+    --sentiment-positive-foreground: var(--primitive-concrete-950);
+    --sentiment-positive-bg: var(--primitive-teal-950);
+    --sentiment-negative: var(--primitive-red-400);
+    --sentiment-negative-foreground: var(--primitive-concrete-950);
+    --sentiment-negative-bg: var(--primitive-red-950);
 }
 
 @layer base {
