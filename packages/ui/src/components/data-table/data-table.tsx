@@ -469,6 +469,11 @@ function ExpandToggle({ rowId, isExpanded, label, onToggle }: ExpandToggleProps)
       aria-expanded={isExpanded}
       aria-controls={`${rowId}-detail`}
       aria-label={`${isExpanded ? "Collapse" : "Expand"} ${label}`}
+      // data-state speaks the shadcn disclosure grammar (open/closed) — the
+      // DOM stays native table markup because a Collapsible can't wrap <tr>
+      // siblings without breaking table semantics, so we match the grammar
+      // (aria-expanded/aria-controls + data-state), not the wrapper.
+      data-state={isExpanded ? "open" : "closed"}
       className="focus-ring hover:text-foreground text-muted-foreground inline-flex size-6 items-center justify-center rounded-sm"
     >
       {isExpanded ? (
@@ -488,7 +493,7 @@ interface ExpandedDetailRowProps {
 
 function ExpandedDetailRow({ rowId, colSpan, children }: ExpandedDetailRowProps) {
   return (
-    <TableRow className="bg-muted/40 hover:bg-muted/40">
+    <TableRow data-state="open" className="bg-muted/40 hover:bg-muted/40">
       <TableCell id={`${rowId}-detail`} colSpan={colSpan} className="px-4 py-3">
         {children}
       </TableCell>

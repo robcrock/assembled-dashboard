@@ -100,12 +100,18 @@ interface StatusDotProps {
 /**
  * Kept its historical name, but renders the status GLYPH — shape does the
  * talking so color stays free to mean only "breach".
+ *
+ * The wrapper is exactly one line tall (h-lh) with the icon centered in it:
+ * an icon-only inline-flex has no text baseline, so in a baseline-aligned
+ * row the icon's BOTTOM would sit on the baseline and read visibly high.
+ * Compose it in `items-start` rows beside text and the glyph centers on the
+ * neighboring line box by construction.
  */
 function StatusDot({ status, decorative = false, className }: StatusDotProps) {
   const meta = STATUS_META[status]
   const Icon = meta.icon
   return (
-    <span className={cn("inline-flex items-center", className)}>
+    <span className={cn("inline-flex h-lh items-center", className)}>
       <Icon aria-hidden className={cn("size-3.5", meta.ink)} />
       {!decorative && <span className="sr-only">{meta.label}</span>}
     </span>

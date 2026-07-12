@@ -124,7 +124,7 @@ titles carry the tier, folders and import paths stay flat:
 | Tier | Lives at | Contents |
 |---|---|---|
 | **Ions** (tokens) | `packages/ui/src/styles/globals.css` | the 4-tier token architecture above |
-| **Atoms** | `packages/ui` | leaves that compose no other component (badge, skeleton, duration, metric-delta, sparkline, spark-bars, meter, deviation-bar, gauge, …) |
+| **Atoms** | `packages/ui` | leaves that compose no other component (badge, skeleton, duration, metric-delta, sparkline, spark-bars, meter, deviation-bar, gauge, callout, …) |
 | **Molecules** | `packages/ui` | compose atoms / own multi-part anatomy + feed states (status-badge, stat-card, data-table, empty/error/stale states, page-section, org-identity) |
 | **Organisms** | `apps/web/features/*` | domain-bound compositions (attainment-overview, queue-health-table, agent-adherence-table) |
 | **Template** | `apps/web/app/dashboard.tsx` | the one client boundary: owns the data hook + page UI state, arranges organisms |
@@ -152,6 +152,7 @@ tick history) → molecules/atoms are stateless or self-contained. The essential
 | `SparkBars` | `points`, `threshold` (bars past it take the reserved breach accent, others muted), computed a11y label | a configurable tint (the breach accent is not overridable — an orange bar always means "over threshold") |
 | `DataTable<Row>` | generic column config (`key/header/cell/sortValue/align`), required sr-only `caption`, optional expandable rows (`getExpandedContent` + `expandLabel`, `aria-controls`-linked), `defaultSort`, one `feed` object | compound/context API (only shared state is one sort tuple); pagination/virtualization (~19 rows total); selection; **row navigation** (rows expand to an inline detail panel, they don't link out); a `rowTone`/row-dimming prop (muted ink is sub-text only — the table makes whole-row muting impossible; triage emphasis rides on sort + a status column) |
 | `Duration` | `seconds` → semantic `<time>` | live ticking (compressed replay time would contradict the wall clock — `StaleIndicator` is the only wall-clock surface) |
+| `Callout` | children + `className` — a quiet aside (hairline rule, muted small text) for context beside data | status/variant tints (a tinted callout is a verdict, and verdicts belong to status surfaces); icon slot; title prop; dismissal |
 | `EmptyState` / `ErrorState` / `StaleIndicator` | title/description/action slot; optional `onRetry`; self-ticking `lastUpdatedAt` + `tone` | icons; auto-derived staleness (the hook is the single owner of that logic) |
 | `ThemeToggle` | — (no props) | light/dark/system menu (binary flip suffices). Catalog-only: the dashboard follows OS appearance and mounts no toggle |
 | `PageSection` | `id` (heading gets `${id}-heading`, `aria-labelledby` wired), `title`, `description`, children | heading-level prop (h2 is the page anatomy under the single h1); actions slot (unearned); baked-in margins (the call site's stack owns spacing); collapse |

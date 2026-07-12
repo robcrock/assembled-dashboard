@@ -243,7 +243,7 @@ conventions below:
 | Atomic tier | Lives at | Contents |
 |---|---|---|
 | **Ions** (tokens) | `packages/ui/src/styles/globals.css` | the 4-tier token architecture (primitive → semantic → component → composite) |
-| **Atoms** | `packages/ui/src/components/*` | leaves that compose no other component: vendored `badge/button/card/table/tooltip/separator/skeleton` + `duration`, `metric-delta`, `sparkline`, `spark-bars`, `meter`, `deviation-bar`, `gauge`, `theme-toggle` |
+| **Atoms** | `packages/ui/src/components/*` | leaves that compose no other component: vendored `badge/button/card/table/tooltip/separator/skeleton` + `duration`, `metric-delta`, `sparkline`, `spark-bars`, `meter`, `deviation-bar`, `gauge`, `callout`, `theme-toggle` |
 | **Molecules** | `packages/ui/src/components/*` | compose atoms / own multi-part anatomy + feed states: `status-badge` (+`StatusDot`), `stat-card`, `data-table`, `empty-state`, `error-state`, `stale-indicator`, `page-section`, `org-identity` |
 | **Organisms** | `apps/web/features/*/components` | domain-bound compositions: `attainment-overview`, `queue-health-table` (+`queue-coverage`), `agent-adherence-table` |
 | **Template** | `apps/web/app/dashboard.tsx` | the one client boundary: owns `useDashboardData()` + page UI state, arranges organisms, passes `{data-slice, feed}` down |
@@ -294,6 +294,9 @@ tuple). Components below the template never fetch.
   `aria-controls`-linked). A single component, not compound — the only shared state is one sort tuple.
 - `Duration` — formats `state_duration_sec` / `out_of_adherence_sec` as a semantic `<time>`.
   (`RelativeTime` deliberately not built; `StaleIndicator` is the only wall-clock surface.)
+- `Callout` — a quiet contextual aside (hairline left rule + muted small text) for caveats
+  beside data; deliberately no status tint, icon, or title (context, not an alarm — verdicts
+  belong to the status surfaces). Consumer: the coverage panel's shared-capacity note.
 - State primitives: `Skeleton`, `EmptyState`, `ErrorState`, `StaleIndicator` (last-updated +
   degraded styling).
 - `ThemeToggle` (catalog-only — the dashboard follows OS appearance and mounts no toggle).
