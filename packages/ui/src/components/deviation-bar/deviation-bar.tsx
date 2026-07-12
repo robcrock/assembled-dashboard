@@ -49,7 +49,7 @@ function DeviationBar({ value, label, range = 100, className }: DeviationBarProp
           fill visibly departs FROM somewhere. */}
       <span
         aria-hidden
-        className="bg-background ring-border absolute top-1/2 left-1/2 size-2 -translate-x-1/2 -translate-y-1/2 rounded-full ring-1"
+        className="bg-background ring-border absolute top-1/2 left-1/2 size-2 -translate-1/2 rounded-full ring-1"
       />
     </div>
   )
