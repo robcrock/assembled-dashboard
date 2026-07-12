@@ -27,7 +27,10 @@ function OrgIdentity({ name, tagline, href = "/", className }: OrgIdentityProps)
     <a
       href={href}
       aria-label="Homepage"
-      className={cn("flex min-w-0 items-center gap-4", className)}
+      // focus-ring: the system's ONE keyboard-focus treatment — without it
+      // this link was the page's only interactive element on the UA default
+      // outline (found in the ROB-79 keyboard audit)
+      className={cn("focus-ring flex min-w-0 items-center gap-4 rounded-lg", className)}
     >
       {name ? (
         <div

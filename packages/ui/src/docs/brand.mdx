@@ -48,6 +48,12 @@ Every departure from the spec is deliberate, and this is its record:
 5. **Radius residuals.** A few curves are geometry, not token: the meter and
    deviation-bar `rounded-full` tracks, the gauge's round linecaps, the monogram
    tile.
+6. **Stock destructive tints sit at 4.09:1.** The vendored Badge/Button
+   `destructive` variants pair the breach ink with a 10% tint of itself, which
+   lands under AA over the page concrete (axe: 4.09 vs 4.5). No consumer ships
+   them — the system's own breach surfaces (StatusBadge, breach-ink values) are
+   AA-solved on their real surfaces — and the variants stay stock for upstream
+   fidelity rather than being forked or re-tinted. Known, bounded, unshipped.
 
 ## How to re-brand
 
