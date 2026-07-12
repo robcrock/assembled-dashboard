@@ -39,13 +39,17 @@ import { cn } from "@workspace/ui/lib/utils"
 // Nothing below the orchestrator is exported: index.ts `export *`s this
 // file, so an `export` keyword IS the public API.
 
-// One fixed rhythm for every body row — skeleton and resolved alike — so
-// loading -> live cannot shift (the states contract) and row height stops
-// depending on WHICH cell content sets the line-box (a badge's svg-first
-// flex baseline inflates it unpredictably vs a text-only row). 40px sits on
-// the Braun 8px grid; td height acts as min-height, so a consumer's taller
-// custom cells still grow past it.
-const ROW_RHYTHM = "h-10"
+// One fixed rhythm per table for every body row — skeleton and resolved
+// alike — so loading -> live cannot shift (the states contract) and row
+// height stops depending on WHICH cell content sets the line-box. td height
+// acts as MIN-height, which is the parity trap: content taller than the
+// rhythm still grows the resolved row past the skeletons. So the contract
+// has a consumer half — pick the rowSize step that CLEARS your tallest
+// cell: "default" (40px) for single-line cells, "tall" (56px) for
+// multi-line anatomies (deviation cells, stacked coverage lines). Both
+// steps sit on the Braun 8px grid, and a rhythm that clears the content
+// also makes ragged rows uniform.
+const ROW_RHYTHM = { default: "h-10", tall: "h-14" } as const
 
 // The expander lead column's one width. Header, skeleton, and data rows must
 // agree on it or the columns shear — a shared constant makes that agreement
@@ -97,6 +101,12 @@ interface DataTableProps<Row> {
   expandLabel?: (row: Row) => string
   defaultSort?: SortState
   skeletonRows?: number
+  /**
+   * Row rhythm for skeleton AND data rows — pick the step that clears your
+   * tallest cell so loading→live cannot shift: "default" (40px) for
+   * single-line cells, "tall" (56px) for multi-line cell anatomies.
+   */
+  rowSize?: "default" | "tall"
   className?: string
 }
 
@@ -112,6 +122,7 @@ function DataTable<Row>({
   expandLabel,
   defaultSort,
   skeletonRows = 5,
+  rowSize = "default",
   className,
 }: DataTableProps<Row>) {
   const { status, lastUpdatedAt = null, onRetry } = feed
@@ -146,6 +157,7 @@ function DataTable<Row>({
               columns={columns}
               hasExpanderColumn={hasExpanderColumn}
               count={skeletonRows}
+              rhythm={ROW_RHYTHM[rowSize]}
             />
           ) : status === "error" ? (
             <ErrorRow colSpan={colSpan} onRetry={onRetry} />
@@ -166,6 +178,7 @@ function DataTable<Row>({
                   rowId={rowId}
                   columns={columns}
                   colSpan={colSpan}
+                  rhythm={ROW_RHYTHM[rowSize]}
                   expander={
                     hasExpanderColumn
                       ? {
@@ -331,19 +344,22 @@ interface SkeletonRowsProps<Row> {
   columns: DataTableColumn<Row>[]
   hasExpanderColumn: boolean
   count: number
+  /** The table's ROW_RHYTHM step — identical on data rows, so no shift on resolve. */
+  rhythm: string
 }
 
 function SkeletonRows<Row>({
   columns,
   hasExpanderColumn,
   count,
+  rhythm,
 }: SkeletonRowsProps<Row>) {
   return (
     <>
       {Array.from({ length: count }, (_, i) => (
-        // ROW_RHYTHM makes skeleton rows and resolved rows the same
+        // The shared rhythm makes skeleton rows and resolved rows the same
         // height by construction — no line-box forensics.
-        <TableRow key={i} className={ROW_RHYTHM}>
+        <TableRow key={i} className={rhythm}>
           {hasExpanderColumn && <TableCell className={EXPANDER_COL} />}
           {columns.map((column) => (
             <TableCell key={column.key} className={column.className}>
@@ -397,6 +413,8 @@ interface DataRowProps<Row> {
   rowId: string
   columns: DataTableColumn<Row>[]
   colSpan: number
+  /** The table's ROW_RHYTHM step — identical on skeleton rows, so no shift on resolve. */
+  rhythm: string
   /**
    * Present iff the TABLE has an expander column — the lead cell must render
    * even when this row has nothing to expand; content === null omits the
@@ -415,11 +433,12 @@ function DataRow<Row>({
   rowId,
   columns,
   colSpan,
+  rhythm,
   expander,
 }: DataRowProps<Row>) {
   return (
     <>
-      <TableRow className={ROW_RHYTHM}>
+      <TableRow className={rhythm}>
         {expander && (
           <TableCell className={cn(EXPANDER_COL, "py-1")}>
             {expander.content !== null && (

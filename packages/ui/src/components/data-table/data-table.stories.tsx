@@ -198,6 +198,9 @@ const baseArgs = {
   rowKey: (row: SampleRow) => row.id,
   caption:
     "Sample queues with status, backlog, coverage, SLA headroom, actual volume versus forecast, and wait trend",
+  // The fixture's deviation/coverage cells are two-line anatomies — same as
+  // the shipped table, so the same rowSize contract applies.
+  rowSize: "tall" as const,
 }
 
 const meta: Meta<typeof DataTable<SampleRow>> = {
@@ -210,6 +213,8 @@ const meta: Meta<typeof DataTable<SampleRow>> = {
 The dense, sortable, keyboard-operable table both dashboard tables are built from — configured entirely by a typed column config (\`key\` / \`header\` / \`cell\` / \`sortValue\` / \`align\`), so it renders any \`Row\` type without knowing the domain. A sr-only \`caption\` is required. A column becomes sortable by having a \`sortValue\`; sort toggles asc/desc and is announced via \`aria-sort\`. Header alignment is not configurable: headers are always left-aligned, and \`align\` governs data cells only. The dashboard's tables pass no \`align\` at all — content shares its header's left edge, so a header always sits over its own data; right-alignment stays available for a consumer whose data genuinely reads better ragged-left.
 
 **The feed contract:** DataTable is a feed OWNER — it owns all four feed states internally. Consumers forward one \`feed\` object (\`{ status: "loading" | "live" | "stale" | "error", lastUpdatedAt?, onRetry? }\`) and never compose state visuals by hand: loading renders skeleton rows under the real header (no layout shift), error renders an \`ErrorState\` with retry, an empty \`rows\` array renders an \`EmptyState\` (\`emptyTitle\` / \`emptyDescription\`), and stale dims the body and shows a \`StaleIndicator\` — it never blanks. The leaf state primitives are the visuals this owner renders, not something to wrap around it. The table never fetches — components below the template never do.
+
+**The no-shift contract has a consumer half:** skeleton and data rows share one row rhythm, but row height is a MINIMUM — content taller than the rhythm grows past the skeletons and loading→live shifts. Pick the \`rowSize\` step that clears your tallest cell: \`"default"\` (40px) for single-line cells, \`"tall"\` (56px) for multi-line anatomies like the deviation cells here. A rhythm that clears the content also makes ragged rows uniform.
 
 **Use it for:** dense read-only rows. \`getExpandedContent\` adds expandable rows — an inline, \`aria-controls\`-linked detail panel per row; return \`null\` for rows with nothing to expand and their toggle is omitted; \`expandLabel\` gives each toggle a row-specific accessible name. The disclosure is deliberately NOT built on shadcn's Collapsible (evaluated, never vendored): a Collapsible's Root/Panel wrappers can't sit between \`<tbody>\` and \`<tr>\` without breaking table semantics, so the expansion keeps native table markup while speaking the same interaction grammar — \`aria-expanded\`/\`aria-controls\`, \`data-state="open|closed"\`, Enter/Space on a real button.
 
@@ -318,8 +323,11 @@ export const States: StoryObj<{ state: (typeof PLAYGROUND_STATES)[number] }> = {
   render: ({ state }) => (
     // Fixed-width wrapper: the app's tables are container-constrained
     // (sections span the page), so width never shifts there — an unwrapped
-    // canvas table would shrink-wrap per state and fake a width bug.
-    <div className="w-4xl">
+    // canvas table would shrink-wrap per state and fake a width bug. Wide
+    // enough for the resolved cells (~970px), or the overflow container
+    // grows a horizontal scrollbar in the live state only and fakes a
+    // ~15px HEIGHT bug too.
+    <div className="w-5xl">
       <DataTable
         {...baseArgs}
         rows={state === "empty" ? [] : ROWS}
