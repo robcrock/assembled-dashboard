@@ -49,8 +49,13 @@ Chat breaches mid-replay and jumps to the top; the final frame shows Billing
   entirely tokens. Primitives are built *on* the stock shadcn parts (Badge,
   Card, Table, Button, Skeleton) rather than from scratch.
 - **Tailwind v4 + CSS-variable design tokens (oklch)** — see the token system
-  below. **Storybook 10** (react-vite) is the catalog; stories live colocated
-  with their components in `packages/ui`.
+  below. **Storybook 10** (react-vite) is the catalog *and the system's
+  documentation home*: stories live colocated with their components in
+  `packages/ui`, every component gets an autodocs page (JSDoc props table +
+  when-to-use/deliberately-omitted notes), and the system's rules are MDX
+  pages under the sidebar's `system/` group — introduction, tokens,
+  color-law, feed-states, a choosing-a-data-primitive decision table, and
+  the brand layer.
 
 ## The domain model (ubiquitous language)
 

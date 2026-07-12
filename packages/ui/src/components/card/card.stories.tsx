@@ -11,6 +11,19 @@ import {
 const meta = {
   title: "atoms/card",
   component: Card,
+  parameters: {
+    docs: {
+      description: {
+        component: `
+Vendored shadcn/ui Card on Base UI (style \`base-nova\`), kept as-shipped with its full stock part surface (header, description, action, footer) even where unused — as-shipped fidelity keeps upstream upgrades cheap. Don't fork it for domain needs; compose it.
+
+In this system it is composed by \`StatCard\`'s \`card\` variant, which wraps its metric anatomy in \`Card size="sm"\`.
+
+All colors route through semantic tokens; the Braun radius scale clamps its \`rounded-*\` utilities.
+`,
+      },
+    },
+  },
 } satisfies Meta<typeof Card>
 
 export default meta

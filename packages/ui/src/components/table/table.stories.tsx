@@ -12,6 +12,19 @@ import {
 const meta = {
   title: "atoms/table",
   component: Table,
+  parameters: {
+    docs: {
+      description: {
+        component: `
+Vendored shadcn/ui Table on Base UI (style \`base-nova\`), kept as-shipped with its full stock part surface (header, body, footer, caption) even where unused — as-shipped fidelity keeps upstream upgrades cheap. Don't fork it for domain needs; compose it.
+
+In this system it is composed by \`DataTable\`, which layers sorting, keyboard navigation, expandable rows, and the feed states on top of these parts.
+
+All colors route through semantic tokens; the Braun radius scale clamps its \`rounded-*\` utilities.
+`,
+      },
+    },
+  },
 } satisfies Meta<typeof Table>
 
 export default meta

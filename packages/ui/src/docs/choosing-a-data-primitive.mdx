@@ -1,0 +1,36 @@
+import { Meta } from "@storybook/addon-docs/blocks"
+
+<Meta title="system/choosing-a-data-primitive" />
+
+# Choosing a data primitive
+
+The decision table for anyone (or any agent) about to visualize a value. Ask what
+the *question* is, not what the data looks like — several of these accept the same
+array of numbers and answer different questions with it.
+
+| Question | Reach for | NOT for |
+|---|---|---|
+| What **shape** has this taken over time? | `Sparkline` | judging each sample against a limit (no threshold concept) — that's SparkBars |
+| How often did we **cross a limit**, tick by tick? | `SparkBars` (`threshold`; over-bars take the breach accent, not overridable) | general trends — if nothing meaningful sits at a cut-off, use Sparkline |
+| How **full / saturated** are we against a bound? | `Meter` (0→max fill; catalog primitive awaiting utilization-type data) | distance from a *target in the middle* — that's DeviationBar |
+| How far **over or under a baseline** are we, signed? | `DeviationBar` (colorless; the baseline dot IS the target; sign is the direction) | verdict rendering (no status tint — verdicts live on badges beside it); showing the exact number (it renders none) |
+| One **hero reading**, 0–100, at a glance? | `Gauge` (open-bottom arc; center content via children) | more than one value; anything needing number formatting (the gauge owns only the arc) |
+| A **labeled number** with live-feed states? | `StatCard` (`variant` card/plain, `size` default/lg, one `feed` prop) | color-by-status cards (alarm ink is the consumer's, passed in the value node) |
+| Many **entities, compared and ranked**? | `DataTable` (sortable, keyboard-navigable, expandable rows, owns feed states) | tiny fixed lists where a table's chrome outweighs three values |
+| A **duration** in human terms? | `Duration` (semantic `<time>`) | wall-clock "updated Xs ago" — that's StaleIndicator, the only wall-clock surface |
+| A **signed change** vs. a target? | `MetricDelta` (colorless, +/− sign, optional unit) | anything needing a verdict color or an arrow — deliberately impossible here |
+| A **verdict**? | `StatusBadge` / `StatusDot` (discriminated `status`, glyph first) | free-form colored chips — no per-call color props exist |
+
+## The pattern behind the table
+
+Every one of these is **stateless and domain-agnostic**: it takes value objects, no
+entity ever crosses the package boundary, and feed states belong to the owners
+(StatCard, DataTable — see [feed-states](?path=/docs/system-feed-states--docs)).
+When two of them seem to fit, prefer the one whose *omissions* match your case: if
+you're fighting a primitive's missing prop (a color, a number, an arrow), the
+omission is usually the system telling you the meaning belongs on another surface.
+
+Composition beats configuration: `StatCard` takes a `Sparkline` as children; the
+queue table wraps `DeviationBar` in its own cell anatomy; the gauge's center is
+whatever you pass it. A missing feature is composed at the call site, not added as
+a prop, until a *second* consumer earns it.

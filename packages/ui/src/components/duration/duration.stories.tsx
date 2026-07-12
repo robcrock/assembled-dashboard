@@ -5,6 +5,23 @@ import { Duration } from "@workspace/ui/components/duration"
 const meta = {
   title: "atoms/duration",
   component: Duration,
+  parameters: {
+    docs: {
+      description: {
+        component: `
+Formats a seconds count as a human-readable duration inside a semantic \`<time>\` element (ISO-8601 \`dateTime\`), rendered with tabular figures so columns of durations never jitter.
+
+**Use it for:** durations that arrive as data — \`state_duration_sec\`, \`out_of_adherence_sec\` — in dense table cells and stat lines.
+
+**Not for:** wall-clock freshness ("updated 12s ago"). That is \`StaleIndicator\`, the page's only wall-clock surface.
+
+**Deliberately omitted:** live ticking. Under replay, data time is compressed (5 fixture-minutes per tick), so a wall-clock ticker would disagree with every other number on screen — a Duration updates only when the data does.
+
+Stateless leaf: it never owns feed states — loading/empty/error/stale live on the composing surface (\`StatCard\`, \`DataTable\`, sections).
+`,
+      },
+    },
+  },
 } satisfies Meta<typeof Duration>
 
 export default meta
@@ -30,11 +47,16 @@ export const Zero: Story = {
   args: { seconds: 0 },
 }
 
-// Tabular figures: a ticking column keeps its width stable. text-metric
-// carries no weight — the consumer chooses emphasis (bare here = the same
-// normal weight table cells render).
 export const Column: Story = {
   args: { seconds: 0 },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Tabular figures: a ticking column keeps its width stable. text-metric carries no weight — the consumer chooses emphasis (bare here = the same normal weight table cells render).",
+      },
+    },
+  },
   render: () => (
     <div className="text-metric flex flex-col items-end gap-1">
       <Duration seconds={45} />

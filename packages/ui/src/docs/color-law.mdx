@@ -1,0 +1,47 @@
+import { Meta } from "@storybook/addon-docs/blocks"
+
+<Meta title="system/color-law" />
+
+# The color law
+
+**The palette spends its one loud color — the Braun utility orange — on exactly one
+meaning: a broken promise.**
+
+An orange pixel anywhere on the page IS a breach. Queue SLA breach and an agent out
+of adherence (the agent-side *schedule* breach) both take it; `--status-breached`
+is a semantic alias of `--sla-breach`, so "breached" and "the accent" cannot drift
+apart; `--destructive` aliases it too — a failed action and a broken promise speak
+with the same voice. `SparkBars` spends it per-bar on samples past the SLA target:
+same meaning, per tick.
+
+## The urgency ramp
+
+```
+grey ──────▶ amber ──────▶ orange
+healthy      at risk       breached
+(calm is     (attention)   (a promise is broken)
+ quiet)
+```
+
+Healthy deliberately speaks in the page's **muted ink** — a calm floor should
+*recede*, and the glyph carries the verdict (status reads by glyph shape first,
+color second; `STATUS_META` is the single source for glyph + label + color, so no
+surface can invent its own pairing).
+
+## No exceptions — and the debt each one would create
+
+- **Deltas are colorless, without exception.** `MetricDelta` renders muted ink and
+  an explicit +/− sign — even the queue table's headroom percent. The verdict
+  already lives in that row's Status badge; a second colored number would compete
+  with it, and the first "small red delta" is the precedent that dissolves the law.
+- **Deviation bars are colorless.** Over-forecast is an *indicator* (the leading
+  signal of the next breach), not a verdict — tint it and every over-forecast bar
+  becomes a false alarm that trains the eye to ignore orange.
+- **No per-call color props.** `StatusBadge`, `StatusDot`, `Sparkline`, `SparkBars`
+  take a `status`, never a color; the canonical classes merge *after* `className`,
+  so a consumer cannot re-tint them even by accident.
+- **Focus is ink, not color.** The ring token is foreground ink — focus should be
+  the sharpest thing on the page, not a fourth accent.
+
+If a new surface seems to need a new color, it needs a new *status* in the domain
+language first — that's a model conversation, not a CSS one.

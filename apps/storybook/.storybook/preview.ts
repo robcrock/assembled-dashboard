@@ -13,6 +13,10 @@ const preview: Preview = {
       parentSelector: "html",
     }),
   ],
+  // Every component gets an autodocs page: the prop-level JSDoc in
+  // packages/ui becomes the props table, and each meta's
+  // parameters.docs.description carries the when-to-use reasoning.
+  tags: ["autodocs"],
   parameters: {
     layout: "centered",
     // body bg/text come from the token stylesheet; SB backgrounds would lie

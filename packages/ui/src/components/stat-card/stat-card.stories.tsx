@@ -9,6 +9,23 @@ const ATTAINMENT_TREND = [97, 96, 95, 93, 90, 87, 84, 82, 84, 86]
 const meta = {
   title: "molecules/stat-card",
   component: StatCard,
+  parameters: {
+    docs: {
+      description: {
+        component: `
+Headline number + label, with a \`delta\` slot (a \`MetricDelta\`, beside the value) and a trend slot (\`children\`, e.g. a \`Sparkline\`, under it). Two presentations over one anatomy: \`variant: card | plain\` (standalone bordered card vs bare content for divider-separated KPI rows where the container owns the separation) and \`size: default | lg\` (dense-strip metric ramp vs overview hero counts — type scale only, same structure and states).
+
+**The feed contract:** StatCard is a feed OWNER — it owns all four feed states internally. Consumers forward one \`feed\` object (\`{ status: "loading" | "live" | "stale" | "error", lastUpdatedAt?, onRetry? }\`, the store's value object) and never compose state visuals by hand: loading renders skeletons that mirror the final layout (no shift on resolve), error renders an \`ErrorState\` with retry, stale dims the value and appends a \`StaleIndicator\` — it never blanks — and a nullish \`value\` under a live feed renders a deliberate em dash. The leaf state primitives (Skeleton / ErrorState / StaleIndicator) are the visuals this owner renders, not something to wrap around it. StatCard never fetches — components below the template never do.
+
+**Use it for:** any KPI/vital — a card in a summary strip, a divider row of sibling stats (\`plain\`), or an overview hero count (\`size="lg"\`).
+
+**Not for:** navigation targets, or tinted "alarm cards" — alarm ink is the consumer's decision, carried by a tinted \`value\` node (e.g. breach ink only when it means a broken promise).
+
+**Deliberately omitted:** a card-level color/status prop (a vital's alarm is its content — tinted cards would compete with the queue table); internal number formatting (\`value\` is a ReactNode — pass \`<Duration>\` etc.); navigation/onClick.
+`,
+      },
+    },
+  },
 } satisfies Meta<typeof StatCard>
 
 export default meta
@@ -56,9 +73,16 @@ export const Loading: Story = {
   },
 }
 
-// Deliberate empty: nullish value under a live feed renders an em dash.
 export const Empty: Story = {
   args: { label: "Tickets waiting" },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Deliberate empty: nullish value under a live feed renders an em dash.",
+      },
+    },
+  },
 }
 
 export const Error: Story = {
@@ -76,10 +100,16 @@ export const Stale: Story = {
   },
 }
 
-// Plain variant: divider-separated KPI row — the row owns the separation,
-// so sibling stats take dividers instead of card chrome.
 export const PlainRow: Story = {
   args: { label: "", variant: "plain" },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Plain variant: divider-separated KPI row — the row owns the separation, so sibling stats take dividers instead of card chrome.",
+      },
+    },
+  },
   render: () => (
     <div className="grid w-xl grid-cols-3">
       <StatCard variant="plain" className="pr-6" label="SLA attainment" value="86%" />
@@ -89,8 +119,6 @@ export const PlainRow: Story = {
   ),
 }
 
-// Overview-band hero count: lg size, alarm ink carried by the value node
-// (the ink decision is the consumer's — breach red only when it means it).
 export const SizeLg: Story = {
   args: {
     label: "Queues breaching",
@@ -103,11 +131,25 @@ export const SizeLg: Story = {
       </div>
     ),
   },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Overview-band hero count: lg size, alarm ink carried by the value node (the ink decision is the consumer's — breach red only when it means it).",
+      },
+    },
+  },
 }
 
-// Density: the summary strip shape — four vitals side by side.
 export const Strip: Story = {
   args: { label: "" },
+  parameters: {
+    docs: {
+      description: {
+        story: "Density: the summary strip shape — four vitals side by side.",
+      },
+    },
+  },
   render: () => (
     <div className="flex gap-3">
       <StatCard

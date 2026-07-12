@@ -1,0 +1,58 @@
+import { Meta } from "@storybook/addon-docs/blocks"
+
+<Meta title="system/brand" />
+
+# Brand — the Braun layer
+
+The visual identity is the **dieter-grid** spec: repo-root `DESIGN.md`, installed
+via `npx designdotmd add dieter-grid` (designdotmd.directory, Google Labs DESIGN.md
+format). Industrial-design palette — concrete grey, one utility-orange stroke,
+disciplined flatness.
+
+**It lands exclusively through the token tiers.** The retheme PR's first commit
+touched `globals.css`, font loading, and `DESIGN.md` — *zero component edits*.
+That is the future-friendliness test passing: the system absorbed a full re-brand
+without any component knowing.
+
+## Spec → token mapping
+
+| DESIGN.md | Token home |
+|---|---|
+| neutral #E7E5E1 | `--background` (the page — the darker neutral) |
+| surface #F3F1EC | `--card` / `--popover` (paper on concrete) |
+| primary #0F1113 | `--foreground`; dark theme's page |
+| secondary #6B6F74 | `--primitive-concrete-500` (large-type/non-text only — see deviations) |
+| tertiary #D95600 | `--primitive-orange-500`, feeding `--sla-breach` (see deviations) |
+| rounded 0 / 2 / 4px | `--radius-sm/md/lg`; every larger utility clamps to 4px |
+| Inter / JetBrains Mono | `--font-sans` / `--font-mono` (next/font in the app; `preview-head.html` here) |
+| label (mono 0.72rem +0.08em) | `@utility text-label` |
+| "flat on purpose" | `shadow-hairline` — elevation by border, never shadow |
+
+## The deviations register
+
+Every departure from the spec is deliberate, and this is its record:
+
+1. **AA-solved inks.** Secondary `#6B6F74` measures 4.02:1 as body text on the
+   spec's own page; tertiary `#D95600` measures 3.15:1. Both stay in the ramps as
+   fill/large-type values; *text* inks use solved steps (concrete-600 at 4.70:1,
+   orange-700 at 4.70:1, orange-400 in dark). Accessibility outranks literalism.
+2. **Amber stays.** The spec's single-accent rule meets a triage dashboard that
+   needs a middle register between quiet and alarm: the urgency ramp is
+   grey → amber → orange (at-risk ink is amber-800, minted for AA on cream). One
+   documented deviation, paid for scanning speed.
+3. **Borders are quiet.** The spec uses secondary-strength grid strokes; six data
+   surfaces ruled that loudly would out-shout the data. Hairlines are concrete-200.
+4. **Dark is authored.** The spec ships no dark theme; ours inverts the concrete
+   ramp (#0F1113 page, concrete-900 cards, cream inks, orange constant in meaning).
+   Invented values, flagged as such.
+5. **Radius residuals.** A few curves are geometry, not token: the meter and
+   deviation-bar `rounded-full` tracks, the gauge's round linecaps, the monogram
+   tile.
+
+## How to re-brand
+
+The procedure this layer proved: swap the primitive ramps and the font pair in
+`globals.css` + font loading, keep every semantic role name, re-run the AA solve
+for text inks (the canvas-readback check lives in the PR history), and touch no
+component. If a re-brand *needs* a component edit, that component has a token leak
+— fix the leak, not the brand.

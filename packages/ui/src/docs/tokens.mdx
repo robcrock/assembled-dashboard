@@ -1,0 +1,100 @@
+import { Meta, ColorPalette, ColorItem } from "@storybook/addon-docs/blocks"
+
+<Meta title="system/tokens" />
+
+# Tokens — the ions
+
+Four tiers in `packages/ui/src/styles/globals.css`, all color in **oklch**:
+
+```
+composite / component ──▶ semantic ──▶ primitive
+```
+
+- **Primitive** (`--primitive-<hue>-<step>`) — context-free raw values. Defined in
+  `:root` only, **never in `@theme`**: that's the enforcement trick, not a style
+  preference — Tailwind generates *no utilities* for them, so a component
+  structurally cannot consume a raw value by class. Never themed.
+- **Semantic** (`--background`, `--muted`, `--status-*`, `--sla-breach`…) — roles
+  that reference primitives. Light/dark remaps happen at **this tier only**: `.dark`
+  re-points roles; pure aliases (`--status-breached`, `--destructive`, `--ring`)
+  are declared once and chase their targets through the remap.
+- **Component** (`--<component>-<part>`) — the earning rule: minted only when two
+  consumers need *different values for the same semantic role*. **Zero exist.** A
+  knob nobody overrides is dead weight.
+- **Composite** — multi-property bundles: `shadow-hairline` (elevation by border,
+  never shadow), the `text-metric-*` tabular ramp, `text-label` (the mono label
+  tier), `stale-dim`, `focus-ring`. Where Tailwind has a namespace they live in
+  `@theme`; otherwise they're an `@utility`. **Every custom `text-*` composite must
+  also be registered in `extendTailwindMerge`** (`packages/ui/src/lib/utils.ts`) —
+  unregistered, tailwind-merge classifies it as a text *color* and silently drops
+  it or the real color in `cn()` merges.
+
+## The live palette
+
+Swatches read the actual CSS variables, so this page is always the shipped truth —
+toggle the toolbar theme and they remap.
+
+<ColorPalette>
+  <ColorItem
+    title="surfaces"
+    subtitle="page / card — the Braun inversion: the page is the darker neutral, cards are surface cream"
+    colors={{ background: "var(--background)", card: "var(--card)" }}
+  />
+  <ColorItem
+    title="inks"
+    subtitle="foreground / muted-foreground (muted is the AA-solved concrete-600)"
+    colors={{ foreground: "var(--foreground)", "muted-foreground": "var(--muted-foreground)" }}
+  />
+  <ColorItem
+    title="structure"
+    subtitle="border (quiet concrete hairline — deliberately NOT the spec's grid stroke) / muted fill"
+    colors={{ border: "var(--border)", muted: "var(--muted)" }}
+  />
+  <ColorItem
+    title="sla-breach — THE reserved accent"
+    subtitle="the one loud color; ink / tint / on-solid"
+    colors={{
+      breach: "var(--sla-breach)",
+      "breach-bg": "var(--sla-breach-bg)",
+      "breach-foreground": "var(--sla-breach-foreground)",
+    }}
+  />
+  <ColorItem
+    title="status scale"
+    subtitle="healthy (concrete grey — calm is quiet) / at-risk (amber) / breached (alias of --sla-breach)"
+    colors={{
+      healthy: "var(--status-healthy)",
+      "at-risk": "var(--status-at-risk)",
+      breached: "var(--status-breached)",
+    }}
+  />
+  <ColorItem
+    title="status tints"
+    subtitle="the -bg steps behind badges"
+    colors={{
+      "healthy-bg": "var(--status-healthy-bg)",
+      "at-risk-bg": "var(--status-at-risk-bg)",
+      "breached-bg": "var(--status-breached-bg)",
+    }}
+  />
+  <ColorItem
+    title="adherence"
+    subtitle="aliases of the status scale — own names so the domain language survives; out = the agent-side breach"
+    colors={{ ok: "var(--adherence-ok)", out: "var(--adherence-out)" }}
+  />
+</ColorPalette>
+
+## Type
+
+Two families, three voices — the pairing is the brand's (see
+[brand](?path=/docs/system-brand--docs)):
+
+| Voice | Utility | Face |
+|---|---|---|
+| Prose | `text-xs` caption → `text-sm` body → `text-base` h2 → `text-2xl` h1 | Inter |
+| Numerics | `text-metric-sm / -metric / -metric-lg / -metric-xl` — always `tabular-nums` | Inter |
+| Labels | `text-label` — 0.72rem, +0.08em tracking | JetBrains Mono |
+
+Numerics never use the prose ramp (ticking numbers must not jitter); labels are not
+prose (metric labels, table headers, roster headings); mono never carries digits in
+data surfaces — mono digits read as code, not vitals.
