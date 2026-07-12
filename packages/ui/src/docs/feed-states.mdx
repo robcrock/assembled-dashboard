@@ -1,0 +1,56 @@
+import { Meta } from "@storybook/addon-docs/blocks"
+
+<Meta title="system/feed-states" />
+
+# Feed states — who owns what
+
+Live data has four conditions, and they travel as **one value object**, not a
+boolean soup:
+
+```ts
+type FeedStatus = "loading" | "live" | "stale" | "error"
+
+interface Feed {
+  status: FeedStatus
+  lastUpdatedAt?: number | null  // feeds the stale indicator
+  onRetry?: () => void           // recovers from error
+}
+```
+
+`Feed` lives in `@workspace/ui/lib/feed`. The store (`useDashboardData()`) is the
+only thing that *derives* it; everything below receives it as a prop. **Components
+never fetch.**
+
+## Owners vs. visuals
+
+Two kinds of component touch these states — confusing them is the most common way
+to misuse this library:
+
+- **Feed owners** — `StatCard` and `DataTable` (and the app's sections). They take
+  the `feed` prop and own all four renderings internally: skeleton that mirrors the
+  final layout (no shift on resolve), a deliberate empty state, an error state with
+  retry, and stale = **keep the data rendered, dim it (`stale-dim`), say how old it
+  is**. Consumers forward the store's feed and are done.
+- **State visuals** — `Skeleton`, `EmptyState`, `ErrorState`, `StaleIndicator`.
+  These are the *leaves the owners render*. Reach for them directly only when
+  building a **new** feed owner — never compose them by hand next to a component
+  that already owns its states.
+
+`StaleIndicator`'s `tone` prop is deliberately narrower than `FeedStatus` — the
+surface has exactly two visual treatments (calm vs degraded), so callers map
+`feed.status === "stale"` at the seam. Page chrome renders it always (loading shows
+the em-dash placeholder); stale-gated surfaces mount it only when degraded.
+
+## The stale rule (the state most dashboards skip)
+
+Stale is not an error: the data is real, just late. So it never blanks, never
+replaces content with a spinner — it dims by exactly `stale-dim` (a token, so a
+fifth surface can't pick its own opacity), shows "Stale · updated Xs ago", and
+keeps every number readable. Degrade honestly rather than lie about liveness.
+
+## Demonstrating states
+
+Every owner has a story per state in this catalog. On the live dashboard: **p**
+pauses the replay (→ stale after the missed tick), the *Inject error* control makes
+the route handler fail (→ error with retry). See each component's docs page for its
+state stories.

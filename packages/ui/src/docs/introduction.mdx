@@ -1,0 +1,57 @@
+import { Meta } from "@storybook/addon-docs/blocks"
+
+<Meta title="system/introduction" />
+
+# The design system
+
+This catalog is not a component gallery — it is the **system's home**. The system is
+the set of rules, tokens, and documented decisions beneath the dashboard, not the
+dashboard itself: the screen is one *proof* of the system, the way the next ten pages
+would be. If you are building a new surface (human or agent), start here, then reach
+for components — the pages in this `system/` group tell you which one and why.
+
+## What "system" means here
+
+Three commitments, held without exceptions:
+
+1. **Rules over artifacts.** Every visual decision routes through the token tiers
+   (see [tokens](?path=/docs/system-tokens--docs)). No raw hex, no magic spacing, no
+   component that branches on theme. A rule with one exception is not a rule — the
+   first exception is the precedent for the tenth.
+2. **Documentation is constitutive.** If a decision isn't written down — in a token
+   comment, a component description on its docs page, README, or CLAUDE.md — it
+   doesn't exist, and the next contributor will legitimately re-decide it. Every
+   primitive documents its props **and the props it deliberately omits**; the
+   omissions are load-bearing API.
+3. **Shared vocabulary.** The domain's ubiquitous language (`SlaStatus`,
+   `AdherenceStatus`, `Feed`, breach, headroom) is the same set of names in the data
+   model, the token layer, the prop enums, and the component names — so nothing can
+   drift between data, tokens, and UI without the type checker noticing.
+
+## The architecture, one screen deep
+
+```
+apps/web (the proof)          apps/storybook (this catalog)
+        └──────────┬──────────────────┘
+              @workspace/ui  ← THE deliverable
+         components (atoms + molecules)
+         lib (duration/delta/feed — pure TS)
+         styles/globals.css (the four token tiers)
+```
+
+Dependency direction is enforced: the library depends on **no app and no feature
+code**. Primitives take value objects (`StatusBadge` takes a `status`; it has never
+heard of a queue); domain-bound compositions live in the app's feature slices.
+Atomic tiers ride in the sidebar titles — `atoms/` compose no other component,
+`molecules/` own multi-part anatomy and feed states; organisms/template/page live in
+the app, outside this catalog.
+
+## Deliberately out of scope
+
+A holistic design system at org scale also requires governance: a contribution and
+approval workflow, versioned releases, deprecation policy, adoption metrics, and a
+team that owns them. **This repo has one contributor and one consumer app, so those
+would be ceremony without a constituency** — stating that is itself the judgment the
+system asks for. The moment there is a second contributor or a second consuming
+product, the register flips: versioning and a contribution path become the next
+tickets, and this page is where that decision is recorded.
