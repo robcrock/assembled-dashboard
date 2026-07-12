@@ -100,6 +100,23 @@ export const Stale: Story = {
   },
 }
 
+export const StaleQuiet: Story = {
+  args: {
+    label: "Tickets waiting",
+    value: "84",
+    feed: { status: "stale", lastUpdatedAt: Date.now() - 42_000 },
+    staleNote: false,
+  },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "`staleNote={false}`: the dim still marks the degradation, but the note is silenced — for pages whose chrome mounts the ONE canonical `StaleIndicator` (the dashboard does this: five identical notes said nothing five times).",
+      },
+    },
+  },
+}
+
 export const PlainRow: Story = {
   args: { label: "", variant: "plain" },
   parameters: {

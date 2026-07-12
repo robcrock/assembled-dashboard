@@ -176,6 +176,11 @@ export function Dashboard() {
                 />
               </div>
 
+              {/* ONE freshness surface: the chrome row's StaleIndicator above
+                  is the page's only stale note — every tile and table passes
+                  staleNote={false} and speaks stale through its dim alone
+                  (less, but better: five identical notes said nothing five
+                  times). */}
               {/* KPI trio: the attainment tile, then the two alarm counts —
                   three siblings with one StatCard rhythm. TOP-aligned (picker
                   round, ROB-72): every tile's label/number/sub-line rows share
@@ -198,6 +203,7 @@ export function Dashboard() {
                     variant="plain"
                     size="lg"
                     feed={feed}
+                    staleNote={false}
                     label="Queues breaching"
                     value={alarmValue(summary?.queues_breaching)}
                   >
@@ -214,6 +220,7 @@ export function Dashboard() {
                     variant="plain"
                     size="lg"
                     feed={feed}
+                    staleNote={false}
                     label="Out of adherence"
                     value={alarmValue(summary?.agents_out_of_adherence)}
                   >

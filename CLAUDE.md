@@ -261,7 +261,9 @@ tuple). Components below the template never fetch.
   drifts. Status reads by **glyph shape first, color second**. `StatusDot` renders the standalone
   glyph. **No per-call color props.**
 - `StatCard` — headline number + label + optional `delta` + optional trend slot (via children,
-  not a `renderTrend` prop). Handles loading/empty/error/stale internally via one `feed` prop.
+  not a `renderTrend` prop). Handles loading/empty/error/stale internally via one `feed` prop;
+  `staleNote` (default true) silences the card's own stale note where page chrome mounts the
+  ONE canonical `StaleIndicator` — the dim always stays.
   `variant: card | plain` (card chrome vs divider rows), `size: default | lg` (dense-strip
   metric ramp vs overview hero counts — type scale only, same anatomy/states). Alarm ink is
   the consumer's: pass a tinted value node (the template's `alarmValue` helper), never a
@@ -290,7 +292,9 @@ tuple). Components below the template never fetch.
   the queue table's headroom and volume visualization; contrast with `Meter`, which answers
   saturation, not distance-from-target.
 - `DataTable` — dense, sortable, keyboard-navigable; queues and agents via generic column config.
-  Owns loading/empty/error/stale. Optional expandable rows (`getExpandedContent` + `expandLabel`,
+  Owns loading/empty/error/stale (`staleNote` silences its own stale note where page chrome
+  carries the one canonical indicator; the body dim always stays). Optional expandable rows
+  (`getExpandedContent` + `expandLabel`,
   `aria-controls`-linked). A single component, not compound — the only shared state is one sort tuple.
 - `Duration` — formats `state_duration_sec` / `out_of_adherence_sec` as a semantic `<time>`.
   (`RelativeTime` deliberately not built; `StaleIndicator` is the only wall-clock surface.)

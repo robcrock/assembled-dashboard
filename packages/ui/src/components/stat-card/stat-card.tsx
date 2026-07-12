@@ -47,6 +47,13 @@ interface StatCardProps {
   size?: "default" | "lg"
   /** Trend slot (e.g. a `Sparkline`), rendered under the value. */
   children?: React.ReactNode
+  /**
+   * Render the "Stale · updated Xs ago" note when the feed degrades (default
+   * true — the card stays self-contained). Pass false on pages whose chrome
+   * already mounts the ONE canonical `StaleIndicator`: the dim still applies —
+   * honesty is not optional, repetition is.
+   */
+  staleNote?: boolean
   className?: string
 }
 
@@ -58,6 +65,7 @@ function StatCard({
   variant = "card",
   size = "default",
   children,
+  staleNote = true,
   className,
 }: StatCardProps) {
   const { status, lastUpdatedAt = null, onRetry } = feed
@@ -99,7 +107,7 @@ function StatCard({
               {children}
             </div>
           )}
-          {status === "stale" && (
+          {status === "stale" && staleNote && (
             <StaleIndicator lastUpdatedAt={lastUpdatedAt} tone="stale" />
           )}
         </>

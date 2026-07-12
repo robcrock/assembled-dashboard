@@ -276,6 +276,22 @@ export const Stale: Story = {
   },
 }
 
+export const StaleQuiet: Story = {
+  args: {
+    ...baseArgs,
+    feed: { status: "stale", lastUpdatedAt: Date.now() - 42_000 },
+    staleNote: false,
+  },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "`staleNote={false}`: the body dim still marks the degradation, but the table's own note is silenced — for pages whose chrome mounts the ONE canonical `StaleIndicator` (both dashboard tables do this).",
+      },
+    },
+  },
+}
+
 export const ExpandableRows: Story = {
   args: {
     ...baseArgs,
