@@ -1,4 +1,5 @@
 import type { StorybookConfig } from "@storybook/react-vite"
+import remarkGfm from "remark-gfm"
 
 // The catalog is a second real consumer of @workspace/ui: stories stay
 // colocated beside their component in packages/ui; this workspace only owns
@@ -14,7 +15,18 @@ const config: StorybookConfig = {
   addons: [
     "@storybook/addon-a11y",
     "@storybook/addon-themes",
-    "@storybook/addon-docs",
+    {
+      name: "@storybook/addon-docs",
+      options: {
+        mdxPluginOptions: {
+          mdxCompileOptions: {
+            // GFM is not in Storybook's MDX pipeline by default — without it
+            // the system pages' markdown tables render as pipe soup.
+            remarkPlugins: [remarkGfm],
+          },
+        },
+      },
+    },
   ],
   async viteFinal(viteConfig) {
     const { mergeConfig } = await import("vite")

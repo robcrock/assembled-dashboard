@@ -35,9 +35,9 @@ const SKELETON_SIZE = {
 
 interface StatCardProps {
   label: string
-  /** Headline. ReactNode so consumers can pass <Duration> etc.; nullish under `live` renders a deliberate em dash. */
+  /** Headline. ReactNode so consumers can pass `Duration` etc.; nullish under `live` renders a deliberate em dash. */
   value?: React.ReactNode
-  /** Slot for a <MetricDelta>, rendered beside the value. */
+  /** Slot for a `MetricDelta`, rendered beside the value. */
   delta?: React.ReactNode
   /** Feed condition; defaults to live. Drives loading/empty/error/stale. */
   feed?: Feed
@@ -45,7 +45,7 @@ interface StatCardProps {
   variant?: "card" | "plain"
   /** Value type scale: dense-strip default, or lg for overview hero counts. */
   size?: "default" | "lg"
-  /** Trend slot (e.g. a <Sparkline>), rendered under the value. */
+  /** Trend slot (e.g. a `Sparkline`), rendered under the value. */
   children?: React.ReactNode
   className?: string
 }
