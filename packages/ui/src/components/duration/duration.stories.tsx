@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite"
 import { Duration } from "@workspace/ui/components/duration"
 
 const meta = {
-  title: "primitives/duration",
+  title: "atoms/duration",
   component: Duration,
 } satisfies Meta<typeof Duration>
 

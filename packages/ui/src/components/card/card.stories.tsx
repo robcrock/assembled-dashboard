@@ -9,7 +9,7 @@ import {
 } from "@workspace/ui/components/card"
 
 const meta = {
-  title: "base/card",
+  title: "atoms/card",
   component: Card,
 } satisfies Meta<typeof Card>
 

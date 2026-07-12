@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite"
 import { Separator } from "@workspace/ui/components/separator"
 
 const meta = {
-  title: "base/separator",
+  title: "atoms/separator",
   component: Separator,
 } satisfies Meta<typeof Separator>
 

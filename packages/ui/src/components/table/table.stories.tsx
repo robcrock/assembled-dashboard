@@ -10,7 +10,7 @@ import {
 } from "@workspace/ui/components/table"
 
 const meta = {
-  title: "base/table",
+  title: "atoms/table",
   component: Table,
 } satisfies Meta<typeof Table>
 

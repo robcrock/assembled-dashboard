@@ -86,7 +86,7 @@ const baseArgs = {
 }
 
 const meta: Meta<typeof DataTable<SampleRow>> = {
-  title: "primitives/data-table",
+  title: "molecules/data-table",
   component: DataTable,
 }
 

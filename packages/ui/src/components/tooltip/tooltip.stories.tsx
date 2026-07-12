@@ -9,7 +9,7 @@ import {
 } from "@workspace/ui/components/tooltip"
 
 const meta = {
-  title: "base/tooltip",
+  title: "atoms/tooltip",
   component: Tooltip,
 } satisfies Meta<typeof Tooltip>
 

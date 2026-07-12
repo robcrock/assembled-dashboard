@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite"
 import { StaleIndicator } from "@workspace/ui/components/stale-indicator"
 
 const meta = {
-  title: "primitives/stale-indicator",
+  title: "molecules/stale-indicator",
   component: StaleIndicator,
 } satisfies Meta<typeof StaleIndicator>
 

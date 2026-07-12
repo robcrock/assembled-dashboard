@@ -206,6 +206,24 @@ Light/dark stays demonstrably real in the Storybook catalog and via OS appearanc
 Primitives are domain-agnostic and live in `@workspace/ui` (aim for ~8–10, not 30);
 compositions wire them to this dashboard's data and live in `apps/web` feature slices.
 
+**Atomic design mapping.** Atomic design is the system's organizing language, expressed
+in-place (Storybook titles + this table) — folders and import paths stay flat per the
+conventions below:
+
+| Atomic tier | Lives at | Contents |
+|---|---|---|
+| **Ions** (tokens) | `packages/ui/src/styles/globals.css` | the 4-tier token architecture (primitive → semantic → component → composite) |
+| **Atoms** | `packages/ui/src/components/*` | leaves that compose no other component: vendored `badge/button/card/table/tooltip/separator/skeleton` + `duration`, `metric-delta`, `sparkline`, `spark-bars`, `meter`, `deviation-bar`, `gauge`, `theme-toggle` |
+| **Molecules** | `packages/ui/src/components/*` | compose atoms / own multi-part anatomy + feed states: `status-badge` (+`StatusDot`), `stat-card`, `data-table`, `empty-state`, `error-state`, `stale-indicator`, `page-section`, `org-identity` |
+| **Organisms** | `apps/web/features/*/components` | domain-bound compositions: `attainment-overview`, `queue-health-table` (+`queue-coverage`), `agent-adherence-table` |
+| **Template** | `apps/web/app/dashboard.tsx` | the one client boundary: owns `useDashboardData()` + page UI state, arranges organisms, passes `{data-slice, feed}` down |
+| **Page / Layout** | `apps/web/app/page.tsx` / `layout.tsx` | route → template; document shell (fonts, ThemeProvider) |
+
+**State ownership ladder:** store (fetch/replay/staleness) → template (page UI state:
+paused, injected error) → organism (per-slice derivation: sort, tick ring buffer) →
+molecule/atom (stateless, or self-contained interaction only — e.g. DataTable's one sort
+tuple). Components below the template never fetch.
+
 **Primitives — `packages/ui`:**
 - `StatusBadge` / `StatusDot` — `status: healthy | at_risk | breached` (+ the adherence pair).
   One canonical `STATUS_META` map turns a status into glyph + label + color (`ink`, `badge`,
@@ -214,6 +232,10 @@ compositions wire them to this dashboard's data and live in `apps/web` feature s
   glyph. **No per-call color props.**
 - `StatCard` — headline number + label + optional `delta` + optional trend slot (via children,
   not a `renderTrend` prop). Handles loading/empty/error/stale internally via one `feed` prop.
+  `variant: card | plain` (card chrome vs divider rows), `size: default | lg` (dense-strip
+  metric ramp vs overview hero counts — type scale only, same anatomy/states). Alarm ink is
+  the consumer's: pass a tinted value node (the template's `alarmValue` helper), never a
+  color prop.
 - `MetricDelta` — signed value + unit, rendered **colorless**: the explicit +/− sign carries
   direction (no arrows/glyphs), muted ink keeps it an annotation. No `invert` prop, no verdict
   color — **without exception**: even the queue table's headroom percent stays neutral, since
@@ -243,11 +265,17 @@ compositions wire them to this dashboard's data and live in `apps/web` feature s
 - State primitives: `Skeleton`, `EmptyState`, `ErrorState`, `StaleIndicator` (last-updated +
   degraded styling).
 - `ThemeToggle` (catalog-only — the dashboard follows OS appearance and mounts no toggle).
+- `PageSection` — the labelled section shell: `id` (wires `aria-labelledby` to
+  `${id}-heading`), `title`, optional `description`, children. Heading level fixed at h2
+  (sections sit under the page's one h1); no margins baked in; no actions slot until earned.
+- `OrgIdentity` — whitelabel identity block: monogram tile derived from `name`, name as the
+  page `<h1>`, muted `tagline`, wrapped in an `aria-label="Homepage"` link. `name: null`
+  renders layout-mirroring skeletons. No logo upload, no size prop until a second consumer.
 
 **Compositions — `apps/web` feature slices:** `AttainmentOverview` (`features/summary` — the
-SLA-attainment gauge; it replaced the old `SummaryBar` KPI strip, and the section-level alarm
-counts render as `AlarmStat` tiles in the composition root beside it), `QueueHealthTable`
-(`features/queue-health`), `AgentAdherenceTable` (`features/agent-adherence`).
+SLA-attainment gauge; it replaced the old `SummaryBar` KPI strip; the section-level alarm
+counts beside it are `StatCard size="lg"` tiles fed breach-ink values by the template),
+`QueueHealthTable` (`features/queue-health`), `AgentAdherenceTable` (`features/agent-adherence`).
 
 **Component API discipline:** discriminated `state`/`status` props, not boolean soup. Children
 over `renderX` props. Compound-component/context machinery only where shared state justifies it
@@ -330,6 +358,8 @@ contrast check on status colors light and dark, one story per state per componen
   `./src/components/*/index.ts`, so consumers always import `@workspace/ui/components/<name>`
   — never a deep file path. The library typechecks with `moduleResolution: "Bundler"` to match
   how it is actually consumed (Next/Turbopack and Vite), same as the app.
+- **Storybook titles carry the atomic tier**: `atoms/<name>` or `molecules/<name>` per the
+  atomic mapping table — the catalog sidebar IS the taxonomy (folders stay flat).
 
 ## Out of scope / anti-goals
 
