@@ -16,8 +16,8 @@ function Callout({ children, className }: CalloutProps) {
   return (
     <aside
       className={cn(
-        "border-border text-muted-foreground border-l-2 pl-3 text-xs",
-        className,
+        "border-l-2 border-border pl-3 text-xs text-muted-foreground",
+        className
       )}
     >
       {children}

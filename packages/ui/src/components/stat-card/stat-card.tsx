@@ -64,9 +64,7 @@ function StatCard({
 
   const content = (
     <>
-      <div className="text-muted-foreground text-label truncate">
-        {label}
-      </div>
+      <div className="truncate text-label text-muted-foreground">{label}</div>
 
       {status === "loading" ? (
         <>
@@ -86,7 +84,7 @@ function StatCard({
           <div
             className={cn(
               "flex items-baseline gap-2",
-              status === "stale" && "stale-dim",
+              status === "stale" && "stale-dim"
             )}
           >
             <div className={cn("text-foreground", VALUE_SIZE[size])}>

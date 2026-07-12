@@ -20,7 +20,10 @@ const MAX_DELAY_MS = 10_000
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
 
-  const delayMs = Math.min(Math.max(Number(searchParams.get("delay")) || 0, 0), MAX_DELAY_MS)
+  const delayMs = Math.min(
+    Math.max(Number(searchParams.get("delay")) || 0, 0),
+    MAX_DELAY_MS
+  )
   if (delayMs > 0) {
     await new Promise((resolve) => setTimeout(resolve, delayMs))
   }
@@ -28,7 +31,10 @@ export async function GET(request: Request) {
   const fail = searchParams.get("fail")
   if (fail) {
     const status = Number(fail) >= 400 ? Number(fail) : 500
-    return NextResponse.json({ error: "Simulated upstream failure" }, { status })
+    return NextResponse.json(
+      { error: "Simulated upstream failure" },
+      { status }
+    )
   }
 
   return NextResponse.json(dashboardState)
