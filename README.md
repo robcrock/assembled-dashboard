@@ -15,7 +15,12 @@ reach for. The dashboard app is the proof.
 ```bash
 pnpm install
 pnpm dev        # web app on :3000 + Storybook catalog on :6006
+pnpm --filter storybook dev   # catalog only
 ```
+
+No local setup at all: the catalog is deployed at
+**<https://assembled-dashboard-storybook.vercel.app>** — every primitive across
+every state and variant, plus the `system/` docs pages.
 
 ### Demo walkthrough (the live-data story)
 
@@ -29,7 +34,7 @@ Chat breaches mid-replay and jumps to the top; the final frame shows Billing
 |---|---|
 | Loading | visit `/?delay=4000` — skeletons mirror the final layout |
 | Error | click **Inject error** in the overview band's Demo controls (or visit `/?fail=1`) — every surface degrades independently with a Retry |
-| **Stale** | press **`p`** — replay pauses; ~8s later the page shows "Stale · updated Xs ago", dims, and keeps the data rendered (stale never blanks) |
+| **Stale** | press **`p`** — replay pauses; ~8s later the page shows "Stale · updated Xs ago", dims, and keeps the data rendered (stale never blanks). No lever needed at the end: once the ~30s replay exhausts the fixture, the feed decays to stale on its own — an exhausted feed ages honestly rather than heartbeating "live". Reload restarts the replay |
 | Dark mode | follows your OS appearance (`prefers-color-scheme`) — the dashboard mounts no toggle; the `ThemeToggle` primitive lives in the Storybook catalog |
 
 ## Stack (and why)
@@ -138,7 +143,12 @@ returned by `useDashboardData()`) and never fetch. The three fields travel
 together as one value object rather than a param clump. State ownership runs
 down a ladder: the store owns fetch/replay/staleness → the template owns page
 UI state (pause, injected error) → organisms own per-slice derivation (sort,
-tick history) → molecules/atoms are stateless or self-contained. The essentials:
+tick history) → molecules/atoms are stateless or self-contained.
+
+The seven vendored shadcn atoms (badge, button, card, table, tooltip,
+separator, skeleton) keep their stock APIs — as-shipped fidelity keeps upstream
+upgrades cheap — and their notes live on their Storybook autodocs pages. The
+table below covers the system's own primitives:
 
 | Primitive | Exposed | Deliberately omitted (why) |
 |---|---|---|
@@ -147,10 +157,10 @@ tick history) → molecules/atoms are stateless or self-contained. The essential
 | `MetricDelta` | raw signed `value`, `unit` → **colorless** signed number (the explicit +/− sign carries direction) | color (deltas are annotations, not verdicts — verdict color lives on the status surfaces; the palette's orange is reserved for breach); direction arrows/glyphs (the sign already says it); an `invert` prop (there is no good/bad to flip when it's colorless); pre-formatted strings |
 | `Meter` | normalized `value`/`max`, `label`, optional `status` tint (from the one canonical `statusFillClass`) | magnitude labels (the meter shows *saturation*; the number that says how far over rides beside it in a `MetricDelta`); a fourth severity color |
 | `DeviationBar` | signed `value` (± % around a center baseline dot), `label`, `range` clamp per half | color entirely — one neutral muted fill (verdict color lives on the badges beside it); a direction/`invert` prop (the sign IS the direction — over extends right past the dot, under extends left); a rendered number (the exact figure rides beside it); threshold markers |
-| `Sparkline` | `points`, optional `status` tint, computed a11y label with override | chart deps, axes, tooltips, animation (snaps on tick) |
-| `Gauge` | normalized `value` (0–100), `label`, center content via **children** (the gauge owns only the arc — it never formats numbers) | gradient / threshold zones / needle (tokens only: muted track, `currentColor` arc); animation; internal number formatting |
+| `Sparkline` | `points`, optional `status` tint, computed a11y label with override | chart deps, axes, tooltips, animation (snaps on tick). Catalog-only: the shipped queue table renders `SparkBars`; kept awaiting a line-trend consumer |
+| `Gauge` | normalized `value` (0–100), `label`, center content via **children** (the gauge owns only the arc — it never formats numbers) | gradient / threshold zones / needle (tokens only: muted track, `currentColor` arc); animation; internal number formatting. Catalog-only: the overview replaced the arc with the attainment tile's `Meter` line; kept awaiting a hero-reading consumer |
 | `SparkBars` | `points`, `threshold` (bars past it take the reserved breach accent, others muted), computed a11y label | a configurable tint (the breach accent is not overridable — an orange bar always means "over threshold") |
-| `DataTable<Row>` | generic column config (`key/header/cell/sortValue/align`), required sr-only `caption`, optional expandable rows (`getExpandedContent` + `expandLabel`, `aria-controls`-linked), `defaultSort`, one `feed` object | compound/context API (only shared state is one sort tuple); pagination/virtualization (~19 rows total); selection; **row navigation** (rows expand to an inline detail panel, they don't link out); a `rowTone`/row-dimming prop (muted ink is sub-text only — the table makes whole-row muting impossible; triage emphasis rides on sort + a status column) |
+| `DataTable<Row>` | generic column config (`key/header/cell/sortValue/align`), required sr-only `caption`, optional expandable rows (`getExpandedContent` + `expandLabel`, `aria-controls`-linked), `defaultSort`, `rowSize: default \| tall` (skeleton AND data rows share the chosen rhythm — pick the step that clears your tallest cell, and loading resolves with zero shift), one `feed` object | compound/context API (only shared state is one sort tuple); pagination/virtualization (~19 rows total); selection; **row navigation** (rows expand to an inline detail panel, they don't link out); a `rowTone`/row-dimming prop (muted ink is sub-text only — the table makes whole-row muting impossible; triage emphasis rides on sort + a status column) |
 | `Duration` | `seconds` → semantic `<time>` | live ticking (compressed replay time would contradict the wall clock — `StaleIndicator` is the only wall-clock surface) |
 | `Callout` | children + `className` — a quiet aside (hairline rule, muted small text) for context beside data | status/variant tints (a tinted callout is a verdict, and verdicts belong to status surfaces); icon slot; title prop; dismissal |
 | `EmptyState` / `ErrorState` / `StaleIndicator` | title/description/action slot; optional `onRetry`; self-ticking `lastUpdatedAt` + `tone` | icons; auto-derived staleness (the hook is the single owner of that logic) |
@@ -215,8 +225,33 @@ stories, token tables, and column configs. **Verified by hand / against the
 running system**: WCAG contrast computed numerically for every status pair in
 both themes; the replay narrative, error, and stale paths driven in a real
 browser; keyboard semantics (`aria-sort`, real-button sort headers, focus
-rings) reviewed per the shadcn/Base UI contracts; `pnpm lint`, `pnpm
-typecheck`, `pnpm build`, and the Storybook build gate every change.
+rings) reviewed per the shadcn/Base UI contracts; `pnpm lint` (zero warnings,
+enforced by `--max-warnings 0`), `pnpm typecheck`, `pnpm build`, and the
+Storybook build gate every change.
 
-The full a11y / keyboard / contrast / responsive verification pass is tracked
-and recorded in the project's final ticket.
+### The verification pass (recorded)
+
+The final a11y + responsive pass, run against the real catalog and dashboard:
+
+- **axe sweep** (axe-core 4.10.2, all 105 stories in light + 16 status-heavy
+  stories in dark): 102/105 fully clean with **zero structural violations
+  anywhere** — no ARIA, role, label, or name findings in the catalog. The one
+  rule that fired is color-contrast, in 3 stories, each a documented call: the
+  stock destructive Badge/Button tints (4.09:1 — unshipped stock variants,
+  brand deviations register #6) and the DataTable stale story (`stale-dim`
+  deliberately trades contrast for honesty on degraded data — the feed-states
+  page records why; live data is always AA).
+- **Keyboard**: every interactive element is a native button or link
+  (Enter/Space semantics come from the platform); `aria-sort` updates live on
+  both tables; expand toggles pair `aria-expanded`/`aria-controls` with
+  row-specific labels; both tables carry sr-only captions; all interactive
+  elements share the single `focus-ring` treatment (the pass caught the
+  OrgIdentity link outside it — fixed).
+- **Contrast, rendered, both themes** (canvas readback of computed colors):
+  every status/text pair ≥ 4.5:1 — light worst case 4.69 (breach ink on the
+  page), dark worst case 4.70 (breached badge ink on its tint).
+- **Responsive**: at 375px the page has zero body-level overflow — tables
+  scroll inside their own containers, the KPI band stacks to a 2-column grid,
+  and the expanded coverage panel wraps clean; at 768px the queue table
+  scrolls internally and the agents table fits; the second-monitor width is
+  the design target.

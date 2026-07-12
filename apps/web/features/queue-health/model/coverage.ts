@@ -68,7 +68,7 @@ export interface QueueCoverage {
 function pulledFromFor(
   agent: CoverageAgent,
   queueId: string,
-  queuesById: Map<string, Queue>,
+  queuesById: Map<string, Queue>
 ): PulledFrom[] {
   return agent.queues
     .filter((id) => id !== queueId)
@@ -101,7 +101,7 @@ function pulledFromSeverity(pulledFrom: PulledFrom[]): number {
 export function deriveQueueCoverage(
   queue: Queue,
   allQueues: Queue[],
-  agents: CoverageAgent[],
+  agents: CoverageAgent[]
 ): QueueCoverage {
   const queuesById = new Map(allQueues.map((q) => [q.queue_id, q]))
   const skilled = agents.filter((a) => a.queues.includes(queue.queue_id))
@@ -115,9 +115,7 @@ export function deriveQueueCoverage(
     .sort((a, b) => a.agent.out_of_adherence_sec - b.agent.out_of_adherence_sec)
 
   const shiftable = skilled
-    .filter(
-      (a) => a.adherence_status === "adherent" && a.state === "on_call",
-    )
+    .filter((a) => a.adherence_status === "adherent" && a.state === "on_call")
     .map((agent) => ({
       agent,
       pulledFrom: pulledFromFor(agent, queue.queue_id, queuesById),
@@ -125,7 +123,7 @@ export function deriveQueueCoverage(
     .sort(
       (a, b) =>
         pulledFromSeverity(b.pulledFrom) - pulledFromSeverity(a.pulledFrom) ||
-        a.agent.name.localeCompare(b.agent.name),
+        a.agent.name.localeCompare(b.agent.name)
     )
 
   return { recoverable, shiftable }

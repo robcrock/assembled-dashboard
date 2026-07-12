@@ -13,17 +13,22 @@ interface EmptyStateProps {
   className?: string
 }
 
-function EmptyState({ title, description, action, className }: EmptyStateProps) {
+function EmptyState({
+  title,
+  description,
+  action,
+  className,
+}: EmptyStateProps) {
   return (
     <div
       className={cn(
         "flex flex-col items-center justify-center gap-1 rounded-lg border border-dashed px-6 py-10 text-center",
-        className,
+        className
       )}
     >
-      <p className="text-foreground text-sm font-medium">{title}</p>
+      <p className="text-sm font-medium text-foreground">{title}</p>
       {description && (
-        <p className="text-muted-foreground text-sm">{description}</p>
+        <p className="text-sm text-muted-foreground">{description}</p>
       )}
       {action && <div className="mt-3">{action}</div>}
     </div>

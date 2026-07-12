@@ -100,6 +100,23 @@ export const Stale: Story = {
   },
 }
 
+export const StaleQuiet: Story = {
+  args: {
+    label: "Tickets waiting",
+    value: "84",
+    feed: { status: "stale", lastUpdatedAt: Date.now() - 42_000 },
+    staleNote: false,
+  },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "`staleNote={false}`: the dim still marks the degradation, but the note is silenced — for pages whose chrome mounts the ONE canonical `StaleIndicator` (the dashboard does this: five identical notes said nothing five times).",
+      },
+    },
+  },
+}
+
 export const PlainRow: Story = {
   args: { label: "", variant: "plain" },
   parameters: {
@@ -112,9 +129,24 @@ export const PlainRow: Story = {
   },
   render: () => (
     <div className="grid w-xl grid-cols-3">
-      <StatCard variant="plain" className="pr-6" label="SLA attainment" value="86%" />
-      <StatCard variant="plain" className="border-l px-6" label="Queues breaching" value="2" />
-      <StatCard variant="plain" className="border-l pl-6" label="Tickets waiting" value="84" />
+      <StatCard
+        variant="plain"
+        className="pr-6"
+        label="SLA attainment"
+        value="86%"
+      />
+      <StatCard
+        variant="plain"
+        className="border-l px-6"
+        label="Queues breaching"
+        value="2"
+      />
+      <StatCard
+        variant="plain"
+        className="border-l pl-6"
+        label="Tickets waiting"
+        value="84"
+      />
     </div>
   ),
 }
@@ -126,7 +158,7 @@ export const SizeLg: Story = {
     variant: "plain",
     size: "lg",
     children: (
-      <div className="text-muted-foreground text-metric-sm">
+      <div className="text-metric-sm text-muted-foreground">
         1 at risk · 84 waiting
       </div>
     ),
@@ -144,7 +176,13 @@ export const SizeLg: Story = {
 // The one interactive story: every other state story couples its data to the
 // state; this one holds FILLED data constant so flipping the control swaps
 // only the state and any resolve-time layout shift becomes visible.
-const PLAYGROUND_STATES = ["loading", "live", "stale", "error", "empty"] as const
+const PLAYGROUND_STATES = [
+  "loading",
+  "live",
+  "stale",
+  "error",
+  "empty",
+] as const
 
 export const States: StoryObj<{ state: (typeof PLAYGROUND_STATES)[number] }> = {
   name: "States (playground)",

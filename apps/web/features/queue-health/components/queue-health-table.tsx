@@ -98,7 +98,7 @@ export function QueueHealthTable({
 }: QueueHealthTableProps) {
   const rows = useMemo(
     () => [...queues].sort(compareQueuesBySeverity),
-    [queues],
+    [queues]
   )
 
   const coverageByQueue = useMemo(() => {
@@ -171,7 +171,7 @@ export function QueueHealthTable({
                 {q.agents_on_call === 1 ? " on a call" : " on calls"}
               </span>
               {levers.length > 0 && (
-                <span className="text-muted-foreground text-metric-sm">
+                <span className="text-metric-sm text-muted-foreground">
                   {levers.join(" · ")}
                 </span>
               )}
@@ -242,7 +242,7 @@ export function QueueHealthTable({
         ),
       },
     ],
-    [coverageByQueue],
+    [coverageByQueue]
   )
 
   return (
@@ -252,6 +252,8 @@ export function QueueHealthTable({
       rowKey={(q) => q.queue_id}
       caption="Queues ordered by SLA severity: breaching first, then at risk, then healthy. Shows backlog, coverage, SLA headroom against each queue's own target, actual volume versus forecast, and the wait trend. Expand a row to see which agents can help that queue."
       feed={feed}
+      // the template's chrome StaleIndicator is the page's ONE stale note
+      staleNote={false}
       emptyTitle="No queues reporting"
       emptyDescription="Queues appear as soon as the feed reports them."
       getExpandedContent={(q) => {

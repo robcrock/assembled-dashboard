@@ -25,8 +25,7 @@ function defaultLabel(points: number[]): string {
   const first = points[0]
   const last = points[points.length - 1]
   if (first === undefined || last === undefined) return "No trend data"
-  const direction =
-    last > first ? "Rising" : last < first ? "Falling" : "Flat"
+  const direction = last > first ? "Rising" : last < first ? "Falling" : "Flat"
   return `${direction} trend from ${first} to ${last}`
 }
 
@@ -34,7 +33,7 @@ function toPolylinePoints(
   points: number[],
   width: number,
   height: number,
-  pad: number,
+  pad: number
 ): string {
   const min = Math.min(...points)
   const max = Math.max(...points)

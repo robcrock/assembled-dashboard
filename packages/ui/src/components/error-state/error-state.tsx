@@ -27,21 +27,16 @@ function ErrorState({
     <div
       role="alert"
       className={cn(
-        "border-sla-breach-bg flex flex-col items-center justify-center gap-1 rounded-lg border px-6 py-10 text-center",
-        className,
+        "flex flex-col items-center justify-center gap-1 rounded-lg border border-sla-breach-bg px-6 py-10 text-center",
+        className
       )}
     >
-      <p className="text-sla-breach text-sm font-medium">{title}</p>
+      <p className="text-sm font-medium text-sla-breach">{title}</p>
       {description && (
-        <p className="text-muted-foreground text-sm">{description}</p>
+        <p className="text-sm text-muted-foreground">{description}</p>
       )}
       {onRetry && (
-        <Button
-          variant="outline"
-          size="sm"
-          className="mt-3"
-          onClick={onRetry}
-        >
+        <Button variant="outline" size="sm" className="mt-3" onClick={onRetry}>
           Retry
         </Button>
       )}

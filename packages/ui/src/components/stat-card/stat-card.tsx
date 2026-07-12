@@ -47,6 +47,13 @@ interface StatCardProps {
   size?: "default" | "lg"
   /** Trend slot (e.g. a `Sparkline`), rendered under the value. */
   children?: React.ReactNode
+  /**
+   * Render the "Stale · updated Xs ago" note when the feed degrades (default
+   * true — the card stays self-contained). Pass false on pages whose chrome
+   * already mounts the ONE canonical `StaleIndicator`: the dim still applies —
+   * honesty is not optional, repetition is.
+   */
+  staleNote?: boolean
   className?: string
 }
 
@@ -58,15 +65,14 @@ function StatCard({
   variant = "card",
   size = "default",
   children,
+  staleNote = true,
   className,
 }: StatCardProps) {
   const { status, lastUpdatedAt = null, onRetry } = feed
 
   const content = (
     <>
-      <div className="text-muted-foreground text-label truncate">
-        {label}
-      </div>
+      <div className="truncate text-label text-muted-foreground">{label}</div>
 
       {status === "loading" ? (
         <>
@@ -86,7 +92,7 @@ function StatCard({
           <div
             className={cn(
               "flex items-baseline gap-2",
-              status === "stale" && "stale-dim",
+              status === "stale" && "stale-dim"
             )}
           >
             <div className={cn("text-foreground", VALUE_SIZE[size])}>
@@ -99,7 +105,7 @@ function StatCard({
               {children}
             </div>
           )}
-          {status === "stale" && (
+          {status === "stale" && staleNote && (
             <StaleIndicator lastUpdatedAt={lastUpdatedAt} tone="stale" />
           )}
         </>

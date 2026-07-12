@@ -36,15 +36,30 @@ export const Neutral: Story = {
 }
 
 export const Healthy: Story = {
-  args: { value: 370, max: 1800, label: "Onboarding SLA target consumed", status: "healthy" },
+  args: {
+    value: 370,
+    max: 1800,
+    label: "Onboarding SLA target consumed",
+    status: "healthy",
+  },
 }
 
 export const AtRisk: Story = {
-  args: { value: 250, max: 300, label: "VIP SLA target consumed", status: "at_risk" },
+  args: {
+    value: 250,
+    max: 300,
+    label: "VIP SLA target consumed",
+    status: "at_risk",
+  },
 }
 
 export const BreachedOverflow: Story = {
-  args: { value: 175, max: 120, label: "Billing SLA target consumed", status: "breached" },
+  args: {
+    value: 175,
+    max: 120,
+    label: "Billing SLA target consumed",
+    status: "breached",
+  },
   parameters: {
     docs: {
       description: {

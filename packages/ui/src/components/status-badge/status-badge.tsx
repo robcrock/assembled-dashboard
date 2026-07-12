@@ -1,10 +1,5 @@
 import type * as React from "react"
-import {
-  CircleAlert,
-  CircleCheck,
-  Clock,
-  type LucideIcon,
-} from "lucide-react"
+import { CircleAlert, CircleCheck, Clock, type LucideIcon } from "lucide-react"
 
 import { Badge } from "@workspace/ui/components/badge"
 import { cn } from "@workspace/ui/lib/utils"

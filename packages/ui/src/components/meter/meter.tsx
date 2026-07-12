@@ -35,12 +35,15 @@ function Meter({ value, max, label, status, className }: MeterProps) {
       aria-valuenow={Math.round(Math.max(0, value))}
       aria-valuemin={0}
       aria-valuemax={Math.round(safeMax)}
-      className={cn("bg-muted h-1.5 w-16 overflow-hidden rounded-full", className)}
+      className={cn(
+        "h-1.5 w-16 overflow-hidden rounded-full bg-muted",
+        className
+      )}
     >
       <div
         className={cn(
           "h-full rounded-full",
-          status ? statusFillClass(status) : "bg-muted-foreground",
+          status ? statusFillClass(status) : "bg-muted-foreground"
         )}
         style={{ width: `${fillPct}%` }}
       />

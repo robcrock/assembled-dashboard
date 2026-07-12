@@ -25,6 +25,9 @@
 //                        section shows ErrorState with retry; toggle off to
 //                        recover
 //   /?fail=1, /?delay=4000 → same failure paths, URL-driven
+//   (no lever needed)  → the replay exhausts ~30s in and the feed decays to
+//                        stale on its own — an exhausted feed ages honestly;
+//                        reload restarts the replay
 
 import { useEffect, useMemo, useState, type ReactNode } from "react"
 import { CircleAlert, Pause, Play } from "lucide-react"
@@ -114,7 +117,7 @@ function DemoControls({
         </Button>
       </div>
       {paused && (
-        <div className="text-muted-foreground text-metric-sm max-lg:hidden">
+        <div className="text-metric-sm text-muted-foreground max-lg:hidden">
           replay paused · goes stale when the next tick is late
         </div>
       )}
@@ -141,10 +144,8 @@ export function Dashboard() {
 
   const queueNamesById = useMemo(
     () =>
-      Object.fromEntries(
-        (data?.queues ?? []).map((q) => [q.queue_id, q.name]),
-      ),
-    [data],
+      Object.fromEntries((data?.queues ?? []).map((q) => [q.queue_id, q.name])),
+    [data]
   )
 
   const summary = data?.summary ?? null
@@ -173,6 +174,11 @@ export function Dashboard() {
                 />
               </div>
 
+              {/* ONE freshness surface: the chrome row's StaleIndicator above
+                  is the page's only stale note — every tile and table passes
+                  staleNote={false} and speaks stale through its dim alone
+                  (less, but better: five identical notes said nothing five
+                  times). */}
               {/* KPI trio: the attainment tile, then the two alarm counts —
                   three siblings with one StatCard rhythm. TOP-aligned (picker
                   round, ROB-72): every tile's label/number/sub-line rows share
@@ -195,11 +201,12 @@ export function Dashboard() {
                     variant="plain"
                     size="lg"
                     feed={feed}
+                    staleNote={false}
                     label="Queues breaching"
                     value={alarmValue(summary?.queues_breaching)}
                   >
                     {summary && (
-                      <div className="text-muted-foreground text-metric-sm">
+                      <div className="text-metric-sm text-muted-foreground">
                         {summary.queues_at_risk} at risk ·{" "}
                         {summary.tickets_waiting_total} waiting
                       </div>
@@ -211,11 +218,12 @@ export function Dashboard() {
                     variant="plain"
                     size="lg"
                     feed={feed}
+                    staleNote={false}
                     label="Out of adherence"
                     value={alarmValue(summary?.agents_out_of_adherence)}
                   >
                     {summary && (
-                      <div className="text-muted-foreground text-metric-sm">
+                      <div className="text-metric-sm text-muted-foreground">
                         of {summary.agents_online} online
                       </div>
                     )}

@@ -107,7 +107,7 @@ function SparkBars({
               rx={Math.min(1.5, barW / 2)}
               fill="currentColor"
               className={cn(
-                over ? "text-sla-breach" : "text-muted-foreground/60",
+                over ? "text-sla-breach" : "text-muted-foreground/60"
               )}
             />
           )

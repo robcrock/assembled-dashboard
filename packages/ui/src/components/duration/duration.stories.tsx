@@ -58,7 +58,7 @@ export const Column: Story = {
     },
   },
   render: () => (
-    <div className="text-metric flex flex-col items-end gap-1">
+    <div className="flex flex-col items-end gap-1 text-metric">
       <Duration seconds={45} />
       <Duration seconds={90} />
       <Duration seconds={900} />

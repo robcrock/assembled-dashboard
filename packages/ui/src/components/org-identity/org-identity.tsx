@@ -22,17 +22,25 @@ interface OrgIdentityProps {
   className?: string
 }
 
-function OrgIdentity({ name, tagline, href = "/", className }: OrgIdentityProps) {
+function OrgIdentity({
+  name,
+  tagline,
+  href = "/",
+  className,
+}: OrgIdentityProps) {
   return (
     <a
       href={href}
       aria-label="Homepage"
-      className={cn("flex min-w-0 items-center gap-4", className)}
+      // focus-ring: the system's ONE keyboard-focus treatment — without it
+      // this link was the page's only interactive element on the UA default
+      // outline (found in the ROB-79 keyboard audit)
+      className={cn("focus-ring flex min-w-0 items-center gap-4 rounded-lg", className)}
     >
       {name ? (
         <div
           aria-hidden
-          className="bg-primary text-primary-foreground grid size-14 shrink-0 place-items-center rounded-lg text-xl font-semibold"
+          className="grid size-14 shrink-0 place-items-center rounded-lg bg-primary text-xl font-semibold text-primary-foreground"
         >
           {name.charAt(0)}
         </div>
@@ -46,7 +54,7 @@ function OrgIdentity({ name, tagline, href = "/", className }: OrgIdentityProps)
           <Skeleton className="h-7 w-56" />
         )}
         {tagline && (
-          <p className="text-muted-foreground truncate text-sm">{tagline}</p>
+          <p className="truncate text-sm text-muted-foreground">{tagline}</p>
         )}
       </div>
     </a>
