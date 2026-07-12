@@ -1,33 +1,49 @@
 import type { Meta, StoryObj } from "@storybook/react-vite"
+import type { ReactNode } from "react"
 
 import {
   DataTable,
   type DataTableColumn,
 } from "@workspace/ui/components/data-table"
-import { Sparkline } from "@workspace/ui/components/sparkline"
+import { DeviationBar } from "@workspace/ui/components/deviation-bar"
+import { Duration } from "@workspace/ui/components/duration"
+import { MetricDelta } from "@workspace/ui/components/metric-delta"
+import { SparkBars } from "@workspace/ui/components/spark-bars"
 import {
   StatusBadge,
   type Status,
 } from "@workspace/ui/components/status-badge"
+import { formatDurationSec } from "@workspace/ui/lib/duration"
 
 // Domain-agnostic sample rows shaped like the dashboard's queues — defined
-// locally; the primitive never imports app types.
+// locally; the primitive never imports app types. The COMPOSITION mirrors
+// the shipped queue table cell for cell (column order, deviation cells,
+// threshold-judged SparkBars), so the flagship story teaches the real
+// pattern, not a simplified one that drifts from production.
 interface SampleRow {
   id: string
   name: string
   status: Status
+  longestWaitSec: number
+  targetSec: number
+  headroomPct: number
   waiting: number
-  overForecastPct: number
-  trend: number[]
+  onCalls: number
+  available: number
+  recoverable: number
+  actual: number
+  forecast: number
+  vsForecastPct: number
+  trendSec: number[]
 }
 
 const ROWS: SampleRow[] = [
-  { id: "billing", name: "Billing", status: "breached", waiting: 32, overForecastPct: 25, trend: [48, 55, 70, 88, 105, 118, 132, 150, 168, 175] },
-  { id: "chat", name: "Live Chat", status: "breached", waiting: 18, overForecastPct: 25, trend: [40, 48, 60, 75, 95, 110, 128, 150, 165, 172] },
-  { id: "vip", name: "VIP", status: "at_risk", waiting: 9, overForecastPct: 5, trend: [60, 65, 80, 120, 190, 260, 310, 330, 300, 250] },
-  { id: "tier_2", name: "Tier 2", status: "healthy", waiting: 5, overForecastPct: 0, trend: [180, 190, 200, 210, 230, 250, 260, 255, 240, 230] },
-  { id: "onboarding", name: "Onboarding", status: "healthy", waiting: 12, overForecastPct: -10, trend: [300, 320, 340, 360, 370, 365, 370, 372, 370, 370] },
-  { id: "general", name: "General", status: "healthy", waiting: 8, overForecastPct: -5, trend: [90, 95, 100, 98, 96, 94, 92, 95, 97, 96] },
+  { id: "billing", name: "Billing", status: "breached", longestWaitSec: 175, targetSec: 120, headroomPct: 46, waiting: 32, onCalls: 3, available: 0, recoverable: 1, actual: 70, forecast: 56, vsForecastPct: 25, trendSec: [48, 55, 70, 88, 105, 118, 132, 150, 168, 175] },
+  { id: "chat", name: "Live Chat", status: "breached", longestWaitSec: 260, targetSec: 180, headroomPct: 44, waiting: 22, onCalls: 2, available: 0, recoverable: 1, actual: 80, forecast: 64, vsForecastPct: 25, trendSec: [60, 75, 95, 120, 150, 185, 210, 235, 250, 260] },
+  { id: "vip", name: "VIP", status: "at_risk", longestWaitSec: 250, targetSec: 300, headroomPct: -17, waiting: 9, onCalls: 3, available: 0, recoverable: 1, actual: 44, forecast: 42, vsForecastPct: 5, trendSec: [60, 65, 80, 120, 190, 260, 310, 330, 300, 250] },
+  { id: "general", name: "General Support", status: "healthy", longestWaitSec: 190, targetSec: 300, headroomPct: -37, waiting: 10, onCalls: 4, available: 0, recoverable: 0, actual: 46, forecast: 47, vsForecastPct: -2, trendSec: [90, 95, 100, 98, 96, 94, 92, 95, 97, 96] },
+  { id: "tier_2", name: "Tier 2", status: "healthy", longestWaitSec: 230, targetSec: 600, headroomPct: -62, waiting: 5, onCalls: 4, available: 1, recoverable: 1, actual: 37, forecast: 37, vsForecastPct: 0, trendSec: [180, 190, 200, 210, 230, 250, 260, 255, 240, 230] },
+  { id: "onboarding", name: "Onboarding", status: "healthy", longestWaitSec: 370, targetSec: 1800, headroomPct: -79, waiting: 6, onCalls: 3, available: 0, recoverable: 0, actual: 23, forecast: 23, vsForecastPct: 0, trendSec: [300, 320, 340, 360, 370, 365, 370, 372, 370, 370] },
 ]
 
 const SEVERITY: Record<Status, number> = {
@@ -38,43 +54,141 @@ const SEVERITY: Record<Status, number> = {
   out_of_adherence: 1,
 }
 
+// The app's triage key, mirrored: severity band first, then depth past the
+// row's own target.
+const severityRank = (row: SampleRow) =>
+  SEVERITY[row.status] * 10_000 - row.headroomPct
+
+// Story-local mirror of the queue table's deviation-cell anatomy (context
+// line over a diverging bar). Like the app's copy, it is table-layout
+// composition, not a primitive — it earns promotion to @workspace/ui only
+// with a second REAL consumer.
+function DeviationCell({
+  absolutes,
+  delta,
+  bar,
+}: {
+  absolutes: ReactNode
+  delta: ReactNode
+  bar: ReactNode
+}) {
+  return (
+    <div className="flex w-36 flex-col gap-1.5">
+      <div className="flex items-baseline justify-between gap-2">
+        <span className="text-metric-sm">{absolutes}</span>
+        {delta}
+      </div>
+      {bar}
+    </div>
+  )
+}
+
+// The shipped column order: demand and capacity (waiting, coverage) before
+// the derived pressure metrics (headroom, forecast deviation, trend).
 const COLUMNS: DataTableColumn<SampleRow>[] = [
-  {
-    key: "status",
-    header: "Status",
-    cell: (row) => <StatusBadge status={row.status} />,
-    sortValue: (row) => SEVERITY[row.status],
-  },
   {
     key: "name",
     header: "Queue",
-    cell: (row) => <span className="text-foreground font-medium">{row.name}</span>,
+    cell: (row) => <span className="font-medium">{row.name}</span>,
     sortValue: (row) => row.name,
+  },
+  {
+    key: "status",
+    header: "Status",
+    cell: (row) => {
+      const overSec = row.longestWaitSec - row.targetSec
+      return (
+        <StatusBadge status={row.status}>
+          {row.status === "breached" && overSec > 0 && (
+            <span>· {formatDurationSec(overSec)} over</span>
+          )}
+        </StatusBadge>
+      )
+    },
+    sortValue: severityRank,
   },
   {
     key: "waiting",
     header: "Waiting",
     cell: (row) => row.waiting,
     sortValue: (row) => row.waiting,
-    align: "right",
+  },
+  {
+    key: "coverage",
+    header: "Coverage",
+    cell: (row) => {
+      const levers = [
+        row.available > 0 && `${row.available} available`,
+        row.recoverable > 0 && `${row.recoverable} recoverable`,
+      ].filter(Boolean)
+      return (
+        <div className="flex flex-col items-start">
+          <span>
+            {row.onCalls}
+            {row.onCalls === 1 ? " on a call" : " on calls"}
+          </span>
+          {levers.length > 0 && (
+            <span className="text-muted-foreground text-metric-sm">
+              {levers.join(" · ")}
+            </span>
+          )}
+        </div>
+      )
+    },
+    sortValue: (row) => row.onCalls,
+  },
+  {
+    key: "headroom",
+    header: "Headroom",
+    cell: (row) => (
+      <DeviationCell
+        absolutes={
+          <>
+            <Duration seconds={row.longestWaitSec} /> /{" "}
+            <Duration seconds={row.targetSec} />
+          </>
+        }
+        delta={<MetricDelta value={row.headroomPct} />}
+        bar={
+          <DeviationBar
+            value={row.headroomPct}
+            label={`${row.name}: longest wait ${formatDurationSec(row.longestWaitSec)} against a ${formatDurationSec(row.targetSec)} target`}
+            className="w-full"
+          />
+        }
+      />
+    ),
+    sortValue: (row) => row.headroomPct,
   },
   {
     key: "forecast",
-    header: "Vs forecast",
-    cell: (row) => `${row.overForecastPct > 0 ? "+" : ""}${row.overForecastPct}%`,
-    sortValue: (row) => row.overForecastPct,
-    align: "right",
+    header: "Actual / forecast",
+    cell: (row) => (
+      <DeviationCell
+        absolutes={`${row.actual} / ${row.forecast}`}
+        delta={<MetricDelta value={row.vsForecastPct} />}
+        bar={
+          <DeviationBar
+            value={row.vsForecastPct}
+            range={50}
+            label={`${row.name}: ${row.actual} tickets against a forecast of ${row.forecast}`}
+            className="w-full"
+          />
+        }
+      />
+    ),
+    sortValue: (row) => row.vsForecastPct,
   },
   {
     key: "trend",
     header: "Wait trend",
     cell: (row) => (
-      <Sparkline
-        points={row.trend}
-        status={row.status === "healthy" ? undefined : row.status}
+      <SparkBars
+        points={row.trendSec}
+        threshold={row.targetSec}
+        label={`Longest wait trend for ${row.name}: ${row.trendSec.filter((s) => s > row.targetSec).length} of ${row.trendSec.length} samples over the ${formatDurationSec(row.targetSec)} target`}
       />
     ),
-    align: "right",
   },
 ]
 
@@ -82,7 +196,8 @@ const baseArgs = {
   columns: COLUMNS,
   rows: ROWS,
   rowKey: (row: SampleRow) => row.id,
-  caption: "Sample queues with status, backlog, forecast and wait trend",
+  caption:
+    "Sample queues with status, backlog, coverage, SLA headroom, actual volume versus forecast, and wait trend",
 }
 
 const meta: Meta<typeof DataTable<SampleRow>> = {
@@ -96,11 +211,13 @@ The dense, sortable, keyboard-operable table both dashboard tables are built fro
 
 **The feed contract:** DataTable is a feed OWNER — it owns all four feed states internally. Consumers forward one \`feed\` object (\`{ status: "loading" | "live" | "stale" | "error", lastUpdatedAt?, onRetry? }\`) and never compose state visuals by hand: loading renders skeleton rows under the real header (no layout shift), error renders an \`ErrorState\` with retry, an empty \`rows\` array renders an \`EmptyState\` (\`emptyTitle\` / \`emptyDescription\`), and stale dims the body and shows a \`StaleIndicator\` — it never blanks. The leaf state primitives are the visuals this owner renders, not something to wrap around it. The table never fetches — components below the template never do.
 
-**Use it for:** dense read-only rows. \`rowTone\` can de-emphasize rows without the table knowing why — the dashboard tables deliberately pass none (muted ink is reserved for sub-text, so their triage emphasis rides on sort order + the status column instead). \`getExpandedContent\` adds expandable rows — an inline, \`aria-controls\`-linked detail panel per row; return \`null\` for rows with nothing to expand and their toggle is omitted; \`expandLabel\` gives each toggle a row-specific accessible name.
+**Use it for:** dense read-only rows. \`getExpandedContent\` adds expandable rows — an inline, \`aria-controls\`-linked detail panel per row; return \`null\` for rows with nothing to expand and their toggle is omitted; \`expandLabel\` gives each toggle a row-specific accessible name.
 
 **Not for:** large paginated/virtualized datasets, row selection, or row navigation — rows expand to an inline detail panel, they don't link out.
 
-**Deliberately omitted:** a compound/context API — this is a single component taking columns + rows, because the only shared state is one internal sort tuple and context machinery would give consumers nothing but wiring. Also no pagination/virtualization (~19 rows total on the dashboard) and no selection.
+**Deliberately omitted:** a compound/context API — this is a single component taking columns + rows, because the only shared state is one internal sort tuple and context machinery would give consumers nothing but wiring. No pagination/virtualization (~19 rows total on the dashboard) and no selection. No \`rowTone\`/row-dimming prop — muted ink is reserved for genuine sub-text, never whole rows of data, so the table makes that violation impossible; triage emphasis rides on sort order + a status column (the same make-it-impossible discipline as StatusBadge's missing color props).
+
+These stories' sample fixture mirrors the shipped queue table's composition cell for cell — column order, deviation-cell anatomy, threshold-judged \`SparkBars\` — using only \`@workspace/ui\` primitives and local sample rows, so the catalog teaches the production pattern without importing app code.
 `,
       },
     },
@@ -115,26 +232,23 @@ export const Live: Story = {
     ...baseArgs,
     defaultSort: { key: "status", direction: "asc" },
   },
-}
-
-export const TriageEmphasis: Story = {
-  args: {
-    ...baseArgs,
-    defaultSort: { key: "status", direction: "asc" },
-    rowTone: (row) => (row.status === "healthy" ? "muted" : "default"),
-  },
   parameters: {
     docs: {
       description: {
         story:
-          'Healthy tail de-emphasized via rowTone — the table never learns what "healthy" means.',
+          "The shipped composition: severity sort leads, breached badges carry their over-target magnitude, deviation cells pair absolutes with a colorless delta and bar, and the trend is threshold-judged SparkBars — an over-target bar is the reserved breach accent, per the color law.",
       },
     },
   },
 }
 
 export const Loading: Story = {
-  args: { ...baseArgs, rows: [], feed: { status: "loading" } },
+  args: {
+    ...baseArgs,
+    rows: [],
+    skeletonRows: 6,
+    feed: { status: "loading" },
+  },
 }
 
 export const Empty: Story = {
@@ -162,11 +276,11 @@ export const ExpandableRows: Story = {
     ...baseArgs,
     defaultSort: { key: "status", direction: "asc" },
     getExpandedContent: (row) =>
-      row.status === "healthy" ? null : (
+      row.recoverable === 0 ? null : (
         <div className="text-sm">
-          <span className="font-medium">{row.name}</span>{" "}
+          <span className="font-medium">Jordan P.</span>{" "}
           <span className="text-muted-foreground">
-            — {row.waiting} waiting, {row.overForecastPct}% vs forecast
+            On break · 15m out of adherence — skilled on {row.name}
           </span>
         </div>
       ),
@@ -175,7 +289,7 @@ export const ExpandableRows: Story = {
     docs: {
       description: {
         story:
-          "Expandable rows: troubled rows carry an inline detail panel; healthy rows return null and get no toggle. Tab to a chevron, Enter/Space toggles.",
+          "Expandable rows, mirroring the app's who-can-help panel: rows with recoverable capacity carry an inline detail; rows returning null get no toggle. Tab to a chevron, Enter/Space toggles.",
       },
     },
   },
@@ -205,7 +319,7 @@ export const States: StoryObj<{ state: (typeof PLAYGROUND_STATES)[number] }> = {
     // Fixed-width wrapper: the app's tables are container-constrained
     // (sections span the page), so width never shifts there — an unwrapped
     // canvas table would shrink-wrap per state and fake a width bug.
-    <div className="w-2xl">
+    <div className="w-4xl">
       <DataTable
         {...baseArgs}
         rows={state === "empty" ? [] : ROWS}
