@@ -26,7 +26,8 @@ import { cn } from "@workspace/ui/lib/utils"
 //
 // Owns its loading/empty/error/stale rendering. Loading renders skeleton rows
 // under the real header (no layout shift); stale dims the body and shows the
-// StaleIndicator but never blanks; error offers retry.
+// StaleIndicator (opt out via staleNote where page chrome carries the one
+// canonical note) but never blanks; error offers retry.
 //
 // Internal architecture (top-down in this file): DataTable is a thin
 // orchestrator — state lives in two hooks (useTableSort, useExpandedKeys;
@@ -107,6 +108,13 @@ interface DataTableProps<Row> {
    * single-line cells, "tall" (56px) for multi-line cell anatomies.
    */
   rowSize?: "default" | "tall"
+  /**
+   * Render the "Stale · updated Xs ago" note above the table when the feed
+   * degrades (default true — the table stays self-contained). Pass false on
+   * pages whose chrome already mounts the ONE canonical `StaleIndicator`: the
+   * body dim still applies — honesty is not optional, repetition is.
+   */
+  staleNote?: boolean
   className?: string
 }
 
@@ -123,6 +131,7 @@ function DataTable<Row>({
   defaultSort,
   skeletonRows = 5,
   rowSize = "default",
+  staleNote = true,
   className,
 }: DataTableProps<Row>) {
   const { status, lastUpdatedAt = null, onRetry } = feed
@@ -136,7 +145,7 @@ function DataTable<Row>({
 
   return (
     <div className={className}>
-      {status === "stale" && (
+      {status === "stale" && staleNote && (
         <div className="mb-1 flex justify-end">
           <StaleIndicator lastUpdatedAt={lastUpdatedAt} tone="stale" />
         </div>

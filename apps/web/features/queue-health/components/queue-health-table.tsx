@@ -252,6 +252,8 @@ export function QueueHealthTable({
       rowKey={(q) => q.queue_id}
       caption="Queues ordered by SLA severity: breaching first, then at risk, then healthy. Shows backlog, coverage, SLA headroom against each queue's own target, actual volume versus forecast, and the wait trend. Expand a row to see which agents can help that queue."
       feed={feed}
+      // the template's chrome StaleIndicator is the page's ONE stale note
+      staleNote={false}
       emptyTitle="No queues reporting"
       emptyDescription="Queues appear as soon as the feed reports them."
       getExpandedContent={(q) => {

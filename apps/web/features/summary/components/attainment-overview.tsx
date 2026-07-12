@@ -63,6 +63,8 @@ export function AttainmentOverview({
       variant="plain"
       size="lg"
       feed={feed}
+      // the template's chrome StaleIndicator is the page's ONE stale note
+      staleNote={false}
       label="SLA attainment"
       value={summary ? `${summary.sla_attainment_pct}%` : undefined}
       className={className}
