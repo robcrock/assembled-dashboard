@@ -1,17 +1,13 @@
-import {
-  statusFillClass,
-  type Status,
-} from "@workspace/ui/components/status-badge"
 import { cn } from "@workspace/ui/lib/utils"
 
 // Signed deviation around a center baseline — how far a value sits over or
 // under its target, as a bar diverging from a baseline dot. Positive values
 // extend RIGHT ("crossed past the promise"), negative extend left; the sign IS
-// the direction, so there is no invert/direction prop. The fill is tinted only
-// through the canonical status scale (neutral when untinted) via
-// statusFillClass, so bars can never invent a fourth severity color or drift
-// from the badges. The bar shows direction + proportion; the number that says
-// exactly how far lives beside it (e.g. a MetricDelta) — never inside.
+// the direction, so there is no invert/direction prop. The bar is deliberately
+// COLORLESS — one neutral muted fill, no status tint at all: it shows
+// direction + proportion, and any verdict lives on the status surfaces beside
+// it (badges), never here. The number that says exactly how far lives beside
+// it too (e.g. a MetricDelta) — never inside.
 //
 // Contrast with Meter: Meter is a normalized 0→max fill (saturation against a
 // bound); DeviationBar is a signed distance from a baseline. Different
@@ -22,20 +18,12 @@ interface DeviationBarProps {
   value: number
   /** Accessible name — what this bar measures (e.g. "Billing: longest wait 2m 55s against a 2m target"). */
   label: string
-  /** Tint from the canonical status scale; neutral (muted ink) when omitted. */
-  status?: Status
   /** Clamp bound for each half; deviations past ±range render a full half. */
   range?: number
   className?: string
 }
 
-function DeviationBar({
-  value,
-  label,
-  status,
-  range = 100,
-  className,
-}: DeviationBarProps) {
+function DeviationBar({ value, label, range = 100, className }: DeviationBarProps) {
   const safeRange = range > 0 ? range : 100
   const clamped = Math.max(-safeRange, Math.min(value, safeRange))
   const halfPct = (Math.abs(clamped) / safeRange) * 50
@@ -50,10 +38,7 @@ function DeviationBar({
       className={cn("bg-muted relative h-1.5 w-24 rounded-full", className)}
     >
       <div
-        className={cn(
-          "absolute inset-y-0 rounded-full",
-          status ? statusFillClass(status) : "bg-muted-foreground",
-        )}
+        className="bg-muted-foreground absolute inset-y-0 rounded-full"
         style={
           clamped >= 0
             ? { left: "50%", width: `${halfPct}%` }
