@@ -113,11 +113,17 @@ export function QueueHealthTable({
     () => [
       // Queue name leads: it's a queue table, so the entity being ranked is
       // the first thing the eye lands on; the status verdict reads second.
+      // Column widths (layout="fixed" below): live cells widen tick to tick —
+      // a badge gains "· 1m 20s over", a lever line appears — and auto layout
+      // would re-solve every column each time, jittering the whole grid. Each
+      // width clears its column's widest realistic content; together they fit
+      // the page's max-w-6xl budget without overflowing into a scrollbar.
       {
         key: "queue",
         header: "Queue",
         cell: (q) => <span className="font-medium">{q.name}</span>,
         sortValue: (q) => q.name,
+        className: "w-32",
       },
       {
         key: "status",
@@ -138,6 +144,8 @@ export function QueueHealthTable({
         // The model's single triage key — shared with the pre-sort comparator
         // so the two orderings can't drift.
         sortValue: (q) => queueSeverityRank(q),
+        // the widest cell on the page's widest tick: "Breached · 1m 20s over"
+        className: "w-60",
       },
       // Demand and capacity (waiting, coverage) read before the derived
       // pressure metrics: how deep is the line and who's on it, then how
@@ -147,6 +155,7 @@ export function QueueHealthTable({
         header: "Waiting",
         cell: (q) => q.tickets_waiting,
         sortValue: (q) => q.tickets_waiting,
+        className: "w-24",
       },
       {
         key: "coverage",
@@ -179,6 +188,8 @@ export function QueueHealthTable({
           )
         },
         sortValue: (q) => q.agents_on_call,
+        // clears the two-lever line ("1 available · 1 recoverable")
+        className: "w-44",
       },
       {
         key: "headroom",
@@ -207,6 +218,8 @@ export function QueueHealthTable({
         ),
         // Pressure vs. the queue's own target — never raw seconds.
         sortValue: (q) => q.sla_headroom_pct,
+        // the DeviationCell's fixed w-36 plus cell padding, exactly
+        className: "w-40",
       },
       {
         key: "forecast",
@@ -229,6 +242,7 @@ export function QueueHealthTable({
           />
         ),
         sortValue: (q) => q.volume_vs_forecast_pct,
+        className: "w-40",
       },
       {
         key: "trend",
@@ -240,6 +254,7 @@ export function QueueHealthTable({
             label={`Longest wait trend for ${q.name}: ${q.wait_trend_sec.filter((s) => s > q.sla_target_sec).length} of ${q.wait_trend_sec.length} samples over the ${formatDurationSec(q.sla_target_sec)} target`}
           />
         ),
+        className: "w-24",
       },
     ],
     [coverageByQueue]
@@ -268,6 +283,9 @@ export function QueueHealthTable({
       // tall: the deviation cells and lever sub-lines are two-line anatomies;
       // the rhythm must clear the tallest cell or loading -> live shifts
       rowSize="tall"
+      // fixed: ticking cells (badge suffixes, lever lines) must never
+      // re-solve the grid — widths live on the columns above
+      layout="fixed"
     />
   )
 }

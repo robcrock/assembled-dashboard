@@ -293,6 +293,12 @@
   * {
     @apply border-border outline-ring/50;
     }
+  html {
+    /* Classic (non-overlay) scrollbars reserve their gutter up front, so a
+       page growing past one screen — resolving skeletons, an expanded row —
+       can't summon a scrollbar that nudges the centered layout sideways. */
+    scrollbar-gutter: stable;
+    }
   body {
     @apply bg-background text-foreground;
     }

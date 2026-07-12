@@ -14,9 +14,10 @@
 // Page hierarchy, top to bottom, is the eye's travel: who + how healthy →
 // queues by trouble → missing capacity.
 //
-// Theming follows OS appearance (prefers-color-scheme via next-themes) — the
-// dashboard deliberately mounts no theme toggle; the ThemeToggle primitive
-// stays in the Storybook catalog.
+// Theming defaults to LIGHT (next-themes defaultTheme="light" — the Braun
+// ramp is authored light-first) — the dashboard deliberately mounts no theme
+// toggle; dark stays reachable via the "d" hotkey, and the ThemeToggle
+// primitive stays in the Storybook catalog.
 //
 // Demo levers (the failure story, demonstrable from the chrome row or by hand):
 //   Pause button / "p" → pause replay; ~8s later ticks are "late" and the
@@ -38,6 +39,8 @@ import { PageSection } from "@workspace/ui/components/page-section"
 import { StaleIndicator } from "@workspace/ui/components/stale-indicator"
 import { StatCard } from "@workspace/ui/components/stat-card"
 import type { Feed } from "@workspace/ui/lib/feed"
+
+import { cn } from "@workspace/ui/lib/utils"
 
 import { AgentAdherenceTable } from "@/features/agent-adherence/components/agent-adherence-table"
 import { QueueHealthTable } from "@/features/queue-health/components/queue-health-table"
@@ -65,9 +68,41 @@ function alarmValue(count: number | undefined): ReactNode {
 }
 
 /**
- * The quiet chrome row: freshness + the demo levers. Secondary to the
+ * Both faces of a toggle's label, stacked in one grid cell: the button is
+ * always as wide as its wider label, so flipping a lever can't resize it and
+ * nudge its siblings. `invisible` keeps the inactive face out of the
+ * accessibility tree while still holding its width.
+ */
+function ToggleLabel({
+  active,
+  activeLabel,
+  inactiveLabel,
+}: {
+  active: boolean
+  activeLabel: string
+  inactiveLabel: string
+}) {
+  return (
+    <span className="grid justify-items-center">
+      <span className={cn("col-start-1 row-start-1", !active && "invisible")}>
+        {activeLabel}
+      </span>
+      <span className={cn("col-start-1 row-start-1", active && "invisible")}>
+        {inactiveLabel}
+      </span>
+    </span>
+  )
+}
+
+/**
+ * The quiet chrome row: the demo levers + freshness. Secondary to the
  * numbers — small outline buttons, muted ink. Local by design: one consumer,
  * and the lever state belongs to the template.
+ *
+ * Order is a no-shift decision: the StaleIndicator's text re-renders every
+ * second and changes width at digit boundaries (and gains a "Stale ·"
+ * prefix), so it sits AFTER the fixed-width levers — its growth lands in the
+ * row's open space instead of pushing the buttons around.
  */
 function DemoControls({
   paused,
@@ -84,10 +119,6 @@ function DemoControls({
 }) {
   return (
     <div className="flex flex-wrap items-center gap-3">
-      <StaleIndicator
-        lastUpdatedAt={feed.lastUpdatedAt ?? null}
-        tone={feed.status === "stale" ? "stale" : "live"}
-      />
       <div
         className="flex items-center gap-2"
         role="group"
@@ -104,7 +135,11 @@ function DemoControls({
           ) : (
             <Pause aria-hidden className="size-3.5" />
           )}
-          {paused ? "Resume replay" : "Pause replay"}
+          <ToggleLabel
+            active={paused}
+            activeLabel="Resume replay"
+            inactiveLabel="Pause replay"
+          />
         </Button>
         <Button
           variant="outline"
@@ -113,7 +148,11 @@ function DemoControls({
           aria-pressed={injectError}
         >
           <CircleAlert aria-hidden className="size-3.5" />
-          {injectError ? "Clear error" : "Inject error"}
+          <ToggleLabel
+            active={injectError}
+            activeLabel="Clear error"
+            inactiveLabel="Inject error"
+          />
         </Button>
       </div>
       {paused && (
@@ -121,6 +160,10 @@ function DemoControls({
           replay paused · goes stale when the next tick is late
         </div>
       )}
+      <StaleIndicator
+        lastUpdatedAt={feed.lastUpdatedAt ?? null}
+        tone={feed.status === "stale" ? "stale" : "live"}
+      />
     </div>
   )
 }

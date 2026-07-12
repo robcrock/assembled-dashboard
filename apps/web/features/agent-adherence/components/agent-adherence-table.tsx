@@ -39,6 +39,11 @@ export function AgentAdherenceTable({
   )
   const adherentCount = agents.length - needingAttention.length
 
+  // Column widths (layout="fixed" below): the two duration cells re-render
+  // every tick, and auto layout would re-solve the grid whenever one gains a
+  // digit. Sized columns clear their widest realistic content; Agent and
+  // Queues stay unsized and split the remainder — their text is stable per
+  // row, so they can't jitter.
   const columns: DataTableColumn<Agent>[] = [
     {
       key: "agent",
@@ -52,6 +57,8 @@ export function AgentAdherenceTable({
       key: "adherence",
       header: "Adherence",
       cell: (a) => <StatusBadge status={a.adherence_status} />,
+      // clears the wider badge, "Out of adherence"
+      className: "w-44",
     },
     {
       key: "state",
@@ -63,12 +70,15 @@ export function AgentAdherenceTable({
         </span>
       ),
       sortValue: (a) => AGENT_STATE_LABEL[a.state],
+      // clears the longest state + duration ("In a meeting · 25m 30s")
+      className: "w-48",
     },
     {
       key: "out-for",
       header: "Out for",
       cell: (a) => <Duration seconds={a.out_of_adherence_sec} />,
       sortValue: (a) => a.out_of_adherence_sec,
+      className: "w-24",
     },
     {
       key: "queues",
@@ -92,6 +102,9 @@ export function AgentAdherenceTable({
         emptyDescription="Everyone is where the schedule expects them."
         defaultSort={{ key: "out-for", direction: "desc" }}
         skeletonRows={3}
+        // fixed: the ticking duration cells must never re-solve the grid —
+        // widths live on the columns above
+        layout="fixed"
       />
       {status !== "loading" && status !== "error" && agents.length > 0 && (
         <p className="mt-2 text-metric-sm text-muted-foreground">

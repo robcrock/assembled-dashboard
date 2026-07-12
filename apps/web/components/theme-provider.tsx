@@ -8,10 +8,13 @@ function ThemeProvider({
   ...props
 }: React.ComponentProps<typeof NextThemesProvider>) {
   return (
+    // Light is the deliberate default — the Braun concrete ramp is authored
+    // light-first, so every visitor lands on the same canonical surface
+    // regardless of OS appearance. Dark stays a first-class theme, reachable
+    // via the "d" hotkey here and demonstrable across the Storybook catalog.
     <NextThemesProvider
       attribute="class"
-      defaultTheme="system"
-      enableSystem
+      defaultTheme="light"
       disableTransitionOnChange
       {...props}
     >
