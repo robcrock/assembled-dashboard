@@ -197,7 +197,9 @@ its own per-theme raw colors.
   - A small type ramp with **tabular figures** (`font-variant-numeric: tabular-nums`) for dense,
     ticking metrics.
 
-Ship a `ThemeToggle` so light/dark is demonstrably real.
+Light/dark stays demonstrably real in the Storybook catalog and via OS appearance
+(`prefers-color-scheme`) — the dashboard itself deliberately mounts no theme toggle; the
+`ThemeToggle` primitive is catalog-only.
 
 ## Component inventory — the sharp set
 
@@ -240,7 +242,7 @@ compositions wire them to this dashboard's data and live in `apps/web` feature s
   (`RelativeTime` deliberately not built; `StaleIndicator` is the only wall-clock surface.)
 - State primitives: `Skeleton`, `EmptyState`, `ErrorState`, `StaleIndicator` (last-updated +
   degraded styling).
-- `ThemeToggle`.
+- `ThemeToggle` (catalog-only — the dashboard follows OS appearance and mounts no toggle).
 
 **Compositions — `apps/web` feature slices:** `AttainmentOverview` (`features/summary` — the
 SLA-attainment gauge; it replaced the old `SummaryBar` KPI strip, and the section-level alarm

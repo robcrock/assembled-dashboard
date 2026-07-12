@@ -1,17 +1,23 @@
 "use client"
 
 // The single client boundary. Owns useDashboardData() and passes
-// { data, feed } down — no section fetches on its own. The header lives here
-// too: this UI is whitelabel, so the operating company's identity (org) comes
-// from the feed and can only render inside the data boundary.
+// { data, feed } down — no section fetches on its own. There is no separate
+// header bar: this UI is whitelabel, so the operating company's identity
+// (org) arrives as data and anchors the OVERVIEW BAND — identity large at the
+// left (with the freshness indicator and demo controls as a quiet chrome row
+// beneath it), and the three floor numbers at the right: the SLA-attainment
+// gauge plus the two alarm counts, divider-separated siblings. Attainment is
+// the org-level promise; each alarm count previews the section beneath that
+// explains it.
 //
-// Page hierarchy, top to bottom, is the eye's travel: identity + freshness
-// chrome → the overview row (SLA-attainment gauge + the two alarm counts) →
-// queues by trouble → missing capacity. The overview is deliberately three
-// numbers, not a strip of mixed KPIs: attainment is the org-level promise,
-// and each alarm count previews the section that explains it.
+// Page hierarchy, top to bottom, is the eye's travel: who + how healthy →
+// queues by trouble → missing capacity.
 //
-// Demo levers (the failure story, demonstrable from the toolbar or by hand):
+// Theming follows OS appearance (prefers-color-scheme via next-themes) — the
+// dashboard deliberately mounts no theme toggle; the ThemeToggle primitive
+// stays in the Storybook catalog.
+//
+// Demo levers (the failure story, demonstrable from the chrome row or by hand):
 //   Pause button / "p" → pause replay; ~8s later ticks are "late" and the
 //                        page degrades to stale
 //   Error button       → refetch hits ?fail=1 (route returns 500) → every
@@ -25,7 +31,6 @@ import { CircleAlert, Pause, Play } from "lucide-react"
 import { Button } from "@workspace/ui/components/button"
 import { Skeleton } from "@workspace/ui/components/skeleton"
 import { StaleIndicator } from "@workspace/ui/components/stale-indicator"
-import { ThemeToggle } from "@workspace/ui/components/theme-toggle"
 import type { Feed } from "@workspace/ui/lib/feed"
 import { cn } from "@workspace/ui/lib/utils"
 
@@ -46,27 +51,28 @@ function isTypingTarget(target: EventTarget | null) {
 
 /**
  * Whitelabel identity: the tenant's name and a monogram tile, both derived
- * from feed data — no hardcoded branding anywhere. Skeletons mirror the
- * final layout until the first payload lands.
+ * from feed data — no hardcoded branding anywhere. Sized as the page's
+ * anchor (it leads the overview band). Skeletons mirror the final layout
+ * until the first payload lands.
  */
 function OrgIdentity({ org }: { org: string | null }) {
   return (
-    <a href="/" aria-label="Homepage" className="flex min-w-0 items-center gap-3">
+    <a href="/" aria-label="Homepage" className="flex min-w-0 items-center gap-4">
       {org ? (
         <div
           aria-hidden
-          className="bg-primary text-primary-foreground grid size-9 shrink-0 place-items-center rounded-md text-sm font-semibold"
+          className="bg-primary text-primary-foreground grid size-14 shrink-0 place-items-center rounded-lg text-xl font-semibold"
         >
           {org.charAt(0)}
         </div>
       ) : (
-        <Skeleton className="size-9 shrink-0 rounded-md" />
+        <Skeleton className="size-14 shrink-0 rounded-lg" />
       )}
       <div className="min-w-0">
         {org ? (
-          <h1 className="truncate text-base font-semibold">{org}</h1>
+          <h1 className="truncate text-2xl font-semibold">{org}</h1>
         ) : (
-          <Skeleton className="h-4 w-36" />
+          <Skeleton className="h-7 w-56" />
         )}
         <p className="text-muted-foreground truncate text-sm">
           Floor status — real-time operations.
@@ -77,7 +83,7 @@ function OrgIdentity({ org }: { org: string | null }) {
 }
 
 /**
- * A section-level alarm number for the overview row — breach ink when
+ * A section-level alarm number for the overview band — breach ink when
  * non-zero, calm otherwise. Fed plain numbers by the composition root so the
  * summary slice never leaks into the section slices.
  */
@@ -160,84 +166,95 @@ export function Dashboard() {
 
   return (
     <div className="isolate min-h-svh">
-      {/* Chrome: identity left, freshness + demo controls + theme right.
-          Inner container matches <main> so content edges align. */}
-      <header className="border-b">
-        <div className="mx-auto flex w-full max-w-6xl flex-wrap items-center justify-between gap-x-6 gap-y-3 px-6 py-4">
-          <OrgIdentity org={org} />
-          <div className="flex flex-wrap items-center justify-end gap-3">
-            {paused && (
-              <div className="text-muted-foreground text-metric-sm max-lg:hidden">
-                replay paused · goes stale when the next tick is late
-              </div>
-            )}
-            <StaleIndicator
-              lastUpdatedAt={feed.lastUpdatedAt ?? null}
-              tone={feed.status === "stale" ? "stale" : "live"}
-            />
-            <div
-              className="flex items-center gap-2"
-              role="group"
-              aria-label="Demo controls"
-            >
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setPaused((p) => !p)}
-                aria-pressed={paused}
-              >
-                {paused ? (
-                  <Play aria-hidden className="size-3.5" />
-                ) : (
-                  <Pause aria-hidden className="size-3.5" />
-                )}
-                {paused ? "Resume replay" : "Pause replay"}
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setInjectError((e) => !e)}
-                aria-pressed={injectError}
-              >
-                <CircleAlert aria-hidden className="size-3.5" />
-                {injectError ? "Clear error" : "Inject error"}
-              </Button>
-            </div>
-            <div aria-hidden className="bg-border h-5 w-px" />
-            <ThemeToggle />
-          </div>
-        </div>
-      </header>
-
       <main className="mx-auto w-full max-w-6xl px-6 py-8">
         <div className="flex flex-col gap-10">
-          {/* Overview row: the org-level promise, then the two alarm counts
-              that preview the sections beneath. */}
-          <section
-            aria-label="Floor overview"
-            className="flex flex-wrap items-center gap-x-14 gap-y-6"
-          >
-            <AttainmentOverview
-              summary={summary}
-              ts={data?.ts ?? null}
-              feed={feed}
-            />
-            <AlarmStat
-              label="Queues breaching"
-              count={summary?.queues_breaching}
-              detail={
-                summary
-                  ? `${summary.queues_at_risk} at risk · ${summary.tickets_waiting_total} waiting`
-                  : undefined
-              }
-              feed={feed}
-            />
-            <AlarmStat
-              label="Out of adherence"
-              count={summary?.agents_out_of_adherence}
-              detail={summary ? `of ${summary.agents_online} online` : undefined}
-              feed={feed}
-            />
+          {/* Overview band — replaces the old header: identity anchors the
+              left (chrome row beneath), the three floor numbers sit right as
+              divider-separated siblings. Container queries drive the
+              collapse; dividers reconfigure per column change. */}
+          <section aria-label="Floor overview" className="@container">
+            <div className="flex flex-col gap-8 @4xl:flex-row @4xl:items-center @4xl:gap-10">
+              <div className="flex min-w-0 flex-1 flex-col gap-4">
+                <OrgIdentity org={org} />
+                {/* Quiet chrome row: freshness + demo levers — secondary to
+                    the numbers, so small outline buttons and muted ink. */}
+                <div className="flex flex-wrap items-center gap-3">
+                  <StaleIndicator
+                    lastUpdatedAt={feed.lastUpdatedAt ?? null}
+                    tone={feed.status === "stale" ? "stale" : "live"}
+                  />
+                  <div
+                    className="flex items-center gap-2"
+                    role="group"
+                    aria-label="Demo controls"
+                  >
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setPaused((p) => !p)}
+                      aria-pressed={paused}
+                    >
+                      {paused ? (
+                        <Play aria-hidden className="size-3.5" />
+                      ) : (
+                        <Pause aria-hidden className="size-3.5" />
+                      )}
+                      {paused ? "Resume replay" : "Pause replay"}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setInjectError((e) => !e)}
+                      aria-pressed={injectError}
+                    >
+                      <CircleAlert aria-hidden className="size-3.5" />
+                      {injectError ? "Clear error" : "Inject error"}
+                    </Button>
+                  </div>
+                  {paused && (
+                    <div className="text-muted-foreground text-metric-sm max-lg:hidden">
+                      replay paused · goes stale when the next tick is late
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* KPI trio: gauge, then the two alarm counts. Narrow: gauge on
+                  its own row, tiles 2-up with one divider. @xl: one row of
+                  three with vertical dividers (first pr-only, middle px,
+                  last pl-only). */}
+              <div className="grid grid-cols-2 gap-y-6 @xl:flex @xl:items-center">
+                <div className="col-span-2 @xl:col-auto @xl:pr-10">
+                  <AttainmentOverview
+                    summary={summary}
+                    ts={data?.ts ?? null}
+                    feed={feed}
+                  />
+                </div>
+                <div className="pr-6 @xl:border-l @xl:px-10">
+                  <AlarmStat
+                    label="Queues breaching"
+                    count={summary?.queues_breaching}
+                    detail={
+                      summary
+                        ? `${summary.queues_at_risk} at risk · ${summary.tickets_waiting_total} waiting`
+                        : undefined
+                    }
+                    feed={feed}
+                  />
+                </div>
+                <div className="border-l pl-6 @xl:pl-10">
+                  <AlarmStat
+                    label="Out of adherence"
+                    count={summary?.agents_out_of_adherence}
+                    detail={
+                      summary ? `of ${summary.agents_online} online` : undefined
+                    }
+                    feed={feed}
+                  />
+                </div>
+              </div>
+            </div>
           </section>
 
           <section aria-labelledby="queues-heading" className="flex flex-col gap-4">

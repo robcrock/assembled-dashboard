@@ -28,9 +28,9 @@ Chat breaches mid-replay and jumps to the top; the final frame shows Billing
 | State | How to demo it |
 |---|---|
 | Loading | visit `/?delay=4000` — skeletons mirror the final layout |
-| Error | click **Simulate error** in the header's Demo controls (or visit `/?fail=1`) — every surface degrades independently with a Retry |
+| Error | click **Inject error** in the overview band's Demo controls (or visit `/?fail=1`) — every surface degrades independently with a Retry |
 | **Stale** | press **`p`** — replay pauses; ~8s later the page shows "Stale · updated Xs ago", dims, and keeps the data rendered (stale never blanks) |
-| Dark mode | press **`d`** or use the header toggle |
+| Dark mode | follows your OS appearance (`prefers-color-scheme`) — the dashboard mounts no toggle; the `ThemeToggle` primitive lives in the Storybook catalog |
 
 ## Stack (and why)
 
@@ -121,7 +121,7 @@ together as one value object rather than a param clump. The essentials:
 | `DataTable<Row>` | generic column config (`key/header/cell/sortValue/align`), required sr-only `caption`, `rowTone` de-emphasis, optional expandable rows (`getExpandedContent` + `expandLabel`, `aria-controls`-linked), `defaultSort`, one `feed` object | compound/context API (only shared state is one sort tuple); pagination/virtualization (~19 rows total); selection; **row navigation** (rows expand to an inline detail panel, they don't link out) |
 | `Duration` | `seconds` → semantic `<time>` | live ticking (compressed replay time would contradict the wall clock — `StaleIndicator` is the only wall-clock surface) |
 | `EmptyState` / `ErrorState` / `StaleIndicator` | title/description/action slot; optional `onRetry`; self-ticking `lastUpdatedAt` + `tone` | icons; auto-derived staleness (the hook is the single owner of that logic) |
-| `ThemeToggle` | — (no props) | light/dark/system menu (binary flip suffices) |
+| `ThemeToggle` | — (no props) | light/dark/system menu (binary flip suffices). Catalog-only: the dashboard follows OS appearance and mounts no toggle |
 
 **Colorless deltas + reserved red.** The palette spends its one loud color,
 `--sla-breach`, on exactly one meaning: a broken promise. Queue SLA breach and
