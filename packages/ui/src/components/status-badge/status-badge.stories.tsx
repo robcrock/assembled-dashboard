@@ -1,9 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite"
 
-import {
-  StatusBadge,
-  StatusDot,
-} from "@workspace/ui/components/status-badge"
+import { StatusBadge, StatusDot } from "@workspace/ui/components/status-badge"
 
 const meta = {
   title: "molecules/status-badge",
@@ -91,7 +88,7 @@ export const Dots: Story = {
 export const DotWithText: Story = {
   args: { status: "breached" },
   render: () => (
-    <div className="text-foreground flex items-center gap-2 text-sm">
+    <div className="flex items-center gap-2 text-sm text-foreground">
       <StatusDot status="breached" decorative />
       Billing
     </div>
@@ -122,7 +119,7 @@ export const Density: Story = {
       ).map(([status, queue]) => (
         <div key={queue} className="flex items-center gap-3">
           <StatusBadge status={status} />
-          <span className="text-foreground text-sm">{queue}</span>
+          <span className="text-sm text-foreground">{queue}</span>
         </div>
       ))}
     </div>
@@ -130,8 +127,7 @@ export const Density: Story = {
   parameters: {
     docs: {
       description: {
-        story:
-          "Density: the triage cluster as it appears in a dashboard row.",
+        story: "Density: the triage cluster as it appears in a dashboard row.",
       },
     },
   },

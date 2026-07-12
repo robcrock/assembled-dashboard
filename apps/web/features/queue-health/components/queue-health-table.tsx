@@ -98,7 +98,7 @@ export function QueueHealthTable({
 }: QueueHealthTableProps) {
   const rows = useMemo(
     () => [...queues].sort(compareQueuesBySeverity),
-    [queues],
+    [queues]
   )
 
   const coverageByQueue = useMemo(() => {
@@ -171,7 +171,7 @@ export function QueueHealthTable({
                 {q.agents_on_call === 1 ? " on a call" : " on calls"}
               </span>
               {levers.length > 0 && (
-                <span className="text-muted-foreground text-metric-sm">
+                <span className="text-metric-sm text-muted-foreground">
                   {levers.join(" · ")}
                 </span>
               )}
@@ -242,7 +242,7 @@ export function QueueHealthTable({
         ),
       },
     ],
-    [coverageByQueue],
+    [coverageByQueue]
   )
 
   return (

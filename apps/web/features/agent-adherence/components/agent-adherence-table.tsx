@@ -35,7 +35,7 @@ export function AgentAdherenceTable({
 }: AgentAdherenceTableProps) {
   const status = feed?.status ?? "live"
   const needingAttention = agents.filter(
-    (a) => a.adherence_status === "out_of_adherence",
+    (a) => a.adherence_status === "out_of_adherence"
   )
   const adherentCount = agents.length - needingAttention.length
 
@@ -44,7 +44,7 @@ export function AgentAdherenceTable({
       key: "agent",
       header: "Agent",
       cell: (a) => (
-        <span className="text-foreground font-medium">{a.name}</span>
+        <span className="font-medium text-foreground">{a.name}</span>
       ),
       sortValue: (a) => a.name,
     },
@@ -94,7 +94,7 @@ export function AgentAdherenceTable({
         skeletonRows={3}
       />
       {status !== "loading" && status !== "error" && agents.length > 0 && (
-        <p className="text-muted-foreground text-metric-sm mt-2">
+        <p className="mt-2 text-metric-sm text-muted-foreground">
           {adherentCount} of {agents.length} agents adherent
         </p>
       )}

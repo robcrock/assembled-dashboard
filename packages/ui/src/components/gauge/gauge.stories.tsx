@@ -51,7 +51,7 @@ export const Reading: Story = {
       <>
         <div className="text-metric-xl">86%</div>
         <MetricDelta value={2} unit="pp" />
-        <div className="text-muted-foreground text-xs font-medium">
+        <div className="text-xs font-medium text-muted-foreground">
           SLA attainment
         </div>
       </>

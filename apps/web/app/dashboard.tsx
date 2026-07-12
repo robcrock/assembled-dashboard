@@ -117,7 +117,7 @@ function DemoControls({
         </Button>
       </div>
       {paused && (
-        <div className="text-muted-foreground text-metric-sm max-lg:hidden">
+        <div className="text-metric-sm text-muted-foreground max-lg:hidden">
           replay paused · goes stale when the next tick is late
         </div>
       )}
@@ -144,10 +144,8 @@ export function Dashboard() {
 
   const queueNamesById = useMemo(
     () =>
-      Object.fromEntries(
-        (data?.queues ?? []).map((q) => [q.queue_id, q.name]),
-      ),
-    [data],
+      Object.fromEntries((data?.queues ?? []).map((q) => [q.queue_id, q.name])),
+    [data]
   )
 
   const summary = data?.summary ?? null
@@ -208,7 +206,7 @@ export function Dashboard() {
                     value={alarmValue(summary?.queues_breaching)}
                   >
                     {summary && (
-                      <div className="text-muted-foreground text-metric-sm">
+                      <div className="text-metric-sm text-muted-foreground">
                         {summary.queues_at_risk} at risk ·{" "}
                         {summary.tickets_waiting_total} waiting
                       </div>
@@ -225,7 +223,7 @@ export function Dashboard() {
                     value={alarmValue(summary?.agents_out_of_adherence)}
                   >
                     {summary && (
-                      <div className="text-muted-foreground text-metric-sm">
+                      <div className="text-metric-sm text-muted-foreground">
                         of {summary.agents_online} online
                       </div>
                     )}

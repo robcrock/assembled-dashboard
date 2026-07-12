@@ -34,7 +34,7 @@ export const Default: Story = {
     description:
       "Sorted by severity against each queue's own target — expand a row to see who can help.",
     children: (
-      <div className="text-muted-foreground rounded-lg border border-dashed p-8 text-center text-sm">
+      <div className="rounded-lg border border-dashed p-8 text-center text-sm text-muted-foreground">
         section content
       </div>
     ),
@@ -46,7 +46,7 @@ export const NoDescription: Story = {
     id: "agents",
     title: "Agents needing attention",
     children: (
-      <div className="text-muted-foreground rounded-lg border border-dashed p-8 text-center text-sm">
+      <div className="rounded-lg border border-dashed p-8 text-center text-sm text-muted-foreground">
         section content
       </div>
     ),

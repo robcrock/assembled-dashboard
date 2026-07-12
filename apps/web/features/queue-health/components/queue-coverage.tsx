@@ -27,7 +27,7 @@ function pulledFromNote({ pulledFrom }: CoverageCandidate): string {
   const names = pulledFrom.map((q) =>
     q.sla_status === "healthy"
       ? q.name
-      : `${q.name} (${q.sla_status === "breached" ? "breached" : "at risk"})`,
+      : `${q.name} (${q.sla_status === "breached" ? "breached" : "at risk"})`
   )
   return `also covers ${names.join(", ")}`
 }
@@ -49,9 +49,7 @@ function CandidateRow({
       <StatusDot status={status} decorative />
       <span className="font-medium">{candidate.agent.name}</span>
       <span className="text-muted-foreground">{children}</span>
-      <span className="text-muted-foreground">
-        {pulledFromNote(candidate)}
-      </span>
+      <span className="text-muted-foreground">{pulledFromNote(candidate)}</span>
     </li>
   )
 }
@@ -69,7 +67,7 @@ export function QueueCoveragePanel({
 
   if (recoverable.length === 0 && shiftable.length === 0) {
     return (
-      <p className="text-muted-foreground text-sm">
+      <p className="text-sm text-muted-foreground">
         No agents cover {queueName}.
       </p>
     )
@@ -79,7 +77,7 @@ export function QueueCoveragePanel({
     <div className="flex flex-col gap-3 text-sm">
       {recoverable.length > 0 && (
         <section className="flex flex-col gap-1.5">
-          <h3 className="text-muted-foreground text-label">Recoverable</h3>
+          <h3 className="text-label text-muted-foreground">Recoverable</h3>
           <ul className="flex flex-col gap-1">
             {recoverable.map((candidate) => (
               <CandidateRow
@@ -97,7 +95,7 @@ export function QueueCoveragePanel({
 
       {shiftable.length > 0 && (
         <section className="flex flex-col gap-1.5">
-          <h3 className="text-muted-foreground text-label">Cross-trained</h3>
+          <h3 className="text-label text-muted-foreground">Cross-trained</h3>
           <ul className="flex flex-col gap-1">
             {shiftable.map((candidate) => (
               <CandidateRow

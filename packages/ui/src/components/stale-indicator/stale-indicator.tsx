@@ -51,13 +51,15 @@ function StaleIndicator({
   return (
     <span
       className={cn(
-        "text-metric-sm inline-flex items-center gap-1",
+        "inline-flex items-center gap-1 text-metric-sm",
         tone === "stale" ? "text-status-at-risk" : "text-muted-foreground",
-        className,
+        className
       )}
     >
       {tone === "stale" && <span className="font-medium">Stale ·</span>}
-      {seconds === null ? "Updated —" : `Updated ${formatDurationSec(seconds)} ago`}
+      {seconds === null
+        ? "Updated —"
+        : `Updated ${formatDurationSec(seconds)} ago`}
     </span>
   )
 }

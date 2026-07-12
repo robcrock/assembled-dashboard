@@ -23,7 +23,12 @@ interface DeviationBarProps {
   className?: string
 }
 
-function DeviationBar({ value, label, range = 100, className }: DeviationBarProps) {
+function DeviationBar({
+  value,
+  label,
+  range = 100,
+  className,
+}: DeviationBarProps) {
   const safeRange = range > 0 ? range : 100
   const clamped = Math.max(-safeRange, Math.min(value, safeRange))
   const halfPct = (Math.abs(clamped) / safeRange) * 50
@@ -35,10 +40,10 @@ function DeviationBar({ value, label, range = 100, className }: DeviationBarProp
       aria-valuenow={Math.round(clamped)}
       aria-valuemin={-safeRange}
       aria-valuemax={safeRange}
-      className={cn("bg-muted relative h-1.5 w-24 rounded-full", className)}
+      className={cn("relative h-1.5 w-24 rounded-full bg-muted", className)}
     >
       <div
-        className="bg-muted-foreground absolute inset-y-0 rounded-full"
+        className="absolute inset-y-0 rounded-full bg-muted-foreground"
         style={
           clamped >= 0
             ? { left: "50%", width: `${halfPct}%` }
@@ -49,7 +54,7 @@ function DeviationBar({ value, label, range = 100, className }: DeviationBarProp
           fill visibly departs FROM somewhere. */}
       <span
         aria-hidden
-        className="bg-background ring-border absolute top-1/2 left-1/2 size-2 -translate-1/2 rounded-full ring-1"
+        className="absolute top-1/2 left-1/2 size-2 -translate-1/2 rounded-full bg-background ring-1 ring-border"
       />
     </div>
   )

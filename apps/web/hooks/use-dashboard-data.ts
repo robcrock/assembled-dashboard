@@ -77,7 +77,7 @@ function framesOf(payload: DashboardPayload): DashboardFrame[] {
 }
 
 export function useDashboardData(
-  options: UseDashboardDataOptions = {},
+  options: UseDashboardDataOptions = {}
 ): UseDashboardDataResult {
   const { tickMs = 3000, paused = false, fail = false } = options
   const staleAfterMs = options.staleAfterMs ?? tickMs * 2.5
@@ -97,7 +97,7 @@ export function useDashboardData(
       try {
         const res = await fetch(
           `/api/dashboard${demoParams(window.location.search, fail)}`,
-          { signal: controller.signal, cache: "no-store" },
+          { signal: controller.signal, cache: "no-store" }
         )
         if (!res.ok) throw new Error(`Dashboard API responded ${res.status}`)
         const body = (await res.json()) as DashboardPayload
@@ -107,7 +107,9 @@ export function useDashboardData(
         setStale(false)
       } catch (err) {
         if (controller.signal.aborted) return
-        setError(err instanceof Error ? err.message : "Failed to load dashboard")
+        setError(
+          err instanceof Error ? err.message : "Failed to load dashboard"
+        )
       }
     }
     void load()
@@ -157,7 +159,7 @@ export function useDashboardData(
 
   const feed = useMemo<Feed>(
     () => ({ status, lastUpdatedAt, onRetry: retry }),
-    [status, lastUpdatedAt, retry],
+    [status, lastUpdatedAt, retry]
   )
 
   return { data, org: payload?.meta.org ?? null, feed }

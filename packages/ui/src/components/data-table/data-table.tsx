@@ -135,7 +135,11 @@ function DataTable<Row>({
   className,
 }: DataTableProps<Row>) {
   const { status, lastUpdatedAt = null, onRetry } = feed
-  const { sortedRows, sort, toggleSort } = useTableSort(columns, rows, defaultSort)
+  const { sortedRows, sort, toggleSort } = useTableSort(
+    columns,
+    rows,
+    defaultSort
+  )
   const expanded = useExpandedKeys()
 
   // Column presence is table-level (the callback exists), independent of any
@@ -217,7 +221,7 @@ function DataTable<Row>({
 function useTableSort<Row>(
   columns: DataTableColumn<Row>[],
   rows: Row[],
-  defaultSort?: SortState,
+  defaultSort?: SortState
 ) {
   // defaultSort is captured at mount (useState initializer semantics) — a
   // consumer changing it later re-sorts nothing, same as before extraction.
@@ -236,7 +240,7 @@ function useTableSort<Row>(
     setSort((prev) =>
       prev?.key === key
         ? { key, direction: prev.direction === "asc" ? "desc" : "asc" }
-        : { key, direction: "asc" },
+        : { key, direction: "asc" }
     )
   }
 
@@ -302,7 +306,7 @@ function HeaderRow<Row>({
             // alignment only. The dashboard tables pass no align at
             // all — every column's content shares its header's left
             // edge, so a header always sits over its own data.
-            className={cn("text-muted-foreground text-label", column.className)}
+            className={cn("text-label text-muted-foreground", column.className)}
           >
             {column.sortValue ? (
               <SortHeaderButton
@@ -338,8 +342,8 @@ function SortHeaderButton({
       type="button"
       onClick={onToggle}
       className={cn(
-        "focus-ring -mx-1 inline-flex items-center gap-1 rounded-sm px-1 py-0.5 hover:text-foreground",
-        direction !== null && "text-foreground",
+        "-mx-1 inline-flex items-center gap-1 rounded-sm px-1 py-0.5 focus-ring hover:text-foreground",
+        direction !== null && "text-foreground"
       )}
     >
       {children}
@@ -410,7 +414,11 @@ function EmptyRow({ colSpan, title, description }: EmptyRowProps) {
   return (
     <TableRow className="hover:bg-transparent">
       <TableCell colSpan={colSpan}>
-        <EmptyState title={title} description={description} className="border-0" />
+        <EmptyState
+          title={title}
+          description={description}
+          className="border-0"
+        />
       </TableCell>
     </TableRow>
   )
@@ -466,7 +474,7 @@ function DataRow<Row>({
             className={cn(
               "text-metric",
               column.align === "right" && "text-right",
-              column.className,
+              column.className
             )}
           >
             {column.cell(row)}
@@ -489,7 +497,12 @@ interface ExpandToggleProps {
   onToggle: () => void
 }
 
-function ExpandToggle({ rowId, isExpanded, label, onToggle }: ExpandToggleProps) {
+function ExpandToggle({
+  rowId,
+  isExpanded,
+  label,
+  onToggle,
+}: ExpandToggleProps) {
   return (
     <button
       type="button"
@@ -502,7 +515,7 @@ function ExpandToggle({ rowId, isExpanded, label, onToggle }: ExpandToggleProps)
       // siblings without breaking table semantics, so we match the grammar
       // (aria-expanded/aria-controls + data-state), not the wrapper.
       data-state={isExpanded ? "open" : "closed"}
-      className="focus-ring hover:text-foreground text-muted-foreground inline-flex size-6 items-center justify-center rounded-sm"
+      className="inline-flex size-6 items-center justify-center rounded-sm text-muted-foreground focus-ring hover:text-foreground"
     >
       {isExpanded ? (
         <ChevronDown aria-hidden className="size-4" />
@@ -519,7 +532,11 @@ interface ExpandedDetailRowProps {
   children: React.ReactNode
 }
 
-function ExpandedDetailRow({ rowId, colSpan, children }: ExpandedDetailRowProps) {
+function ExpandedDetailRow({
+  rowId,
+  colSpan,
+  children,
+}: ExpandedDetailRowProps) {
   return (
     <TableRow data-state="open" className="bg-muted/40 hover:bg-muted/40">
       <TableCell id={`${rowId}-detail`} colSpan={colSpan} className="px-4 py-3">

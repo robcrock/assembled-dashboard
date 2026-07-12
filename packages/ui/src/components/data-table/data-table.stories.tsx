@@ -9,10 +9,7 @@ import { DeviationBar } from "@workspace/ui/components/deviation-bar"
 import { Duration } from "@workspace/ui/components/duration"
 import { MetricDelta } from "@workspace/ui/components/metric-delta"
 import { SparkBars } from "@workspace/ui/components/spark-bars"
-import {
-  StatusBadge,
-  type Status,
-} from "@workspace/ui/components/status-badge"
+import { StatusBadge, type Status } from "@workspace/ui/components/status-badge"
 import { formatDurationSec } from "@workspace/ui/lib/duration"
 
 // Domain-agnostic sample rows shaped like the dashboard's queues — defined
@@ -38,12 +35,102 @@ interface SampleRow {
 }
 
 const ROWS: SampleRow[] = [
-  { id: "billing", name: "Billing", status: "breached", longestWaitSec: 175, targetSec: 120, headroomPct: 46, waiting: 32, onCalls: 3, available: 0, recoverable: 1, actual: 70, forecast: 56, vsForecastPct: 25, trendSec: [48, 55, 70, 88, 105, 118, 132, 150, 168, 175] },
-  { id: "chat", name: "Live Chat", status: "breached", longestWaitSec: 260, targetSec: 180, headroomPct: 44, waiting: 22, onCalls: 2, available: 0, recoverable: 1, actual: 80, forecast: 64, vsForecastPct: 25, trendSec: [60, 75, 95, 120, 150, 185, 210, 235, 250, 260] },
-  { id: "vip", name: "VIP", status: "at_risk", longestWaitSec: 250, targetSec: 300, headroomPct: -17, waiting: 9, onCalls: 3, available: 0, recoverable: 1, actual: 44, forecast: 42, vsForecastPct: 5, trendSec: [60, 65, 80, 120, 190, 260, 310, 330, 300, 250] },
-  { id: "general", name: "General Support", status: "healthy", longestWaitSec: 190, targetSec: 300, headroomPct: -37, waiting: 10, onCalls: 4, available: 0, recoverable: 0, actual: 46, forecast: 47, vsForecastPct: -2, trendSec: [90, 95, 100, 98, 96, 94, 92, 95, 97, 96] },
-  { id: "tier_2", name: "Tier 2", status: "healthy", longestWaitSec: 230, targetSec: 600, headroomPct: -62, waiting: 5, onCalls: 4, available: 1, recoverable: 1, actual: 37, forecast: 37, vsForecastPct: 0, trendSec: [180, 190, 200, 210, 230, 250, 260, 255, 240, 230] },
-  { id: "onboarding", name: "Onboarding", status: "healthy", longestWaitSec: 370, targetSec: 1800, headroomPct: -79, waiting: 6, onCalls: 3, available: 0, recoverable: 0, actual: 23, forecast: 23, vsForecastPct: 0, trendSec: [300, 320, 340, 360, 370, 365, 370, 372, 370, 370] },
+  {
+    id: "billing",
+    name: "Billing",
+    status: "breached",
+    longestWaitSec: 175,
+    targetSec: 120,
+    headroomPct: 46,
+    waiting: 32,
+    onCalls: 3,
+    available: 0,
+    recoverable: 1,
+    actual: 70,
+    forecast: 56,
+    vsForecastPct: 25,
+    trendSec: [48, 55, 70, 88, 105, 118, 132, 150, 168, 175],
+  },
+  {
+    id: "chat",
+    name: "Live Chat",
+    status: "breached",
+    longestWaitSec: 260,
+    targetSec: 180,
+    headroomPct: 44,
+    waiting: 22,
+    onCalls: 2,
+    available: 0,
+    recoverable: 1,
+    actual: 80,
+    forecast: 64,
+    vsForecastPct: 25,
+    trendSec: [60, 75, 95, 120, 150, 185, 210, 235, 250, 260],
+  },
+  {
+    id: "vip",
+    name: "VIP",
+    status: "at_risk",
+    longestWaitSec: 250,
+    targetSec: 300,
+    headroomPct: -17,
+    waiting: 9,
+    onCalls: 3,
+    available: 0,
+    recoverable: 1,
+    actual: 44,
+    forecast: 42,
+    vsForecastPct: 5,
+    trendSec: [60, 65, 80, 120, 190, 260, 310, 330, 300, 250],
+  },
+  {
+    id: "general",
+    name: "General Support",
+    status: "healthy",
+    longestWaitSec: 190,
+    targetSec: 300,
+    headroomPct: -37,
+    waiting: 10,
+    onCalls: 4,
+    available: 0,
+    recoverable: 0,
+    actual: 46,
+    forecast: 47,
+    vsForecastPct: -2,
+    trendSec: [90, 95, 100, 98, 96, 94, 92, 95, 97, 96],
+  },
+  {
+    id: "tier_2",
+    name: "Tier 2",
+    status: "healthy",
+    longestWaitSec: 230,
+    targetSec: 600,
+    headroomPct: -62,
+    waiting: 5,
+    onCalls: 4,
+    available: 1,
+    recoverable: 1,
+    actual: 37,
+    forecast: 37,
+    vsForecastPct: 0,
+    trendSec: [180, 190, 200, 210, 230, 250, 260, 255, 240, 230],
+  },
+  {
+    id: "onboarding",
+    name: "Onboarding",
+    status: "healthy",
+    longestWaitSec: 370,
+    targetSec: 1800,
+    headroomPct: -79,
+    waiting: 6,
+    onCalls: 3,
+    available: 0,
+    recoverable: 0,
+    actual: 23,
+    forecast: 23,
+    vsForecastPct: 0,
+    trendSec: [300, 320, 340, 360, 370, 365, 370, 372, 370, 370],
+  },
 ]
 
 const SEVERITY: Record<Status, number> = {
@@ -128,7 +215,7 @@ const COLUMNS: DataTableColumn<SampleRow>[] = [
             {row.onCalls === 1 ? " on a call" : " on calls"}
           </span>
           {levers.length > 0 && (
-            <span className="text-muted-foreground text-metric-sm">
+            <span className="text-metric-sm text-muted-foreground">
               {levers.join(" · ")}
             </span>
           )}
@@ -320,7 +407,13 @@ export const ExpandableRows: Story = {
 // state (Loading/Empty/Error pass rows: []); this one holds FILLED rows
 // constant so flipping the control swaps only the state and any resolve-time
 // layout shift becomes visible.
-const PLAYGROUND_STATES = ["loading", "live", "stale", "error", "empty"] as const
+const PLAYGROUND_STATES = [
+  "loading",
+  "live",
+  "stale",
+  "error",
+  "empty",
+] as const
 
 export const States: StoryObj<{ state: (typeof PLAYGROUND_STATES)[number] }> = {
   name: "States (playground)",
@@ -369,7 +462,11 @@ export const Dense: Story = {
   args: {
     ...baseArgs,
     rows: Array.from({ length: 3 }, (_, i) =>
-      ROWS.map((row) => ({ ...row, id: `${row.id}-${i}`, waiting: row.waiting + i })),
+      ROWS.map((row) => ({
+        ...row,
+        id: `${row.id}-${i}`,
+        waiting: row.waiting + i,
+      }))
     ).flat(),
   },
   parameters: {
