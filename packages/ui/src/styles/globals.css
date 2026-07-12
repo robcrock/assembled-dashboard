@@ -27,11 +27,16 @@
  *    Where Tailwind v4 has a namespace for it (--shadow-*), it lives in
  *    @theme; otherwise it becomes an @utility.
  *
- * Neutral ramp: custom, cool-cast (hue ~255, low chroma) after Linear's
- * Void→Paper scale; lightness steps preserve the previous shadcn values so
- * existing consumers keep their contrast. Chromatic ramps (red/amber/green/
- * indigo) adopt Tailwind v4's oklch values at sparse steps — mint more steps
- * only when a semantic role needs one.
+ * Brand layer: Braun / dieter-grid (see DESIGN.md at the repo root). The
+ * neutral ramp is "concrete" — warm cream at the light end (#F3F1EC/#E7E5E1),
+ * cool graphite at the dark end (#6B6F74/#0F1113), exactly the spec's four
+ * anchors; mid-steps are interpolated in OKLab (not LCH — a hue-arc sweep
+ * from warm ~85° to cool ~250° would tint the greys green). The single
+ * chromatic accent is the spec's utility orange (#D95600); amber stays for
+ * the at-risk middle of the urgency ramp (grey → amber → orange) — the one
+ * documented deviation from the spec's single-accent rule, paid for triage
+ * scanning. Steps beyond the anchors exist only where a semantic role
+ * consumes one.
  * ------------------------------------------------------------------------- */
 
 @theme inline {
@@ -67,20 +72,27 @@
     --color-card: var(--card);
     --color-foreground: var(--foreground);
     --color-background: var(--background);
-    --radius-sm: calc(var(--radius) * 0.6);
-    --radius-md: calc(var(--radius) * 0.8);
+    /* Braun radius scale, literal: 0 / 2px / 4px (DESIGN.md `rounded`).
+       Everything above lg CLAMPS to 4px — vendored components keep their
+       stock rounded-xl/rounded-4xl classes but render Braun-square. Bare
+       `rounded` (0.25rem = 4px) already coincides with lg. Residual
+       non-token curves (rounded-full meter/deviation tracks, gauge round
+       linecaps, the monogram tile) are documented in the PR. */
+    --radius-sm: 0px;
+    --radius-md: 2px;
     --radius-lg: var(--radius);
-    --radius-xl: calc(var(--radius) * 1.4);
-    --radius-2xl: calc(var(--radius) * 1.8);
-    --radius-3xl: calc(var(--radius) * 2.2);
-    --radius-4xl: calc(var(--radius) * 2.6);
+    --radius-xl: var(--radius);
+    --radius-2xl: var(--radius);
+    --radius-3xl: var(--radius);
+    --radius-4xl: var(--radius);
     --font-sans: var(--font-sans);
     /* composite: hairline elevation — surfaces separate by border, not shadow */
     --shadow-hairline: inset 0 0 0 1px var(--border);
     /* semantic: SLA breach — THE reserved accent. The palette's single loud
-       color, spent on exactly one meaning: a broken SLA promise. Nothing
-       else may be red; every other status leans on iconography + calmer
-       inks, so a red pixel anywhere on the page IS a breach. */
+       color — the spec's utility orange, the calculator's one orange key —
+       spent on exactly one meaning: a broken SLA promise. Nothing else may
+       be orange; every other status leans on iconography + calmer inks, so
+       an orange pixel anywhere on the page IS a breach. */
     --color-sla-breach: var(--sla-breach);
     --color-sla-breach-foreground: var(--sla-breach-foreground);
     --color-sla-breach-bg: var(--sla-breach-bg);
@@ -104,104 +116,109 @@
 }
 
 :root {
-    /* ---- primitive: neutral (cool cast, hue ~255) ---- */
-    --primitive-neutral-0: oklch(1 0 0);
-    --primitive-neutral-50: oklch(0.985 0.001 255);
-    --primitive-neutral-100: oklch(0.97 0.002 255);
-    --primitive-neutral-200: oklch(0.922 0.004 255);
-    --primitive-neutral-300: oklch(0.87 0.006 255);
-    --primitive-neutral-400: oklch(0.708 0.01 255);
-    --primitive-neutral-500: oklch(0.556 0.012 255);
-    --primitive-neutral-600: oklch(0.439 0.011 255);
-    --primitive-neutral-700: oklch(0.371 0.01 255);
-    --primitive-neutral-800: oklch(0.269 0.008 255);
-    --primitive-neutral-900: oklch(0.205 0.006 255);
-    --primitive-neutral-950: oklch(0.145 0.005 255);
-    --primitive-neutral-975: oklch(0.13 0.004 255);
+    /* ---- primitive: concrete (Braun neutral ramp) ----
+       Anchors are DESIGN.md literals: 50 = surface #F3F1EC, 100 = neutral
+       #E7E5E1, 500 = secondary #6B6F74, 950 = primary #0F1113. 600 is SOLVED,
+       not interpolated: the lightest grey that clears 4.5:1 as text on the
+       page surface (spec-500 measures 4.02:1 there — kept spec-literal for
+       large-text/non-text roles, never body ink). Remaining steps are
+       OKLab-interpolated between anchors on Tailwind's neutral spacing. */
+    --primitive-concrete-50: oklch(0.958 0.007 88.6);
+    --primitive-concrete-100: oklch(0.922 0.006 84.6);
+    --primitive-concrete-200: oklch(0.878 0.004 87.3);
+    --primitive-concrete-300: oklch(0.83 0.002 95.1);
+    --primitive-concrete-400: oklch(0.68 0.004 247.9);
+    --primitive-concrete-500: oklch(0.54 0.009 253.9);
+    --primitive-concrete-600: oklch(0.503 0.009 253.6);
+    --primitive-concrete-700: oklch(0.428 0.008 252.7);
+    --primitive-concrete-800: oklch(0.314 0.007 251.1);
+    --primitive-concrete-900: oklch(0.243 0.006 249.8);
+    --primitive-concrete-950: oklch(0.176 0.005 248.1);
 
-    /* ---- primitive: red ---- */
-    --primitive-red-100: oklch(0.936 0.032 17.717);
-    --primitive-red-300: oklch(0.808 0.114 19.571);
-    --primitive-red-400: oklch(0.704 0.191 22.216);
-    --primitive-red-500: oklch(0.637 0.237 25.331);
-    --primitive-red-600: oklch(0.577 0.245 27.325);
-    --primitive-red-700: oklch(0.505 0.213 27.518);
-    --primitive-red-950: oklch(0.258 0.092 26.042);
+    /* ---- primitive: orange (Braun utility accent) ----
+       500 is the DESIGN.md tertiary #D95600, spec-literal — at 3.15:1 on the
+       page it is a fill/large-type value, never body ink. 700 is the solved
+       light-theme text ink (4.70:1 on the page, 4.92:1 on its own tint);
+       400 the solved dark-theme ink; 100/950 the badge tints. */
+    --primitive-orange-100: oklch(0.94 0.032 43.6);
+    --primitive-orange-400: oklch(0.65 0.181 43.6);
+    --primitive-orange-500: oklch(0.616 0.181 43.6);
+    --primitive-orange-700: oklch(0.519 0.152 43.6);
+    --primitive-orange-950: oklch(0.25 0.065 43.6);
 
-    /* ---- primitive: amber ---- */
+    /* ---- primitive: amber (at-risk) — Tailwind v4 oklch values at sparse
+       steps. 800 minted because at-risk ink needs it: amber-700 measures
+       4.01:1 on the Braun page (it passed on the old white canvas). ---- */
     --primitive-amber-100: oklch(0.962 0.059 95.617);
     --primitive-amber-300: oklch(0.879 0.169 91.605);
     --primitive-amber-400: oklch(0.828 0.189 84.429);
     --primitive-amber-500: oklch(0.769 0.188 70.08);
     --primitive-amber-600: oklch(0.666 0.179 58.318);
     --primitive-amber-700: oklch(0.555 0.163 48.998);
+    --primitive-amber-800: oklch(0.473 0.137 46.201);
     --primitive-amber-950: oklch(0.279 0.077 45.635);
 
-    /* ---- primitive: green ---- */
-    --primitive-green-100: oklch(0.962 0.044 156.743);
-    --primitive-green-300: oklch(0.871 0.15 154.449);
-    --primitive-green-400: oklch(0.792 0.209 151.711);
-    --primitive-green-500: oklch(0.723 0.219 149.579);
-    --primitive-green-600: oklch(0.627 0.194 149.214);
-    --primitive-green-700: oklch(0.527 0.154 150.069);
-    --primitive-green-950: oklch(0.266 0.065 152.934);
+    /* ---- semantic (light) ----
+       Braun inversion: the PAGE is the darker neutral (#E7E5E1) and cards sit
+       on it in the lighter surface cream (#F3F1EC) — negative space carries
+       the composition, cards read as paper on concrete. Border is a quiet
+       concrete hairline (concrete-200), deliberately NOT the spec's #6B6F74
+       grid stroke — six data surfaces ruled in secondary-strength lines would
+       out-shout the data. Ring is foreground ink (focus = the sharpest thing
+       on the page, not a color); destructive aliases the breach accent so a
+       failed action and a broken promise speak with the same voice. */
+    --background: var(--primitive-concrete-100);
+    --foreground: var(--primitive-concrete-950);
+    --card: var(--primitive-concrete-50);
+    --card-foreground: var(--primitive-concrete-950);
+    --popover: var(--primitive-concrete-50);
+    --popover-foreground: var(--primitive-concrete-950);
+    --primary: var(--primitive-concrete-900);
+    --primary-foreground: var(--primitive-concrete-50);
+    --secondary: var(--primitive-concrete-200);
+    --secondary-foreground: var(--primitive-concrete-900);
+    --muted: var(--primitive-concrete-200);
+    --muted-foreground: var(--primitive-concrete-600);
+    --accent: var(--primitive-concrete-200);
+    --accent-foreground: var(--primitive-concrete-900);
+    --destructive: var(--sla-breach);
+    --border: var(--primitive-concrete-200);
+    --input: var(--primitive-concrete-200);
+    --ring: var(--foreground);
+    --chart-1: var(--primitive-concrete-300);
+    --chart-2: var(--primitive-concrete-500);
+    --chart-3: var(--primitive-concrete-600);
+    --chart-4: var(--primitive-concrete-700);
+    --chart-5: var(--primitive-concrete-800);
+    --radius: 4px;
+    --sidebar: var(--primitive-concrete-50);
+    --sidebar-foreground: var(--primitive-concrete-950);
+    --sidebar-primary: var(--primitive-concrete-900);
+    --sidebar-primary-foreground: var(--primitive-concrete-50);
+    --sidebar-accent: var(--primitive-concrete-200);
+    --sidebar-accent-foreground: var(--primitive-concrete-900);
+    --sidebar-border: var(--primitive-concrete-200);
+    --sidebar-ring: var(--foreground);
 
-    /* ---- primitive: indigo (accent) ---- */
-    --primitive-indigo-300: oklch(0.785 0.115 274.713);
-    --primitive-indigo-400: oklch(0.673 0.182 276.935);
-    --primitive-indigo-500: oklch(0.585 0.233 277.117);
-    --primitive-indigo-600: oklch(0.511 0.262 276.966);
-    --primitive-indigo-950: oklch(0.257 0.09 281.288);
-
-    /* ---- semantic (light) ---- */
-    --background: var(--primitive-neutral-0);
-    --foreground: var(--primitive-neutral-950);
-    --card: var(--primitive-neutral-0);
-    --card-foreground: var(--primitive-neutral-950);
-    --popover: var(--primitive-neutral-0);
-    --popover-foreground: var(--primitive-neutral-950);
-    --primary: var(--primitive-neutral-900);
-    --primary-foreground: var(--primitive-neutral-50);
-    --secondary: var(--primitive-neutral-100);
-    --secondary-foreground: var(--primitive-neutral-900);
-    --muted: var(--primitive-neutral-100);
-    --muted-foreground: var(--primitive-neutral-500);
-    --accent: var(--primitive-neutral-100);
-    --accent-foreground: var(--primitive-neutral-900);
-    --destructive: var(--primitive-red-600);
-    --border: var(--primitive-neutral-200);
-    --input: var(--primitive-neutral-200);
-    --ring: var(--primitive-indigo-500);
-    --chart-1: var(--primitive-neutral-300);
-    --chart-2: var(--primitive-neutral-500);
-    --chart-3: var(--primitive-neutral-600);
-    --chart-4: var(--primitive-neutral-700);
-    --chart-5: var(--primitive-neutral-800);
-    --radius: 0.625rem;
-    --sidebar: var(--primitive-neutral-50);
-    --sidebar-foreground: var(--primitive-neutral-950);
-    --sidebar-primary: var(--primitive-neutral-900);
-    --sidebar-primary-foreground: var(--primitive-neutral-50);
-    --sidebar-accent: var(--primitive-neutral-100);
-    --sidebar-accent-foreground: var(--primitive-neutral-900);
-    --sidebar-border: var(--primitive-neutral-200);
-    --sidebar-ring: var(--primitive-indigo-500);
-
-    /* ---- semantic: SLA breach (light) — the reserved accent. Red belongs
-       to this token alone; --status-breached is an ALIAS of it, so "breached"
-       and "the accent color" cannot drift apart. ---- */
-    --sla-breach: var(--primitive-red-700);
-    --sla-breach-foreground: var(--primitive-neutral-0);
-    --sla-breach-bg: var(--primitive-red-100);
+    /* ---- semantic: SLA breach (light) — the reserved accent. Utility
+       orange belongs to this token alone; --status-breached is an ALIAS of
+       it, so "breached" and "the accent color" cannot drift apart. ---- */
+    --sla-breach: var(--primitive-orange-700);
+    --sla-breach-foreground: var(--primitive-concrete-50);
+    --sla-breach-bg: var(--primitive-orange-100);
 
     /* ---- semantic: status (light) ----
        ink doubles as text-on-page, text-on-tint, and solid fill; -foreground
-       sits on the solid fill; -bg is the subtle tint. AA verified (ROB-47). */
-    --status-healthy: var(--primitive-green-700);
-    --status-healthy-foreground: var(--primitive-neutral-0);
-    --status-healthy-bg: var(--primitive-green-100);
-    --status-at-risk: var(--primitive-amber-700);
-    --status-at-risk-foreground: var(--primitive-neutral-0);
+       sits on the solid fill; -bg is the subtle tint. Healthy demotes to
+       concrete grey — calm is quiet; it deliberately speaks in the SAME ink
+       as muted-foreground, with the glyph carrying the verdict. At-risk
+       stays amber (the documented spec deviation), on the 800 step for AA
+       on cream. All pairs verified ≥4.5:1 numerically, both themes. */
+    --status-healthy: var(--primitive-concrete-600);
+    --status-healthy-foreground: var(--primitive-concrete-50);
+    --status-healthy-bg: var(--primitive-concrete-100);
+    --status-at-risk: var(--primitive-amber-800);
+    --status-at-risk-foreground: var(--primitive-concrete-50);
     --status-at-risk-bg: var(--primitive-amber-100);
     --status-breached: var(--sla-breach);
     --status-breached-foreground: var(--sla-breach-foreground);
@@ -226,56 +243,50 @@
 
 .dark {
     /* semantic only — primitives never change per theme.
-       Void-style canvas with Carbon-style card elevation; separation via
-       solid graphite hairlines rather than alpha borders. */
-    --background: var(--primitive-neutral-975);
-    --foreground: var(--primitive-neutral-50);
-    --card: var(--primitive-neutral-950);
-    --card-foreground: var(--primitive-neutral-50);
-    --popover: var(--primitive-neutral-950);
-    --popover-foreground: var(--primitive-neutral-50);
-    --primary: var(--primitive-neutral-200);
-    --primary-foreground: var(--primitive-neutral-900);
-    --secondary: var(--primitive-neutral-800);
-    --secondary-foreground: var(--primitive-neutral-50);
-    --muted: var(--primitive-neutral-800);
-    --muted-foreground: var(--primitive-neutral-400);
-    --accent: var(--primitive-neutral-800);
-    --accent-foreground: var(--primitive-neutral-50);
-    --destructive: var(--primitive-red-400);
-    --border: var(--primitive-neutral-800);
-    --input: var(--primitive-neutral-800);
-    --ring: var(--primitive-indigo-400);
-    --chart-1: var(--primitive-neutral-300);
-    --chart-2: var(--primitive-neutral-500);
-    --chart-3: var(--primitive-neutral-600);
-    --chart-4: var(--primitive-neutral-700);
-    --chart-5: var(--primitive-neutral-800);
-    --sidebar: var(--primitive-neutral-950);
-    --sidebar-foreground: var(--primitive-neutral-50);
-    --sidebar-primary: var(--primitive-indigo-600);
-    --sidebar-primary-foreground: var(--primitive-neutral-50);
-    --sidebar-accent: var(--primitive-neutral-800);
-    --sidebar-accent-foreground: var(--primitive-neutral-50);
-    --sidebar-border: var(--primitive-neutral-800);
-    --sidebar-ring: var(--primitive-indigo-400);
+       Authored Braun-dark: DESIGN.md ships no dark theme, so this is our
+       inversion of the concrete ramp — the spec's primary graphite #0F1113
+       becomes the page, cards elevate one step to concrete-900, inks come
+       from the cream end, and orange keeps its one meaning at the solved
+       400 ink. Pure aliases (--ring, --destructive, --status-breached,
+       adherence) are NOT re-declared: they chase the tokens they alias. */
+    --background: var(--primitive-concrete-950);
+    --foreground: var(--primitive-concrete-50);
+    --card: var(--primitive-concrete-900);
+    --card-foreground: var(--primitive-concrete-50);
+    --popover: var(--primitive-concrete-900);
+    --popover-foreground: var(--primitive-concrete-50);
+    --primary: var(--primitive-concrete-100);
+    --primary-foreground: var(--primitive-concrete-900);
+    --secondary: var(--primitive-concrete-800);
+    --secondary-foreground: var(--primitive-concrete-50);
+    --muted: var(--primitive-concrete-800);
+    --muted-foreground: var(--primitive-concrete-400);
+    --accent: var(--primitive-concrete-800);
+    --accent-foreground: var(--primitive-concrete-50);
+    --border: var(--primitive-concrete-800);
+    --input: var(--primitive-concrete-800);
+    --sidebar: var(--primitive-concrete-900);
+    --sidebar-foreground: var(--primitive-concrete-50);
+    --sidebar-primary: var(--primitive-concrete-100);
+    --sidebar-primary-foreground: var(--primitive-concrete-900);
+    --sidebar-accent: var(--primitive-concrete-800);
+    --sidebar-accent-foreground: var(--primitive-concrete-50);
+    --sidebar-border: var(--primitive-concrete-800);
 
     /* ---- semantic: SLA breach (dark) — the reserved accent ---- */
-    --sla-breach: var(--primitive-red-400);
-    --sla-breach-foreground: var(--primitive-neutral-975);
-    --sla-breach-bg: var(--primitive-red-950);
+    --sla-breach: var(--primitive-orange-400);
+    --sla-breach-foreground: var(--primitive-concrete-950);
+    --sla-breach-bg: var(--primitive-orange-950);
 
-    /* ---- semantic: status (dark) — 400-step inks on Void, 950-step tints;
-       breached stays an alias of the reserved accent ---- */
-    --status-healthy: var(--primitive-green-400);
-    --status-healthy-foreground: var(--primitive-neutral-975);
-    --status-healthy-bg: var(--primitive-green-950);
+    /* ---- semantic: status (dark) — healthy ink rides one step brighter
+       than dark muted ink (300 vs 400) to keep AA margin on its concrete-800
+       tint (400-on-800 measures exactly 4.50; 300 gives 7.64). ---- */
+    --status-healthy: var(--primitive-concrete-300);
+    --status-healthy-foreground: var(--primitive-concrete-950);
+    --status-healthy-bg: var(--primitive-concrete-800);
     --status-at-risk: var(--primitive-amber-400);
-    --status-at-risk-foreground: var(--primitive-neutral-975);
+    --status-at-risk-foreground: var(--primitive-concrete-950);
     --status-at-risk-bg: var(--primitive-amber-950);
-    --status-breached: var(--sla-breach);
-    --status-breached-foreground: var(--sla-breach-foreground);
-    --status-breached-bg: var(--sla-breach-bg);
 }
 
 @layer base {
