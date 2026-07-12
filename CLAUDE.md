@@ -352,7 +352,9 @@ Design as if live even if the render is static.
 
 Design for triage, not completeness. Lead with what's wrong; let the healthy majority recede.
 
-- Breaching/at-risk queues first, sorted by severity; healthy queues collapse or de-emphasize.
+- Breaching/at-risk queues first, sorted by severity; healthy queues sit last in full ink —
+  the grey Healthy badge and the sort order carry the de-emphasis (muted text is reserved
+  for sub-text, never whole data rows).
 - Volume vs. forecast as a first-class signal (over-forecast is the leading indicator of the
   next breach). The queue table's volume column (headed "Actual / forecast" — the header names
   what the cell shows) consolidates it with the same deviation anatomy

@@ -58,11 +58,8 @@ export function AgentAdherenceTable({
       header: "State",
       cell: (a) => (
         <span>
-          {AGENT_STATE_LABEL[a.state]}
-          <span className="text-muted-foreground">
-            {" "}
-            · <Duration seconds={a.state_duration_sec} />
-          </span>
+          {AGENT_STATE_LABEL[a.state]} ·{" "}
+          <Duration seconds={a.state_duration_sec} />
         </span>
       ),
       sortValue: (a) => AGENT_STATE_LABEL[a.state],
@@ -76,11 +73,8 @@ export function AgentAdherenceTable({
     {
       key: "queues",
       header: "Queues",
-      cell: (a) => (
-        <span className="text-muted-foreground">
-          {a.queues.map((id) => queueNamesById[id] ?? id).join(", ")}
-        </span>
-      ),
+      // the cause→symptom link (Jordan → Billing) — primary data, row ink
+      cell: (a) => a.queues.map((id) => queueNamesById[id] ?? id).join(", "),
     },
   ]
 

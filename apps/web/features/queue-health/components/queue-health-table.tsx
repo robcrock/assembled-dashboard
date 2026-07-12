@@ -16,9 +16,10 @@
 //   whose baseline dot is the forecast) fully colorless: over-forecast is
 //   the leading indicator of the next breach, not a verdict — direction reads
 //   from the bar crossing the dot, and orange stays reserved for actual breach.
-// - Healthy tail is DIMMED, not collapsed: six queues fit on one screen, and
-//   collapsing hides what a manager still scans; dimming keeps the fire loud
-//   and the calm visible-but-quiet.
+// - Healthy tail keeps FULL ink: muted text is reserved for genuine sub-text
+//   (the lever line), never for whole rows of data a manager still reads.
+//   De-emphasis rides on the severity sort and the status column alone —
+//   healthy's grey badge IS the quiet register (the urgency ramp's floor).
 // - Breached rows say HOW FAR past the promise, in the status badge itself.
 // - Wait trend renders as bars judged against the queue's OWN SLA target:
 //   over-target samples light up, the rest stay neutral. That makes "how
@@ -73,10 +74,8 @@ function DeviationCell({
   return (
     <div className="flex w-36 flex-col gap-1.5">
       <div className="flex items-baseline justify-between gap-2">
-        {/* the cell's PRIMARY line: row ink, deliberately NOT muted — and it
-            must INHERIT (no explicit text-foreground) so rowTone's
-            healthy-tail dimming reaches it; the delta beside it is the muted
-            sub-text */}
+        {/* the cell's PRIMARY line: row ink (inherited, never explicit), NOT
+            muted; the delta beside it is the muted sub-text */}
         <span className="text-metric-sm">{absolutes}</span>
         {delta}
       </div>
@@ -117,7 +116,6 @@ export function QueueHealthTable({
       {
         key: "queue",
         header: "Queue",
-        // inherits row color so rowTone's de-emphasis reaches the name
         cell: (q) => <span className="font-medium">{q.name}</span>,
         sortValue: (q) => q.name,
       },
@@ -180,10 +178,10 @@ export function QueueHealthTable({
         header: "Coverage",
         // Occupancy + levers. on_call = OCCUPIED on a contact (see
         // lib/agent-state.ts), so the primary line reads "on calls" — "on
-        // call" would misread as rostered. The whole primary line rides in
-        // row ink (inherited, so rowTone reaches it); the levers (idle
-        // capacity, recoverable capacity) are the muted sub-text and appear
-        // only when non-zero: an absent lever line IS the no-slack signal.
+        // call" would misread as rostered. The primary line rides in row
+        // ink; the levers (idle capacity, recoverable capacity) are the
+        // muted sub-text and appear only when non-zero: an absent lever
+        // line IS the no-slack signal.
         cell: (q) => {
           const recoverable =
             coverageByQueue.get(q.queue_id)?.recoverable.length ?? 0
@@ -253,7 +251,6 @@ export function QueueHealthTable({
       feed={feed}
       emptyTitle="No queues reporting"
       emptyDescription="Queues appear as soon as the feed reports them."
-      rowTone={(q) => (q.sla_status === "healthy" ? "muted" : "default")}
       getExpandedContent={(q) => {
         const coverage = coverageByQueue.get(q.queue_id)
         return coverage ? (

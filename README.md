@@ -180,9 +180,10 @@ not a primitive).
   agents out of adherence — each previewing the section that explains it.
   Everything else lives beside the data that gives it meaning.
 - **Triage order is the default everywhere**: breaching first, then at-risk,
-  healthy last — and the healthy tail **dims** rather than collapses (six
-  queues fit on screen; hiding rows a manager still scans costs more than it
-  saves). Re-sorting is allowed; severity is a default, not a cage.
+  healthy last — and the healthy tail keeps **full ink** (muted text is
+  reserved for genuine sub-text, never whole rows a manager still reads);
+  de-emphasis rides on the sort order and the grey Healthy badge alone.
+  Re-sorting is allowed; severity is a default, not a cage.
 - **Volume vs. forecast is a first-class column**: it's the leading indicator
   of the next breach. The volume column (headed "Actual / forecast") consolidates
   the whole story — actual /
