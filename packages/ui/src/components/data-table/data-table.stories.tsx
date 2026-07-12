@@ -211,11 +211,11 @@ The dense, sortable, keyboard-operable table both dashboard tables are built fro
 
 **The feed contract:** DataTable is a feed OWNER — it owns all four feed states internally. Consumers forward one \`feed\` object (\`{ status: "loading" | "live" | "stale" | "error", lastUpdatedAt?, onRetry? }\`) and never compose state visuals by hand: loading renders skeleton rows under the real header (no layout shift), error renders an \`ErrorState\` with retry, an empty \`rows\` array renders an \`EmptyState\` (\`emptyTitle\` / \`emptyDescription\`), and stale dims the body and shows a \`StaleIndicator\` — it never blanks. The leaf state primitives are the visuals this owner renders, not something to wrap around it. The table never fetches — components below the template never do.
 
-**Use it for:** dense read-only rows. \`rowTone\` can de-emphasize rows without the table knowing why — the dashboard tables deliberately pass none (muted ink is reserved for sub-text, so their triage emphasis rides on sort order + the status column instead). \`getExpandedContent\` adds expandable rows — an inline, \`aria-controls\`-linked detail panel per row; return \`null\` for rows with nothing to expand and their toggle is omitted; \`expandLabel\` gives each toggle a row-specific accessible name.
+**Use it for:** dense read-only rows. \`getExpandedContent\` adds expandable rows — an inline, \`aria-controls\`-linked detail panel per row; return \`null\` for rows with nothing to expand and their toggle is omitted; \`expandLabel\` gives each toggle a row-specific accessible name.
 
 **Not for:** large paginated/virtualized datasets, row selection, or row navigation — rows expand to an inline detail panel, they don't link out.
 
-**Deliberately omitted:** a compound/context API — this is a single component taking columns + rows, because the only shared state is one internal sort tuple and context machinery would give consumers nothing but wiring. Also no pagination/virtualization (~19 rows total on the dashboard) and no selection.
+**Deliberately omitted:** a compound/context API — this is a single component taking columns + rows, because the only shared state is one internal sort tuple and context machinery would give consumers nothing but wiring. No pagination/virtualization (~19 rows total on the dashboard) and no selection. No \`rowTone\`/row-dimming prop — muted ink is reserved for genuine sub-text, never whole rows of data, so the table makes that violation impossible; triage emphasis rides on sort order + a status column (the same make-it-impossible discipline as StatusBadge's missing color props).
 
 These stories' sample fixture mirrors the shipped queue table's composition cell for cell — column order, deviation-cell anatomy, threshold-judged \`SparkBars\` — using only \`@workspace/ui\` primitives and local sample rows, so the catalog teaches the production pattern without importing app code.
 `,
@@ -237,22 +237,6 @@ export const Live: Story = {
       description: {
         story:
           "The shipped composition: severity sort leads, breached badges carry their over-target magnitude, deviation cells pair absolutes with a colorless delta and bar, and the trend is threshold-judged SparkBars — an over-target bar is the reserved breach accent, per the color law.",
-      },
-    },
-  },
-}
-
-export const TriageEmphasis: Story = {
-  args: {
-    ...baseArgs,
-    defaultSort: { key: "status", direction: "asc" },
-    rowTone: (row) => (row.status === "healthy" ? "muted" : "default"),
-  },
-  parameters: {
-    docs: {
-      description: {
-        story:
-          'Capability demo of rowTone — de-emphasizing rows without the table learning what "healthy" means. The dashboard deliberately passes no rowTone (muted ink is reserved for sub-text there); the prop remains for consumers that want tail-muting.',
       },
     },
   },

@@ -59,11 +59,6 @@ interface DataTableProps<Row> {
   emptyTitle?: string
   emptyDescription?: string
   /**
-   * Per-row de-emphasis without the table knowing why — severity-sorted
-   * consumers mute their healthy tail ("muted"), the table just renders it.
-   */
-  rowTone?: (row: Row) => "default" | "muted"
-  /**
    * Presence adds an expander column; each row toggles an inline detail panel
    * rendered from this callback. The idiomatic exception to "children over
    * renderX" — the content is row-dependent, so a callback is the honest API.
@@ -94,7 +89,6 @@ function DataTable<Row>({
   feed = { status: "live" },
   emptyTitle = "Nothing to show",
   emptyDescription,
-  rowTone,
   getExpandedContent,
   expandLabel,
   defaultSort,
@@ -238,20 +232,12 @@ function DataTable<Row>({
             </TableRow>
           ) : (
             sortedRows.map((row) => {
-              const tone = rowTone?.(row) ?? "default"
               const key = rowKey(row)
               const expandedContent = getExpandedContent?.(row) ?? null
               const isExpanded = expandedContent !== null && expandedKeys.has(key)
               return (
                 <React.Fragment key={key}>
-                  <TableRow
-                    // de-emphasis is color-only: muted-foreground keeps AA
-                    // contrast; stacking opacity on top would crush it (~2.2:1)
-                    className={cn(
-                      ROW_RHYTHM,
-                      tone === "muted" && "text-muted-foreground",
-                    )}
-                  >
+                  <TableRow className={ROW_RHYTHM}>
                     {expandable && (
                       <TableCell className="w-8 py-1">
                         {expandedContent !== null && (
