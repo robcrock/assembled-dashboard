@@ -161,7 +161,7 @@ function DataTable<Row>({
                       : undefined
                   }
                   className={cn(
-                    "text-muted-foreground text-xs",
+                    "text-muted-foreground text-label",
                     column.align === "right" && "text-right",
                     column.className,
                   )}

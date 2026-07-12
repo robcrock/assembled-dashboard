@@ -15,6 +15,7 @@ const twMerge = extendTailwindMerge({
         "text-metric-lg",
         "text-metric",
         "text-metric-sm",
+        "text-label",
       ],
     },
   },

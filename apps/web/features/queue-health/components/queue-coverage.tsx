@@ -61,7 +61,7 @@ export function QueueCoveragePanel({
     <div className="flex flex-col gap-3 text-sm">
       {recoverable.length > 0 && (
         <div className="flex flex-col gap-1.5">
-          <h3 className="text-muted-foreground text-xs font-medium">
+          <h3 className="text-muted-foreground text-label">
             Recover first — out of adherence, skilled on {queueName}
           </h3>
           <ul className="flex flex-col gap-1">
@@ -83,7 +83,7 @@ export function QueueCoveragePanel({
 
       {shiftable.length > 0 && (
         <div className="flex flex-col gap-1.5">
-          <h3 className="text-muted-foreground text-xs font-medium">
+          <h3 className="text-muted-foreground text-label">
             Or shift a cross-trained agent — on a call now, skilled on{" "}
             {queueName}
           </h3>

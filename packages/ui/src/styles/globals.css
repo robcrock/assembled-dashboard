@@ -304,10 +304,11 @@
  * Sans + tabular-nums, not mono — mono reads as code, not vitals.
  *
  * Prose ramp (the documented rule — stock utilities, no composites needed):
- *   text-xs   captions & labels (paired with font-medium + muted ink)
+ *   text-xs   caption prose (footnotes, explanatory asides; muted ink)
  *   text-sm   body copy & descriptions
  *   text-base section headings (h2, font-semibold)
  *   text-2xl  the page title (h1 / OrgIdentity)
+ * LABELS are not prose — they use text-label (the mono tier below).
  * Numerics never use the prose ramp — they use text-metric-* (tabular).
  * ------------------------------------------------------------------------- */
 
@@ -343,6 +344,21 @@
   line-height: 1.3;
   font-weight: 400;
   font-variant-numeric: tabular-nums;
+}
+
+@utility text-label {
+  /* composite: the Braun label tier (DESIGN.md `label`) — JetBrains Mono at
+     0.72rem, +0.08em tracking. The ONE mono voice on the page: metric
+     labels, table headers, roster group headings. Prose stays Inter (ramp
+     above); numerics stay text-metric-* — mono DIGITS would read as code,
+     not vitals. Weight 500 carries over from the text-xs font-medium recipe
+     this replaced. Registered in extendTailwindMerge (lib/utils.ts) like
+     every custom text-* composite. */
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  line-height: 1.3;
+  letter-spacing: 0.08em;
+  font-weight: 500;
 }
 
 @utility stale-dim {
