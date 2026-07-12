@@ -9,13 +9,13 @@
 // fill is neutral ink — attainment is a reading, not a verdict; orange
 // stays on the alarm counts beside it.
 //
-// Owns a render-time ring buffer of recent ticks (same idempotent last-ts
-// pattern the old summary strip used) so the delta is tick-over-tick without
-// widening the store's API. Rendering delegates to StatCard, so all four
-// feed states come from the one owner every KPI tile uses — the hand-rolled
-// skeleton/error/stale this component used to carry is gone.
+// Owns a ring buffer of recent ticks (state adjusted during render, guarded
+// by the last seen `ts`) so the delta is tick-over-tick without widening the
+// store's API. Rendering delegates to StatCard, so all four feed states come
+// from the one owner every KPI tile uses — the hand-rolled skeleton/error/
+// stale this component used to carry is gone.
 
-import { useRef } from "react"
+import { useState } from "react"
 
 import { Meter } from "@workspace/ui/components/meter"
 import { MetricDelta } from "@workspace/ui/components/metric-delta"
@@ -43,20 +43,22 @@ export function AttainmentOverview({
   feed = { status: "live" },
   className,
 }: AttainmentOverviewProps) {
-  // History accumulates in a ref during render, appended only when a new tick
-  // (`ts`) arrives — idempotent under repeat renders / StrictMode.
-  const entriesRef = useRef<AttainmentEntry[]>([])
-  if (
-    summary &&
-    ts &&
-    entriesRef.current[entriesRef.current.length - 1]?.ts !== ts
-  ) {
-    entriesRef.current = [
-      ...entriesRef.current.slice(-19),
+  // History accumulates via the adjust-state-during-render pattern: when a
+  // new tick (`ts`) arrives, the guarded setState makes React re-run this
+  // render with the appended buffer BEFORE committing, so the delta lands in
+  // the same paint — and the `lastTs` guard keeps the append idempotent under
+  // repeat renders / StrictMode. Not an effect: that would show the delta one
+  // paint late.
+  const [entries, setEntries] = useState<AttainmentEntry[]>([])
+  const [lastTs, setLastTs] = useState<string | null>(null)
+  if (summary && ts && ts !== lastTs) {
+    setLastTs(ts)
+    setEntries((prev) => [
+      ...prev.slice(-19),
       { ts, attainment: summary.sla_attainment_pct },
-    ]
+    ])
   }
-  const previous = [...entriesRef.current].reverse().find((e) => e.ts !== ts)
+  const previous = [...entries].reverse().find((e) => e.ts !== ts)
 
   return (
     <StatCard
