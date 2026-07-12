@@ -168,9 +168,12 @@ function DataTable<Row>({
                         : "descending"
                       : undefined
                   }
+                  // Headers are ALWAYS left-aligned; column.align is data
+                  // alignment only. The dashboard tables pass no align at
+                  // all — every column's content shares its header's left
+                  // edge, so a header always sits over its own data.
                   className={cn(
                     "text-muted-foreground text-label",
-                    column.align === "right" && "text-right",
                     column.className,
                   )}
                 >

@@ -11,13 +11,15 @@
 //   right past the baseline dot, headroom extends left. The whole cell is
 //   colorless — bar and percent both neutral; the SLA verdict rides entirely
 //   in the Status badge, so nothing else on the row competes with it.
-// - Volume reuses the same deviation anatomy (actual / forecast over a bar
+// - Volume (headed "Actual / forecast" — the header names what the cell
+//   shows) reuses the same deviation anatomy (actual / forecast over a bar
 //   whose baseline dot is the forecast) fully colorless: over-forecast is
 //   the leading indicator of the next breach, not a verdict — direction reads
-//   from the bar crossing the dot, and red stays reserved for actual breach.
-// - Healthy tail is DIMMED, not collapsed: six queues fit on one screen, and
-//   collapsing hides what a manager still scans; dimming keeps the fire loud
-//   and the calm visible-but-quiet.
+//   from the bar crossing the dot, and orange stays reserved for actual breach.
+// - Healthy tail keeps FULL ink: muted text is reserved for genuine sub-text
+//   (the lever line), never for whole rows of data a manager still reads.
+//   De-emphasis rides on the severity sort and the status column alone —
+//   healthy's grey badge IS the quiet register (the urgency ramp's floor).
 // - Breached rows say HOW FAR past the promise, in the status badge itself.
 // - Wait trend renders as bars judged against the queue's OWN SLA target:
 //   over-target samples light up, the rest stay neutral. That makes "how
@@ -70,11 +72,11 @@ function DeviationCell({
   bar: ReactNode
 }) {
   return (
-    <div className="ml-auto flex w-36 flex-col gap-1.5">
+    <div className="flex w-36 flex-col gap-1.5">
       <div className="flex items-baseline justify-between gap-2">
-        <span className="text-muted-foreground text-metric-sm">
-          {absolutes}
-        </span>
+        {/* the cell's PRIMARY line: row ink (inherited, never explicit), NOT
+            muted; the delta beside it is the muted sub-text */}
+        <span className="text-metric-sm">{absolutes}</span>
         {delta}
       </div>
       {bar}
@@ -114,7 +116,6 @@ export function QueueHealthTable({
       {
         key: "queue",
         header: "Queue",
-        // inherits row color so rowTone's de-emphasis reaches the name
         cell: (q) => <span className="font-medium">{q.name}</span>,
         sortValue: (q) => q.name,
       },
@@ -137,6 +138,47 @@ export function QueueHealthTable({
         // The model's single triage key — shared with the pre-sort comparator
         // so the two orderings can't drift.
         sortValue: (q) => queueSeverityRank(q),
+      },
+      // Demand and capacity (waiting, coverage) read before the derived
+      // pressure metrics: how deep is the line and who's on it, then how
+      // that translates against the promise.
+      {
+        key: "waiting",
+        header: "Waiting",
+        cell: (q) => q.tickets_waiting,
+        sortValue: (q) => q.tickets_waiting,
+      },
+      {
+        key: "coverage",
+        header: "Coverage",
+        // Occupancy + levers. on_call = OCCUPIED on a contact (see
+        // lib/agent-state.ts), so the primary line reads "on calls" — "on
+        // call" would misread as rostered. The primary line rides in row
+        // ink; the levers (idle capacity, recoverable capacity) are the
+        // muted sub-text and appear only when non-zero: an absent lever
+        // line IS the no-slack signal.
+        cell: (q) => {
+          const recoverable =
+            coverageByQueue.get(q.queue_id)?.recoverable.length ?? 0
+          const levers = [
+            q.agents_available > 0 && `${q.agents_available} available`,
+            recoverable > 0 && `${recoverable} recoverable`,
+          ].filter(Boolean)
+          return (
+            <div className="flex flex-col items-start">
+              <span>
+                {q.agents_on_call}
+                {q.agents_on_call === 1 ? " on a call" : " on calls"}
+              </span>
+              {levers.length > 0 && (
+                <span className="text-muted-foreground text-metric-sm">
+                  {levers.join(" · ")}
+                </span>
+              )}
+            </div>
+          )
+        },
+        sortValue: (q) => q.agents_on_call,
       },
       {
         key: "headroom",
@@ -165,53 +207,10 @@ export function QueueHealthTable({
         ),
         // Pressure vs. the queue's own target — never raw seconds.
         sortValue: (q) => q.sla_headroom_pct,
-        align: "right",
-      },
-      {
-        key: "waiting",
-        header: "Waiting",
-        cell: (q) => q.tickets_waiting,
-        sortValue: (q) => q.tickets_waiting,
-        align: "right",
-      },
-      {
-        key: "coverage",
-        header: "Coverage",
-        // Occupancy + levers. on_call = OCCUPIED on a contact (see
-        // lib/agent-state.ts), so the primary line reads "on calls" — "on
-        // call" would misread as rostered. The levers (idle capacity,
-        // recoverable capacity) are GOOD news, so they read in calm muted
-        // ink and appear only when non-zero: an absent lever line IS the
-        // no-slack signal.
-        cell: (q) => {
-          const recoverable =
-            coverageByQueue.get(q.queue_id)?.recoverable.length ?? 0
-          const levers = [
-            q.agents_available > 0 && `${q.agents_available} available`,
-            recoverable > 0 && `${recoverable} recoverable`,
-          ].filter(Boolean)
-          return (
-            <div className="flex flex-col items-end">
-              <span>
-                {q.agents_on_call}
-                <span className="text-muted-foreground">
-                  {q.agents_on_call === 1 ? " on a call" : " on calls"}
-                </span>
-              </span>
-              {levers.length > 0 && (
-                <span className="text-muted-foreground text-metric-sm">
-                  {levers.join(" · ")}
-                </span>
-              )}
-            </div>
-          )
-        },
-        sortValue: (q) => q.agents_on_call,
-        align: "right",
       },
       {
         key: "forecast",
-        header: "Volume",
+        header: "Actual / forecast",
         // Same deviation anatomy as headroom, deliberately COLORLESS: the bar's
         // baseline dot is the forecast, but over-forecast is a leading
         // indicator, not a verdict — no status tint, stock muted delta.
@@ -230,7 +229,6 @@ export function QueueHealthTable({
           />
         ),
         sortValue: (q) => q.volume_vs_forecast_pct,
-        align: "right",
       },
       {
         key: "trend",
@@ -242,7 +240,6 @@ export function QueueHealthTable({
             label={`Longest wait trend for ${q.name}: ${q.wait_trend_sec.filter((s) => s > q.sla_target_sec).length} of ${q.wait_trend_sec.length} samples over the ${formatDurationSec(q.sla_target_sec)} target`}
           />
         ),
-        align: "right",
       },
     ],
     [coverageByQueue],
@@ -253,11 +250,10 @@ export function QueueHealthTable({
       columns={columns}
       rows={rows}
       rowKey={(q) => q.queue_id}
-      caption="Queues ordered by SLA severity: breaching first, then at risk, then healthy. Shows SLA headroom against each queue's own target, backlog, coverage, volume versus forecast, and the wait trend. Expand a row to see which agents can help that queue."
+      caption="Queues ordered by SLA severity: breaching first, then at risk, then healthy. Shows backlog, coverage, SLA headroom against each queue's own target, actual volume versus forecast, and the wait trend. Expand a row to see which agents can help that queue."
       feed={feed}
       emptyTitle="No queues reporting"
       emptyDescription="Queues appear as soon as the feed reports them."
-      rowTone={(q) => (q.sla_status === "healthy" ? "muted" : "default")}
       getExpandedContent={(q) => {
         const coverage = coverageByQueue.get(q.queue_id)
         return coverage ? (
