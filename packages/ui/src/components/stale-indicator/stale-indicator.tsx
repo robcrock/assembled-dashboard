@@ -28,10 +28,7 @@ function useSecondsSince(sinceMs: number | null): number | null {
   const [seconds, setSeconds] = useState<number | null>(null)
 
   useEffect(() => {
-    if (sinceMs === null) {
-      setSeconds(null)
-      return
-    }
+    if (sinceMs === null) return
     const update = () =>
       setSeconds(Math.max(0, Math.floor((Date.now() - sinceMs) / 1000)))
     update()
@@ -39,7 +36,9 @@ function useSecondsSince(sinceMs: number | null): number | null {
     return () => clearInterval(id)
   }, [sinceMs])
 
-  return seconds
+  // The em-dash case derives at render — a null `sinceMs` has no age to
+  // tick, so it never touches state (or scheduled a cascading render).
+  return sinceMs === null ? null : seconds
 }
 
 function StaleIndicator({
