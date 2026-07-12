@@ -1,16 +1,8 @@
-// Canonical signed-delta semantics — MetricDelta renders it.
+// Canonical signed-delta formatting — MetricDelta renders it.
 //
-// A delta has a magnitude and a signed direction; MetricDelta renders it as a
-// colorless arrow + number — direction is shown, never judged as good or bad
-// (verdict color is reserved for the status surfaces).
-
-export type DeltaDirection = "up" | "down" | "flat"
-
-export function deltaDirection(value: number): DeltaDirection {
-  if (value > 0) return "up"
-  if (value < 0) return "down"
-  return "flat"
-}
+// A delta's direction is carried entirely by its explicit +/− sign; it is
+// never judged as good or bad (verdict color is reserved for the status
+// surfaces).
 
 /**
  * Explicit sign so over/under never needs re-reading: "+25%", "-17%", "0%",

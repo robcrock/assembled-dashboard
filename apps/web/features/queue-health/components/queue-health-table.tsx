@@ -8,9 +8,13 @@
 //   queue's OWN target (Onboarding's 370s is healthy vs a 30-min promise;
 //   VIP's 250s is scary vs 5).
 // - Headroom renders as a DIVERGING bar around the target: over-target crosses
-//   right past the baseline dot, headroom extends left. Its percent takes
-//   status ink — the one sanctioned tinted delta, because this cell IS a
-//   status surface (the MetricDelta primitive itself stays colorless).
+//   right past the baseline dot, headroom extends left. The whole cell is
+//   colorless — bar and percent both neutral; the SLA verdict rides entirely
+//   in the Status badge, so nothing else on the row competes with it.
+// - Volume reuses the same deviation anatomy (actual / forecast over a bar
+//   whose baseline dot is the forecast) fully colorless: over-forecast is
+//   the leading indicator of the next breach, not a verdict — direction reads
+//   from the bar crossing the dot, and red stays reserved for actual breach.
 // - Healthy tail is DIMMED, not collapsed: six queues fit on one screen, and
 //   collapsing hides what a manager still scans; dimming keeps the fire loud
 //   and the calm visible-but-quiet.
@@ -24,7 +28,7 @@
 //   out-of-adherence agent first, then shift a cross-trained one), derived
 //   from the SAME agent pool the adherence table reads.
 
-import { useMemo } from "react"
+import { useMemo, type ReactNode } from "react"
 
 import { Duration } from "@workspace/ui/components/duration"
 import {
@@ -34,10 +38,7 @@ import {
 import { DeviationBar } from "@workspace/ui/components/deviation-bar"
 import { MetricDelta } from "@workspace/ui/components/metric-delta"
 import { SparkBars } from "@workspace/ui/components/spark-bars"
-import {
-  StatusBadge,
-  statusTextClass,
-} from "@workspace/ui/components/status-badge"
+import { StatusBadge } from "@workspace/ui/components/status-badge"
 import type { Feed } from "@workspace/ui/lib/feed"
 import { formatDurationSec } from "@workspace/ui/lib/duration"
 
@@ -52,6 +53,34 @@ import {
   queueSeverityRank,
   type Queue,
 } from "@/features/queue-health/model/queue"
+
+/**
+ * Shared WHOOP-style cell anatomy for "value vs. its own target" columns:
+ * context line (absolutes left, signed percent right) over a full-width
+ * diverging bar. Table-layout composition, not a primitive — it earns
+ * promotion to @workspace/ui only with a second consumer file.
+ */
+function DeviationCell({
+  absolutes,
+  delta,
+  bar,
+}: {
+  absolutes: ReactNode
+  delta: ReactNode
+  bar: ReactNode
+}) {
+  return (
+    <div className="ml-auto flex w-36 flex-col gap-1.5">
+      <div className="flex items-baseline justify-between gap-2">
+        <span className="text-muted-foreground text-metric-sm">
+          {absolutes}
+        </span>
+        {delta}
+      </div>
+      {bar}
+    </div>
+  )
+}
 
 interface QueueHealthTableProps {
   queues: Queue[]
@@ -111,27 +140,27 @@ export function QueueHealthTable({
       {
         key: "headroom",
         header: "Headroom",
-        // WHOOP-style: context line (absolutes left, tinted percent right)
-        // over a diverging bar whose baseline dot is the target itself.
+        // WHOOP-style: context line (absolutes left, percent right) over a
+        // diverging bar whose baseline dot is the target itself. The whole
+        // cell is neutral — the status verdict rides in the Status badge, so
+        // the percent stays a plain colorless annotation like every delta.
         cell: (q) => (
-          <div className="ml-auto flex w-36 flex-col gap-1.5">
-            <div className="flex items-baseline justify-between gap-2">
-              <span className="text-muted-foreground text-metric-sm">
+          <DeviationCell
+            absolutes={
+              <>
                 <Duration seconds={q.longest_wait_sec} /> /{" "}
                 <Duration seconds={q.sla_target_sec} />
-              </span>
-              <MetricDelta
+              </>
+            }
+            delta={<MetricDelta value={q.sla_headroom_pct} />}
+            bar={
+              <DeviationBar
                 value={q.sla_headroom_pct}
-                className={statusTextClass(q.sla_status)}
+                label={`${q.name}: longest wait ${formatDurationSec(q.longest_wait_sec)} against a ${formatDurationSec(q.sla_target_sec)} target`}
+                className="w-full"
               />
-            </div>
-            <DeviationBar
-              value={q.sla_headroom_pct}
-              status={q.sla_status}
-              label={`${q.name}: longest wait ${formatDurationSec(q.longest_wait_sec)} against a ${formatDurationSec(q.sla_target_sec)} target`}
-              className="w-full"
-            />
-          </div>
+            }
+          />
         ),
         // Pressure vs. the queue's own target — never raw seconds.
         sortValue: (q) => q.sla_headroom_pct,
@@ -171,8 +200,24 @@ export function QueueHealthTable({
       },
       {
         key: "forecast",
-        header: "Vs forecast",
-        cell: (q) => <MetricDelta value={q.volume_vs_forecast_pct} />,
+        header: "Volume",
+        // Same deviation anatomy as headroom, deliberately COLORLESS: the bar's
+        // baseline dot is the forecast, but over-forecast is a leading
+        // indicator, not a verdict — no status tint, stock muted delta.
+        cell: (q) => (
+          <DeviationCell
+            absolutes={`${q.volume_last_15m} / ${q.volume_forecast_next_15m}`}
+            delta={<MetricDelta value={q.volume_vs_forecast_pct} />}
+            bar={
+              <DeviationBar
+                value={q.volume_vs_forecast_pct}
+                range={50}
+                label={`${q.name}: ${q.volume_last_15m} tickets last 15m against a forecast of ${q.volume_forecast_next_15m}`}
+                className="w-full"
+              />
+            }
+          />
+        ),
         sortValue: (q) => q.volume_vs_forecast_pct,
         align: "right",
       },
