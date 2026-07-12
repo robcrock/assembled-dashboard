@@ -263,6 +263,9 @@ export function QueueHealthTable({
       expandLabel={(q) => `${q.name} coverage`}
       defaultSort={{ key: "status", direction: "asc" }}
       skeletonRows={6}
+      // tall: the deviation cells and lever sub-lines are two-line anatomies;
+      // the rhythm must clear the tallest cell or loading -> live shifts
+      rowSize="tall"
     />
   )
 }
