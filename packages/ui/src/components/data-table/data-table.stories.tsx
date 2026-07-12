@@ -88,6 +88,23 @@ const baseArgs = {
 const meta: Meta<typeof DataTable<SampleRow>> = {
   title: "molecules/data-table",
   component: DataTable,
+  parameters: {
+    docs: {
+      description: {
+        component: `
+The dense, sortable, keyboard-operable table both dashboard tables are built from — configured entirely by a typed column config (\`key\` / \`header\` / \`cell\` / \`sortValue\` / \`align\`), so it renders any \`Row\` type without knowing the domain. A sr-only \`caption\` is required. A column becomes sortable by having a \`sortValue\`; sort toggles asc/desc and is announced via \`aria-sort\`.
+
+**The feed contract:** DataTable is a feed OWNER — it owns all four feed states internally. Consumers forward one \`feed\` object (\`{ status: "loading" | "live" | "stale" | "error", lastUpdatedAt?, onRetry? }\`) and never compose state visuals by hand: loading renders skeleton rows under the real header (no layout shift), error renders an \`ErrorState\` with retry, an empty \`rows\` array renders an \`EmptyState\` (\`emptyTitle\` / \`emptyDescription\`), and stale dims the body and shows a \`StaleIndicator\` — it never blanks. The leaf state primitives are the visuals this owner renders, not something to wrap around it. The table never fetches — components below the template never do.
+
+**Use it for:** dense read-only rows. \`rowTone\` de-emphasizes rows without the table knowing why (severity-sorted consumers mute their healthy tail). \`getExpandedContent\` adds expandable rows — an inline, \`aria-controls\`-linked detail panel per row; return \`null\` for rows with nothing to expand and their toggle is omitted; \`expandLabel\` gives each toggle a row-specific accessible name.
+
+**Not for:** large paginated/virtualized datasets, row selection, or row navigation — rows expand to an inline detail panel, they don't link out.
+
+**Deliberately omitted:** a compound/context API — this is a single component taking columns + rows, because the only shared state is one internal sort tuple and context machinery would give consumers nothing but wiring. Also no pagination/virtualization (~19 rows total on the dashboard) and no selection.
+`,
+      },
+    },
+  },
 }
 
 export default meta
@@ -100,12 +117,19 @@ export const Live: Story = {
   },
 }
 
-// Healthy tail de-emphasized via rowTone — the table never learns what "healthy" means.
 export const TriageEmphasis: Story = {
   args: {
     ...baseArgs,
     defaultSort: { key: "status", direction: "asc" },
     rowTone: (row) => (row.status === "healthy" ? "muted" : "default"),
+  },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Healthy tail de-emphasized via rowTone — the table never learns what "healthy" means.',
+      },
+    },
   },
 }
 
@@ -133,8 +157,6 @@ export const Stale: Story = {
   },
 }
 
-// Expandable rows: troubled rows carry an inline detail panel; healthy rows
-// return null and get no toggle. Tab to a chevron, Enter/Space toggles.
 export const ExpandableRows: Story = {
   args: {
     ...baseArgs,
@@ -149,14 +171,29 @@ export const ExpandableRows: Story = {
         </div>
       ),
   },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Expandable rows: troubled rows carry an inline detail panel; healthy rows return null and get no toggle. Tab to a chevron, Enter/Space toggles.",
+      },
+    },
+  },
 }
 
-// 18 rows: keyboard-sort the columns (Tab to a header, Enter/Space toggles).
 export const Dense: Story = {
   args: {
     ...baseArgs,
     rows: Array.from({ length: 3 }, (_, i) =>
       ROWS.map((row) => ({ ...row, id: `${row.id}-${i}`, waiting: row.waiting + i })),
     ).flat(),
+  },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "18 rows: keyboard-sort the columns (Tab to a header, Enter/Space toggles).",
+      },
+    },
   },
 }

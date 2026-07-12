@@ -5,6 +5,27 @@ import { Meter } from "@workspace/ui/components/meter"
 const meta = {
   title: "atoms/meter",
   component: Meter,
+  parameters: {
+    docs: {
+      description: {
+        component: `
+A normalized 0→max fill against a bound — the **saturation** reading.
+
+**Use it for:** "how full is this against its limit" — utilization-type readings. Tint comes only from the canonical status scale (\`statusFillClass\`) via \`status\`; neutral when omitted — so meters can never invent a fourth severity color or drift from the badges. (Catalog primitive: the dashboard currently has no consumer — \`DeviationBar\` took over the headroom column — kept deliberately, awaiting utilization-type data.)
+
+**Not for:**
+- Signed distance from a target — \`DeviationBar\` (Meter answers saturation, not distance-from-target).
+- Per-tick threshold crossings over time — \`SparkBars\`.
+- Trend shape — \`Sparkline\`.
+- One normalized hero reading — \`Gauge\`.
+
+**Deliberately omitted:** magnitude labels — overflow (\`value > max\`) caps the fill at 100%; the meter shows saturation, and the number that says HOW far over rides beside it in a \`MetricDelta\`. Also any fourth severity color.
+
+Stateless leaf: it never owns feed states — loading/empty/error/stale live on the composing surface (\`StatCard\`, \`DataTable\`, sections).
+`,
+      },
+    },
+  },
 } satisfies Meta<typeof Meter>
 
 export default meta
@@ -22,18 +43,32 @@ export const AtRisk: Story = {
   args: { value: 250, max: 300, label: "VIP SLA target consumed", status: "at_risk" },
 }
 
-// value > max: the fill caps at 100% — magnitude belongs to a MetricDelta beside it.
 export const BreachedOverflow: Story = {
   args: { value: 175, max: 120, label: "Billing SLA target consumed", status: "breached" },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "value > max: the fill caps at 100% — magnitude belongs to a MetricDelta beside it.",
+      },
+    },
+  },
 }
 
 export const EmptyFill: Story = {
   args: { value: 0, max: 100, label: "No wait", status: "healthy" },
 }
 
-// Density: as the meters sit stacked in the queue table's headroom column.
 export const Density: Story = {
   args: { value: 45, max: 100, label: "Utilization" },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Density: meters stacked at table-row rhythm, as they'd sit in a queue-table column.",
+      },
+    },
+  },
   render: () => (
     <div className="flex flex-col gap-2">
       <Meter value={175} max={120} label="Billing" status="breached" />

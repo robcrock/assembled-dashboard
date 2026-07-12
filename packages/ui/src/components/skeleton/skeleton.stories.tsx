@@ -5,6 +5,19 @@ import { Skeleton } from "@workspace/ui/components/skeleton"
 const meta = {
   title: "atoms/skeleton",
   component: Skeleton,
+  parameters: {
+    docs: {
+      description: {
+        component: `
+Vendored shadcn/ui Skeleton on Base UI (style \`base-nova\`), kept as-shipped — as-shipped fidelity keeps upstream upgrades cheap. Don't fork it for domain needs; compose it.
+
+In this system it backs every loading state: \`StatCard\`, \`DataTable\`, and \`OrgIdentity\` compose it into skeletons that mirror their final layout, so nothing shifts on resolve.
+
+All colors route through semantic tokens (the pulse surface is \`muted\`); the Braun radius scale clamps its \`rounded-*\` utilities.
+`,
+      },
+    },
+  },
 } satisfies Meta<typeof Skeleton>
 
 export default meta
