@@ -191,7 +191,12 @@ no magic spacing, no ad-hoc colors in component code. Components never branch on
 light/dark lives entirely in tokens. `dark:` variant classes are the normal Tailwind idiom
 and are fine (icon swaps, alpha tweaks, vendored shadcn internals); the rule's teeth are
 that theme-specific *color values* live in the token layer — a component never introduces
-its own per-theme raw colors.
+its own per-theme raw colors. **Components consume tokens at the semantic tier or above**
+(semantic roles + component/composite utilities) — a `--primitive-*` name never appears
+outside `globals.css`. Primitives generate no utilities (structural enforcement); the one
+escape hatch, `var(--primitive-*)` in arbitrary values or inline styles, is banned — audit
+with `grep -rn "primitive-" packages/ui/src/components packages/ui/src/lib apps/web`,
+which must return nothing.
 
 The brand layer is **Braun / dieter-grid** — repo-root `DESIGN.md` (installed via
 `npx designdotmd add dieter-grid` from designdotmd.directory), applied exclusively through

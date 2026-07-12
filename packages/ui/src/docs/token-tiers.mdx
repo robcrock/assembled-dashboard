@@ -7,8 +7,12 @@ import { Meta } from "@storybook/addon-docs/blocks"
 Four tiers in `packages/ui/src/styles/globals.css`, all color in **oklch**:
 
 ```
-composite / component ──▶ semantic ──▶ primitive
+primitive ──▶ semantic ──▶ component / composite
 ```
+
+Value flows left to right: each tier is minted only from the tier before it.
+Consumption enters from the right — components reach the semantic and
+composite/component tiers only, never a primitive (the rule below).
 
 - **Primitive** (`--primitive-<hue>-<step>`) — context-free raw values. Defined in
   `:root` only, **never in `@theme`**: that's the enforcement trick, not a style
@@ -33,5 +37,37 @@ composite / component ──▶ semantic ──▶ primitive
   also be registered in `extendTailwindMerge`** (`packages/ui/src/lib/utils.ts`) —
   unregistered, tailwind-merge classifies it as a text *color* and silently drops
   it or the real color in `cn()` merges.
+
+Today's census of the top tiers, so nobody has to grep to trust the docs:
+**component tokens — zero** (the earning rule has never been met). **Composites
+are all spent**: `text-metric-*` ticks in StatCard, MetricDelta, and
+StaleIndicator; `text-label` heads StatCard, DataTable, and the coverage panel;
+`stale-dim` dims StatCard and DataTable; `focus-ring` rides DataTable and
+OrgIdentity — except `shadow-hairline`, minted and awaiting its first consumer
+(the vendored Card carries its stock `ring-1` hairline: same visual voice,
+stock recipe).
+
+## The consumption rule
+
+**Components consume tokens at the semantic tier or above — a `--primitive-*`
+name never appears outside `globals.css`.** A component that needs a color asks
+for the *role* (`bg-card`, `text-status-breached`), never the raw step
+(`--primitive-orange-500`): the role is what `.dark` remaps and what a re-brand
+re-points, so a primitive smuggled into a component is a value that silently
+stops theming.
+
+Enforcement is layered:
+
+- **Structural** — primitives live in `:root` only, never `@theme`, so Tailwind
+  generates no `bg-primitive-*` / `text-primitive-*` utilities. The class-based
+  path cannot express the violation.
+- **The remaining escape hatch is banned** — `var(--primitive-*)` inside an
+  arbitrary value or inline style compiles fine and is therefore a review
+  concern, not a compiler one. The audit is one grep, and it must stay empty:
+
+```
+grep -rn "primitive-" packages/ui/src/components packages/ui/src/lib apps/web
+# → no matches
+```
 
 Live swatches of every ramp and role live in [colors](?path=/docs/colors--docs).

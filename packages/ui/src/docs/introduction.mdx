@@ -31,10 +31,15 @@ Three commitments, held without exceptions:
    doesn't exist, and the next contributor will legitimately re-decide it. Every
    primitive documents its props **and the props it deliberately omits**; the
    omissions are load-bearing API.
-3. **Shared vocabulary.** The domain's ubiquitous language (`SlaStatus`,
-   `AdherenceStatus`, `Feed`, breach, headroom) is the same set of names in the data
-   model, the token layer, the prop enums, and the component names — so nothing can
-   drift between data, tokens, and UI without the type checker noticing.
+3. **Shared vocabulary.** One name per concept, spelled the same at every layer.
+   *Breach* is `sla_status: "breached"` in the fixture, `--sla-breach` in the token
+   layer, and `status="breached"` on the badge. *Adherence* is the `AdherenceStatus`
+   union in the model and the `--adherence-*` tokens in CSS. *Headroom* is
+   `sla_headroom_pct` in the data and the queue table's deviation column. *Feed* is
+   the `Feed` value object every data surface receives as its one `feed` prop. The
+   same names in the data model, the token layer, the prop enums, and the component
+   names — so nothing can drift between data, tokens, and UI without the type
+   checker noticing.
 
 ## The architecture, one screen deep
 
