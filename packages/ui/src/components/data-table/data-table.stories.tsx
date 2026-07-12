@@ -181,6 +181,52 @@ export const ExpandableRows: Story = {
   },
 }
 
+// The one interactive story: every other state story couples its data to the
+// state (Loading/Empty/Error pass rows: []); this one holds FILLED rows
+// constant so flipping the control swaps only the state and any resolve-time
+// layout shift becomes visible.
+const PLAYGROUND_STATES = ["loading", "live", "stale", "error", "empty"] as const
+
+export const States: StoryObj<{ state: (typeof PLAYGROUND_STATES)[number] }> = {
+  name: "States (playground)",
+  argTypes: {
+    state: { control: "select", options: [...PLAYGROUND_STATES] },
+  },
+  args: { state: "loading" },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Playground: flip `state` to watch the transitions in place — the sidebar state stories re-mount on every click, so only this control shows the reflow. The contract under test is **loading → live: no layout shift** — the real header stays and skeleton rows must match resolved row height (pass `skeletonRows` = your typical row count, as the dashboard does). Empty swapping to the centered message block is a designed difference, not a shift bug.",
+      },
+    },
+  },
+  render: ({ state }) => (
+    // Fixed-width wrapper: the app's tables are container-constrained
+    // (sections span the page), so width never shifts there — an unwrapped
+    // canvas table would shrink-wrap per state and fake a width bug.
+    <div className="w-2xl">
+      <DataTable
+        {...baseArgs}
+        rows={state === "empty" ? [] : ROWS}
+        skeletonRows={ROWS.length}
+        defaultSort={{ key: "status", direction: "asc" }}
+        emptyTitle="No queues to show"
+        emptyDescription="Queues appear as soon as the feed reports them."
+        feed={
+          state === "loading"
+            ? { status: "loading" }
+            : state === "error"
+              ? { status: "error", onRetry: () => {} }
+              : state === "stale"
+                ? { status: "stale", lastUpdatedAt: Date.now() - 42_000 }
+                : { status: "live" }
+        }
+      />
+    </div>
+  ),
+}
+
 export const Dense: Story = {
   args: {
     ...baseArgs,
