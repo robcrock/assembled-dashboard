@@ -143,7 +143,9 @@ drifts between data, tokens, and UI. Model straight from the fixture:
 - **Value concepts cutting across both:**
   - `SlaStatus` = `healthy | at_risk | breached`
   - `AdherenceStatus` = `adherent | out_of_adherence`
-  - `AgentState` = `available | on_call | on_break | in_meeting | offline`
+  - `AgentState` = `available | on_call | on_break | in_meeting | offline` — `on_call` means
+    OCCUPIED on a contact ("On a call"), distinct from `available` (idle, ready to take one);
+    per-queue `agents_on_call` counts skilled agents in that state
   - `Duration` (seconds → human), a **signed delta vs. a target** (semantic over/under
     direction), and **freshness** (tick `ts` vs. now — this is the stale state).
 
