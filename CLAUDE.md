@@ -182,22 +182,41 @@ and are fine (icon swaps, alpha tweaks, vendored shadcn internals); the rule's t
 that theme-specific *color values* live in the token layer — a component never introduces
 its own per-theme raw colors.
 
+The brand layer is **Braun / dieter-grid** — repo-root `DESIGN.md` (installed via
+`npx designdotmd add dieter-grid` from designdotmd.directory), applied exclusively through
+the token tiers: the "concrete" neutral ramp is anchored on the spec's four literals
+(#F3F1EC surface / #E7E5E1 neutral / #6B6F74 secondary / #0F1113 primary; the page is the
+*darker* neutral, cards sit on it in surface cream), the single chromatic accent is the
+spec's utility orange (#D95600), radii are the literal 0/2px/4px steps (larger utilities
+clamp to 4px), and type is Inter + a JetBrains Mono `text-label` tier. Deviations are
+documented at the token that makes them: text inks use AA-solved ramp steps where spec
+literals fail 4.5:1 on their own surfaces; borders are a quiet concrete hairline, not the
+spec grid stroke; the dark theme is an authored inversion the spec doesn't ship; amber
+stays (below).
+
 - **Inherited from shadcn** (semantic, oklch, `:root` + `.dark`): `background/foreground`,
   `card`, `popover`, `primary`, `secondary`, `muted`, `accent`, `destructive`, `border`,
   `input`, `ring`, `chart-1…5`, and the `--radius` scale. The surface/`-foreground` pairing is
   the rule: a surface token sets the background, its `-foreground` sets text/icon on it.
+  `destructive` aliases `--sla-breach` (a failed action and a broken promise speak with one
+  voice); `ring` is foreground ink, not a color.
 - **Domain tokens we add** (the ubiquitous language becomes CSS):
   - Reserved accent: `--sla-breach` (+ `-foreground` + `-bg`) — the palette's one loud color,
-    spent on exactly one meaning: a broken promise. `--status-breached` is a semantic **alias**
-    of `--sla-breach`, and `out_of_adherence` (the agent-side schedule breach) resolves to it
-    too — so a red pixel anywhere on the page reads as "a promise is broken," and breach can't
-    drift. Everything else leans on glyphs + calmer inks; deltas are colorless.
+    the Braun utility orange, spent on exactly one meaning: a broken promise.
+    `--status-breached` is a semantic **alias** of `--sla-breach`, and `out_of_adherence`
+    (the agent-side schedule breach) resolves to it too — so an orange pixel anywhere on the
+    page reads as "a promise is broken," and breach can't drift. Everything else leans on
+    glyphs + calmer inks; deltas are colorless.
   - Status: `--status-healthy`, `--status-at-risk`, `--status-breached` (+ `-foreground` and a
     subtle `-bg` tint each) — one canonical scale used by *every* status surface (badges,
-    cards, rows, meters, bars) so nothing drifts.
+    cards, rows, meters, bars) so nothing drifts. The urgency ramp is **grey → amber →
+    orange**: healthy is concrete grey (calm is quiet — it deliberately speaks in the muted
+    ink), at-risk keeps amber. Amber is the one documented deviation from the spec's
+    single-accent rule, paid for triage scanning: a two-severity floor needs a middle
+    register between quiet and alarm.
   - Adherence: `--adherence-ok`, `--adherence-out`.
   - A small type ramp with **tabular figures** (`font-variant-numeric: tabular-nums`) for dense,
-    ticking metrics.
+    ticking metrics, plus the mono `text-label` tier for labels and table headers.
 
 Light/dark stays demonstrably real in the Storybook catalog and via OS appearance
 (`prefers-color-scheme`) — the dashboard itself deliberately mounts no theme toggle; the
@@ -242,7 +261,7 @@ tuple). Components below the template never fetch.
   direction (no arrows/glyphs), muted ink keeps it an annotation. No `invert` prop, no verdict
   color — **without exception**: even the queue table's headroom percent stays neutral, since
   that row's SLA verdict already lives in its Status badge. Verdict color rides on the status
-  surfaces (badges, `Sparkline` tint) alone; red is reserved for breach.
+  surfaces (badges, `Sparkline` tint) alone; orange is reserved for breach.
 - `Sparkline` — line trend; `status`-tinted, accessible aria-label. (Catalog primitive — its
   summary-strip consumer was replaced by the gauge overview.)
 - `Gauge` — one normalized value (0–100) as an open-bottom arc; center content via children
@@ -329,7 +348,7 @@ Design for triage, not completeness. Lead with what's wrong; let the healthy maj
   next breach). The queue table's Volume cell consolidates it with the same deviation anatomy
   as headroom — actual / forecast absolutes over a `DeviationBar` whose baseline dot is the
   forecast — fully **colorless** (every bar is neutral; here even the percent stays the stock
-  muted `MetricDelta`): it's an indicator, not a verdict, so red keeps meaning only "a promise
+  muted `MetricDelta`): it's an indicator, not a verdict, so orange keeps meaning only "a promise
   is broken."
 - Out-of-adherence agents surfaced directly, with how long they've been out.
 - Each queue row **expands to a coverage panel** (`features/queue-health/model/coverage.ts` +

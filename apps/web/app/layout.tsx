@@ -1,5 +1,5 @@
 import type { Metadata } from "next"
-import { Geist, Geist_Mono } from "next/font/google"
+import { Inter, JetBrains_Mono } from "next/font/google"
 
 import "@workspace/ui/globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
@@ -10,9 +10,11 @@ export const metadata: Metadata = {
   description: "Real-time contact-center operations dashboard.",
 }
 
-const geist = Geist({subsets:['latin'],variable:'--font-sans'})
+// Braun type pairing (DESIGN.md): Inter carries display through body; the
+// mono variable is JetBrains Mono, reserved for the label tier.
+const fontSans = Inter({ subsets: ["latin"], variable: "--font-sans" })
 
-const fontMono = Geist_Mono({
+const fontMono = JetBrains_Mono({
   subsets: ["latin"],
   variable: "--font-mono",
 })
@@ -26,7 +28,7 @@ export default function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      className={cn("antialiased", fontMono.variable, "font-sans", geist.variable)}
+      className={cn("antialiased", fontMono.variable, "font-sans", fontSans.variable)}
     >
       <body>
         <ThemeProvider>{children}</ThemeProvider>

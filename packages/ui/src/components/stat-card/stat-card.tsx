@@ -64,7 +64,7 @@ function StatCard({
 
   const content = (
     <>
-      <div className="text-muted-foreground truncate text-xs font-medium">
+      <div className="text-muted-foreground text-label truncate">
         {label}
       </div>
 

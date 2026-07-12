@@ -99,7 +99,7 @@ export function AttainmentOverview({
               unit="pp"
             />
           )}
-        <div className="text-muted-foreground text-xs font-medium">
+        <div className="text-muted-foreground text-label">
           SLA attainment
         </div>
       </Gauge>

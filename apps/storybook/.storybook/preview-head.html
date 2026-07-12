@@ -1,0 +1,19 @@
+<!--
+  Font parity with the app: apps/web loads Inter + JetBrains Mono through
+  next/font, which defines --font-sans/--font-mono on <html>. Storybook has
+  no next/font, so the catalog loads the same faces from Google Fonts and
+  defines the same two variables the token sheet consumes — otherwise every
+  story would silently render in the system fallback.
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link
+  href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+  rel="stylesheet"
+/>
+<style>
+  :root {
+    --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+    --font-mono: "JetBrains Mono", ui-monospace, monospace;
+  }
+</style>
