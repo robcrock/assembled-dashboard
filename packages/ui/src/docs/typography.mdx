@@ -1,0 +1,227 @@
+import { Meta } from "@storybook/addon-docs/blocks"
+import { TypeRamp, TypeScale, TypeSpecimen } from "./type-specimen"
+
+<Meta title="system/typography" />
+
+# Typography — two families, three voices
+
+Inter carries prose and numerics; JetBrains Mono carries labels — the pairing is
+the brand's (see [brand](?path=/docs/system-brand--docs)). The ramp is deliberately
+small: the prose steps are **stock Tailwind utilities** (no composites to learn),
+and the only custom type utilities are the five composites below — four tabular
+`text-metric-*` steps and the mono `text-label` tier. Hierarchy is carried by size
+and weight, never by color.
+
+Every sample on this page renders with the real utility class, so the specimens
+are always the shipped truth; the printed meta is transcribed from
+`packages/ui/src/styles/globals.css` — update them together.
+
+## Faces & sourcing
+
+| Face | Variable | Weights loaded | Carries |
+| --- | --- | --- | --- |
+| Inter | `var(--font-sans)` | 400 · 500 · 600 · 700 | prose + numerics |
+| JetBrains Mono | `var(--font-mono)` | 400 · 500 | labels (`text-label`) |
+
+The utilities consume only the CSS variables. The **app** defines them via
+`next/font` (`apps/web/app/layout.tsx`); **Storybook** defines them in
+`.storybook/preview-head.html` (Google Fonts + `:root` variables). A new face or
+weight must land in **both** places, or the catalog silently falls back.
+
+## The scale at a glance
+
+The same words at every prose step, the same figure at every numeric step —
+hierarchy is size and weight doing the work, never color. Full per-step meta
+and real consumers follow below.
+
+<div className="flex flex-col gap-4">
+  <TypeScale
+    label="prose — Inter"
+    sample="Queue health"
+    steps={[
+      { utility: "text-2xl", className: "font-semibold", px: "24px" },
+      { utility: "text-base", className: "font-semibold", px: "16px" },
+      { utility: "text-sm", px: "14px" },
+      { utility: "text-xs", className: "text-muted-foreground", px: "12px" },
+    ]}
+  />
+  <TypeScale
+    label="numerics — Inter + tabular-nums"
+    sample="1,842.09"
+    steps={[
+      { utility: "text-metric-xl", px: "36px" },
+      { utility: "text-metric-lg", px: "28px" },
+      { utility: "text-metric", px: "14px" },
+      { utility: "text-metric-sm", px: "12px" },
+    ]}
+  />
+</div>
+
+## Prose ramp — Inter
+
+Stock utilities, four steps. Everything that is a sentence lives here.
+
+<TypeRamp>
+  <TypeSpecimen
+    utility="text-2xl"
+    className="font-semibold"
+    sample="Horizon Support"
+    size="1.5rem / 24px"
+    lineHeight="2rem"
+    weight="600 (font-semibold)"
+    face="Inter"
+    usedBy="OrgIdentity — the page's one h1"
+    note="One acknowledged off-ramp exists: the OrgIdentity monogram initials use text-xl font-semibold — a sized ornament, not a ramp step."
+  />
+  <TypeSpecimen
+    utility="text-base"
+    className="font-semibold"
+    sample="Queue health"
+    size="1rem / 16px"
+    lineHeight="1.5rem"
+    weight="600 (font-semibold)"
+    face="Inter"
+    usedBy="PageSection heading (h2), Card title"
+  />
+  <TypeSpecimen
+    utility="text-sm"
+    sample="Volume is tracking 25% over forecast on two queues."
+    size="0.875rem / 14px"
+    lineHeight="1.25rem"
+    weight="400"
+    face="Inter"
+    usedBy="body copy & descriptions — the dominant voice; font-medium where a row leads"
+  />
+  <TypeSpecimen
+    utility="text-xs"
+    className="text-muted-foreground"
+    sample="Shared capacity — agents may appear under several queues."
+    size="0.75rem / 12px"
+    lineHeight="1rem"
+    weight="400"
+    face="Inter"
+    usedBy="captions, footnotes, explanatory asides — always muted ink"
+  />
+</TypeRamp>
+
+## Numeric ramp — Inter + tabular figures
+
+The four `text-metric-*` composites. Sans + `tabular-nums`, **not** mono — mono
+digits read as code, not vitals. Weight caps at 500: a number earns attention by
+size, never by boldness.
+
+<TypeRamp>
+  <TypeSpecimen
+    utility="text-metric-xl"
+    sample="1,842"
+    size="2.25rem / 36px"
+    lineHeight="2.5rem"
+    weight="500"
+    face="Inter"
+    usedBy="StatCard value (size lg) — the overview hero counts; Gauge center"
+  />
+  <TypeSpecimen
+    utility="text-metric-lg"
+    sample="98.2%"
+    size="1.75rem / 28px"
+    lineHeight="1.15"
+    weight="500"
+    tracking="−0.02em"
+    face="Inter"
+    usedBy="StatCard value (default) — dense-strip headline numbers"
+  />
+  <TypeSpecimen
+    utility="text-metric"
+    sample="4:32"
+    size="0.875rem / 14px"
+    lineHeight="1.4"
+    weight="unset — consumer adds font-medium where numbers lead"
+    face="Inter"
+    usedBy="DataTable numeric cells"
+  />
+  <TypeSpecimen
+    utility="text-metric-sm"
+    sample="+2.4 pts"
+    size="0.75rem / 12px"
+    lineHeight="1.3"
+    weight="400"
+    face="Inter"
+    usedBy="MetricDelta, StaleIndicator, secondary numerics"
+  />
+</TypeRamp>
+
+### Why tabular figures
+
+Ticking numbers must not jitter horizontally, and columns of figures must align
+at the decimal. Tabular figures give every digit the same advance width:
+
+<div className="sb-unstyled font-sans bg-background flex gap-14 rounded-sm border px-5 py-4">
+  <div>
+    <div className="text-label text-muted-foreground mb-2">
+      tabular — decimals align
+    </div>
+    <div className="text-metric text-foreground w-24 text-right">
+      <div>1,111.18</div>
+      <div>8,808.42</div>
+      <div>0.09</div>
+    </div>
+  </div>
+  <div>
+    <div className="text-label text-muted-foreground mb-2">
+      proportional — digits drift
+    </div>
+    <div className="text-sm text-foreground w-24 text-right">
+      <div>1,111.18</div>
+      <div>8,808.42</div>
+      <div>0.09</div>
+    </div>
+  </div>
+</div>
+
+## Label voice — JetBrains Mono
+
+The one mono voice on the page. Labels are not prose and not numerics: small
+persistent identifiers that must recede behind the data they name — which is why
+the pairing with `text-muted-foreground` is part of the recipe, not optional.
+
+<TypeRamp>
+  <TypeSpecimen
+    utility="text-label"
+    className="text-muted-foreground"
+    sample="Longest wait"
+    size="0.72rem / ~11.5px"
+    lineHeight="1.3"
+    weight="500"
+    tracking="+0.08em"
+    face="JetBrains Mono"
+    usedBy="StatCard label, DataTable column headers, roster group headings"
+    note="Written in sentence case — the mono face and tracking do the labelling; no uppercase transform."
+  />
+</TypeRamp>
+
+## The rules
+
+- **Numerics never use the prose ramp** — ticking numbers must not jitter; prose
+  never carries tabular data.
+- **Labels are always mono *and* always muted** — `text-label` +
+  `text-muted-foreground` travel together.
+- **Mono never carries digits in data surfaces** — mono digits read as code, not
+  vitals; numbers stay Inter + `text-metric-*`.
+- **Weight ceiling is 600** (`font-semibold`, headings only); the metric
+  composites cap at 500. Nothing bolder, ever.
+- **Every new `text-*` composite must be registered in `extendTailwindMerge`**
+  (`packages/ui/src/lib/utils.ts`) or `cn()` classifies it as a text color and
+  silently drops it — the long-form rationale lives in
+  [tokens](?path=/docs/system-tokens--docs).
+- **Don't mint new ramp steps.** The monogram's `text-xl` is the only shipped
+  off-ramp, and it needed a reason.
+
+## Choosing a voice
+
+- A number the eye compares or that ticks → `text-metric-*`.
+- A small persistent identifier (metric label, column header, group heading) →
+  `text-label` + `text-muted-foreground`.
+- Everything else is prose → the stock ramp, `text-xs` → `text-2xl`.
+
+For the component-level version of this decision, see
+[choosing-a-data-primitive](?path=/docs/system-choosing-a-data-primitive--docs).
