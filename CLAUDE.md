@@ -409,6 +409,11 @@ state handling (especially stale/error), token consistency (no stray hex), and c
 *both* themes. Verification pass: axe / Storybook a11y addon, keyboard-only pass on the tables,
 contrast check on status colors light and dark, one story per state per component.
 
+Project agent skills live in `.claude/skills/` — repo-tailored variants of `design`,
+`componentize`, `make-responsive`, `vercel-composition-patterns`, and `ideas` that bake the
+token law, the package seam, and the component API discipline into each workflow. Prefer them
+over generic equivalents when working in this repo.
+
 ## Definition of done / submission
 
 - Dashboard runs locally with one command (`pnpm dev`); live replay + stale + error demonstrable.
