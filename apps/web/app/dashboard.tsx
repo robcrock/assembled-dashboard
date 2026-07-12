@@ -174,11 +174,15 @@ export function Dashboard() {
               </div>
 
               {/* KPI trio: the attainment tile, then the two alarm counts —
-                  three siblings with one StatCard rhythm. Narrow: attainment
-                  on its own row, alarm tiles 2-up with one divider. @xl: one
-                  row of three with vertical dividers (first pr-only, middle
-                  px, last pl-only). */}
-              <div className="grid grid-cols-2 gap-y-6 @xl:flex @xl:items-center">
+                  three siblings with one StatCard rhythm. TOP-aligned (picker
+                  round, ROB-72): every tile's label/number/sub-line rows share
+                  exact baselines, and the attainment tile's meter hangs below
+                  as the fourth row it alone carries — items-center would let
+                  that extra row push its text off the shared lines. Narrow:
+                  attainment on its own row, alarm tiles 2-up with one divider.
+                  @xl: one row of three with vertical dividers (first pr-only,
+                  middle px, last pl-only). */}
+              <div className="grid grid-cols-2 gap-y-6 @xl:flex @xl:items-start">
                 <div className="col-span-2 @xl:col-auto @xl:pr-10">
                   <AttainmentOverview
                     summary={summary}
