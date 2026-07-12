@@ -139,34 +139,9 @@ export function QueueHealthTable({
         // so the two orderings can't drift.
         sortValue: (q) => queueSeverityRank(q),
       },
-      {
-        key: "headroom",
-        header: "Headroom",
-        // WHOOP-style: context line (absolutes left, percent right) over a
-        // diverging bar whose baseline dot is the target itself. The whole
-        // cell is neutral — the status verdict rides in the Status badge, so
-        // the percent stays a plain colorless annotation like every delta.
-        cell: (q) => (
-          <DeviationCell
-            absolutes={
-              <>
-                <Duration seconds={q.longest_wait_sec} /> /{" "}
-                <Duration seconds={q.sla_target_sec} />
-              </>
-            }
-            delta={<MetricDelta value={q.sla_headroom_pct} />}
-            bar={
-              <DeviationBar
-                value={q.sla_headroom_pct}
-                label={`${q.name}: longest wait ${formatDurationSec(q.longest_wait_sec)} against a ${formatDurationSec(q.sla_target_sec)} target`}
-                className="w-full"
-              />
-            }
-          />
-        ),
-        // Pressure vs. the queue's own target — never raw seconds.
-        sortValue: (q) => q.sla_headroom_pct,
-      },
+      // Demand and capacity (waiting, coverage) read before the derived
+      // pressure metrics: how deep is the line and who's on it, then how
+      // that translates against the promise.
       {
         key: "waiting",
         header: "Waiting",
@@ -204,6 +179,34 @@ export function QueueHealthTable({
           )
         },
         sortValue: (q) => q.agents_on_call,
+      },
+      {
+        key: "headroom",
+        header: "Headroom",
+        // WHOOP-style: context line (absolutes left, percent right) over a
+        // diverging bar whose baseline dot is the target itself. The whole
+        // cell is neutral — the status verdict rides in the Status badge, so
+        // the percent stays a plain colorless annotation like every delta.
+        cell: (q) => (
+          <DeviationCell
+            absolutes={
+              <>
+                <Duration seconds={q.longest_wait_sec} /> /{" "}
+                <Duration seconds={q.sla_target_sec} />
+              </>
+            }
+            delta={<MetricDelta value={q.sla_headroom_pct} />}
+            bar={
+              <DeviationBar
+                value={q.sla_headroom_pct}
+                label={`${q.name}: longest wait ${formatDurationSec(q.longest_wait_sec)} against a ${formatDurationSec(q.sla_target_sec)} target`}
+                className="w-full"
+              />
+            }
+          />
+        ),
+        // Pressure vs. the queue's own target — never raw seconds.
+        sortValue: (q) => q.sla_headroom_pct,
       },
       {
         key: "forecast",
@@ -247,7 +250,7 @@ export function QueueHealthTable({
       columns={columns}
       rows={rows}
       rowKey={(q) => q.queue_id}
-      caption="Queues ordered by SLA severity: breaching first, then at risk, then healthy. Shows SLA headroom against each queue's own target, backlog, coverage, actual volume versus forecast, and the wait trend. Expand a row to see which agents can help that queue."
+      caption="Queues ordered by SLA severity: breaching first, then at risk, then healthy. Shows backlog, coverage, SLA headroom against each queue's own target, actual volume versus forecast, and the wait trend. Expand a row to see which agents can help that queue."
       feed={feed}
       emptyTitle="No queues reporting"
       emptyDescription="Queues appear as soon as the feed reports them."
