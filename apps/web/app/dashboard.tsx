@@ -6,7 +6,7 @@
 // fetches on its own. There is no separate header bar: the whitelabel
 // identity (OrgIdentity, fed meta.org) anchors the overview band at the left
 // with the demo chrome beneath it, and the three floor numbers sit right —
-// the SLA-attainment gauge plus two alarm counts (StatCard size="lg",
+// the SLA-attainment tile plus two alarm counts (all StatCard size="lg";
 // breach ink supplied by the template because the ink decision is app
 // semantics). Attainment is the org-level promise; each alarm count previews
 // the section beneath that explains it.
@@ -173,10 +173,11 @@ export function Dashboard() {
                 />
               </div>
 
-              {/* KPI trio: gauge, then the two alarm counts. Narrow: gauge on
-                  its own row, tiles 2-up with one divider. @xl: one row of
-                  three with vertical dividers (first pr-only, middle px,
-                  last pl-only). */}
+              {/* KPI trio: the attainment tile, then the two alarm counts —
+                  three siblings with one StatCard rhythm. Narrow: attainment
+                  on its own row, alarm tiles 2-up with one divider. @xl: one
+                  row of three with vertical dividers (first pr-only, middle
+                  px, last pl-only). */}
               <div className="grid grid-cols-2 gap-y-6 @xl:flex @xl:items-center">
                 <div className="col-span-2 @xl:col-auto @xl:pr-10">
                   <AttainmentOverview
