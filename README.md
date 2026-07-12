@@ -81,25 +81,35 @@ Four tiers in `packages/ui/src/styles/globals.css`, all color in **oklch**:
 composite / component ──▶ semantic ──▶ primitive
 ```
 
-- **Primitive** (`--primitive-<hue>-<step>`): cool-cast neutral ramp (adapted
-  from Linear's Void→Paper scale) + sparse red/amber/green/indigo ramps.
-  Defined in `:root` only, **never in `@theme`** — Tailwind generates no
-  utilities for them, so components structurally cannot consume raw values.
+- **Primitive** (`--primitive-<hue>-<step>`): the Braun "concrete" neutral
+  ramp — warm cream at the light end, cool graphite at the dark end, anchored
+  on the four `DESIGN.md` literals (#F3F1EC / #E7E5E1 / #6B6F74 / #0F1113),
+  mid-steps interpolated in OKLab — plus the utility-orange ramp (#D95600)
+  and a sparse amber ramp. Defined in `:root` only, **never in `@theme`** —
+  Tailwind generates no utilities for them, so components structurally cannot
+  consume raw values.
 - **Semantic**: the shadcn roles plus the domain scale —
   `--status-healthy/-at-risk` and `--adherence-ok/-out` (each with `-foreground`
   and a `-bg` tint), and the reserved **`--sla-breach`** accent. Breach is the
-  palette's one loud color: `--status-breached` is a semantic *alias* of
-  `--sla-breach`, and `out_of_adherence` (the agent-side schedule breach) takes
-  it too, so red can never drift from "a promise is broken." Light/dark remaps
-  happen **only** at this tier. All pairs AA-verified numerically (breach is
-  red-700 light / red-400 dark, kept distinct from `destructive`, which is an
-  action color).
+  palette's one loud color — the Braun utility orange: `--status-breached` is a
+  semantic *alias* of `--sla-breach`, and `out_of_adherence` (the agent-side
+  schedule breach) takes it too, so orange can never drift from "a promise is
+  broken." `destructive` aliases breach outright (a failed action IS a broken
+  promise), and the urgency ramp is **grey → amber → orange**: healthy demotes
+  to concrete grey, at-risk keeps amber — the one documented deviation from the
+  spec's single-accent rule, paid for triage scanning. Light/dark remaps happen
+  **only** at this tier (the dark theme is an authored Braun inversion; the
+  spec ships none). All pairs AA-verified numerically in both themes — where a
+  spec literal fails 4.5:1 as text on its own surfaces (#6B6F74, #D95600), the
+  ink uses a solved ramp step and the literal stays for fills/large type.
 - **Component**: minted only when two consumers need different values for the
   same role. **Zero exist** — a knob nobody overrides is dead weight.
-- **Composite**: `shadow-hairline` (Linear's elevation-by-border principle)
-  and the metric type ramp `text-metric-lg / text-metric / text-metric-sm` —
-  sans + `tabular-nums` (ticking numbers don't jitter; mono reads as code, not
-  vitals), weight capped at 500.
+- **Composite**: `shadow-hairline` (elevation-by-border — Braun-flat, no
+  shadows), the metric type ramp `text-metric-lg / text-metric /
+  text-metric-sm` — sans + `tabular-nums` (ticking numbers don't jitter; mono
+  digits read as code, not vitals), weight capped at 500 — and the
+  `text-label` tier (JetBrains Mono, 0.72rem, +0.08em: labels and table
+  headers speak in the spec's mono label voice).
 
 ## The atomic mapping
 
@@ -129,12 +139,12 @@ tick history) → molecules/atoms are stateless or self-contained. The essential
 |---|---|---|
 | `StatusBadge` / `StatusDot` | `status` (one five-value union covering SLA + adherence) → canonical **glyph + label** (`StatusDot` renders the standalone status glyph); detail `children` that **augment, never replace** the label | color/variant props (the canonical mapping isn't per-call negotiable); size; onClick |
 | `StatCard` | `label`, `value`, `delta` + trend as **ReactNode slots**, one `feed` object, `variant: card \| plain` (card chrome vs divider rows), `size: default \| lg` (dense-strip ramp vs overview hero counts — type scale only) | card-level color/status (a vital's alarm is its content — the overview passes a breach-inked value node; tinted cards would compete with the queue table); internal number formatting; navigation |
-| `MetricDelta` | raw signed `value`, `unit` → **colorless** signed number (the explicit +/− sign carries direction) | color (deltas are annotations, not verdicts — verdict color lives on the status surfaces; the palette's red is reserved for breach); direction arrows/glyphs (the sign already says it); an `invert` prop (there is no good/bad to flip when it's colorless); pre-formatted strings |
+| `MetricDelta` | raw signed `value`, `unit` → **colorless** signed number (the explicit +/− sign carries direction) | color (deltas are annotations, not verdicts — verdict color lives on the status surfaces; the palette's orange is reserved for breach); direction arrows/glyphs (the sign already says it); an `invert` prop (there is no good/bad to flip when it's colorless); pre-formatted strings |
 | `Meter` | normalized `value`/`max`, `label`, optional `status` tint (from the one canonical `statusFillClass`) | magnitude labels (the meter shows *saturation*; the number that says how far over rides beside it in a `MetricDelta`); a fourth severity color |
 | `DeviationBar` | signed `value` (± % around a center baseline dot), `label`, `range` clamp per half | color entirely — one neutral muted fill (verdict color lives on the badges beside it); a direction/`invert` prop (the sign IS the direction — over extends right past the dot, under extends left); a rendered number (the exact figure rides beside it); threshold markers |
 | `Sparkline` | `points`, optional `status` tint, computed a11y label with override | chart deps, axes, tooltips, animation (snaps on tick) |
 | `Gauge` | normalized `value` (0–100), `label`, center content via **children** (the gauge owns only the arc — it never formats numbers) | gradient / threshold zones / needle (tokens only: muted track, `currentColor` arc); animation; internal number formatting |
-| `SparkBars` | `points`, `threshold` (bars past it take the reserved breach accent, others muted), computed a11y label | a configurable tint (the breach accent is not overridable — a red bar always means "over threshold") |
+| `SparkBars` | `points`, `threshold` (bars past it take the reserved breach accent, others muted), computed a11y label | a configurable tint (the breach accent is not overridable — an orange bar always means "over threshold") |
 | `DataTable<Row>` | generic column config (`key/header/cell/sortValue/align`), required sr-only `caption`, `rowTone` de-emphasis, optional expandable rows (`getExpandedContent` + `expandLabel`, `aria-controls`-linked), `defaultSort`, one `feed` object | compound/context API (only shared state is one sort tuple); pagination/virtualization (~19 rows total); selection; **row navigation** (rows expand to an inline detail panel, they don't link out) |
 | `Duration` | `seconds` → semantic `<time>` | live ticking (compressed replay time would contradict the wall clock — `StaleIndicator` is the only wall-clock surface) |
 | `EmptyState` / `ErrorState` / `StaleIndicator` | title/description/action slot; optional `onRetry`; self-ticking `lastUpdatedAt` + `tone` | icons; auto-derived staleness (the hook is the single owner of that logic) |
@@ -142,12 +152,13 @@ tick history) → molecules/atoms are stateless or self-contained. The essential
 | `PageSection` | `id` (heading gets `${id}-heading`, `aria-labelledby` wired), `title`, `description`, children | heading-level prop (h2 is the page anatomy under the single h1); actions slot (unearned); baked-in margins (the call site's stack owns spacing); collapse |
 | `OrgIdentity` | `name` (null → layout-mirroring skeletons), `tagline`, `href` (default "/", `aria-label="Homepage"`) | logo upload (monogram derives from the name — identity is data in a whitelabel system); a size prop (single consumer scale); heading-level choice (the identity block anchors a page, so the name IS the h1) |
 
-**Colorless deltas + reserved red.** The palette spends its one loud color,
-`--sla-breach`, on exactly one meaning: a broken promise. Queue SLA breach and
-an agent out of adherence (an agent-side *schedule* breach) both take it;
-`--status-breached` is a semantic alias of `--sla-breach` so it can't drift.
-Everything else — deltas, trends, healthy/at-risk — leans on glyphs and calmer
-inks, so a red pixel anywhere on the page reads as "a promise is broken." The
+**Colorless deltas + reserved orange.** The palette spends its one loud color,
+`--sla-breach` — the Braun utility orange — on exactly one meaning: a broken
+promise. Queue SLA breach and an agent out of adherence (an agent-side
+*schedule* breach) both take it; `--status-breached` is a semantic alias of
+`--sla-breach` so it can't drift. Everything else — deltas, trends,
+healthy/at-risk — leans on glyphs and calmer inks (grey → amber → orange), so
+an orange pixel anywhere on the page reads as "a promise is broken." The
 `MetricDelta` primitive is colorless everywhere, with **no exceptions**: even
 the queue table's headroom percent stays neutral, because the SLA verdict
 already lives in that row's Status badge — a second colored number would just
@@ -171,8 +182,8 @@ not a primitive).
   of the next breach. The Volume cell consolidates the whole story — actual /
   forecast absolutes with a diverging `DeviationBar` against the forecast
   baseline — but deliberately **without color** (neutral fill, colorless
-  delta): over-forecast is an indicator, not a verdict, so red stays reserved
-  for actual breach. Both deviation cells (headroom and volume) are fully
+  delta): over-forecast is an indicator, not a verdict, so orange stays
+  reserved for actual breach. Both deviation cells (headroom and volume) are fully
   neutral — bar and percent alike; the SLA verdict lives in the Status badge.
 - **Each queue row expands** to a "who can help" coverage panel: the
   out-of-adherence agents skilled on that queue (recoverable capacity) and the
