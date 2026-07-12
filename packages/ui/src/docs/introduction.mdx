@@ -1,21 +1,29 @@
 import { Meta } from "@storybook/addon-docs/blocks"
 
-<Meta title="system/introduction" />
+<Meta title="introduction" />
 
 # The design system
 
 This catalog is not a component gallery — it is the **system's home**. The system is
 the set of rules, tokens, and documented decisions beneath the dashboard, not the
 dashboard itself: the screen is one *proof* of the system, the way the next ten pages
-would be. If you are building a new surface (human or agent), start here, then reach
-for components — the pages in this `system/` group tell you which one and why.
+would be. If you are building a new surface (human or agent), start here, then
+navigate by what you need — the sidebar is organized so nothing requires guessing:
+
+- **components** — every primitive, atoms then molecules, one docs page each
+- **typography** / **colors** / **icons** / **spacing & misc.** — the reference
+  pages: live specimens and swatches of what exists
+- **rules** — the governance: token-tiers, color-law, feed-states, brand — *why*
+  things are the way they are, and what may not change
+- **skills** — task guidance, starting with choosing-a-data-primitive: *which*
+  component answers your question
 
 ## What "system" means here
 
 Three commitments, held without exceptions:
 
 1. **Rules over artifacts.** Every visual decision routes through the token tiers
-   (see [tokens](?path=/docs/system-tokens--docs)). No raw hex, no magic spacing, no
+   (see [token-tiers](?path=/docs/rules-token-tiers--docs)). No raw hex, no magic spacing, no
    component that branches on theme. A rule with one exception is not a rule — the
    first exception is the precedent for the tenth.
 2. **Documentation is constitutive.** If a decision isn't written down — in a token
@@ -23,10 +31,15 @@ Three commitments, held without exceptions:
    doesn't exist, and the next contributor will legitimately re-decide it. Every
    primitive documents its props **and the props it deliberately omits**; the
    omissions are load-bearing API.
-3. **Shared vocabulary.** The domain's ubiquitous language (`SlaStatus`,
-   `AdherenceStatus`, `Feed`, breach, headroom) is the same set of names in the data
-   model, the token layer, the prop enums, and the component names — so nothing can
-   drift between data, tokens, and UI without the type checker noticing.
+3. **Shared vocabulary.** One name per concept, spelled the same at every layer.
+   *Breach* is `sla_status: "breached"` in the fixture, `--sla-breach` in the token
+   layer, and `status="breached"` on the badge. *Adherence* is the `AdherenceStatus`
+   union in the model and the `--adherence-*` tokens in CSS. *Headroom* is
+   `sla_headroom_pct` in the data and the queue table's deviation column. *Feed* is
+   the `Feed` value object every data surface receives as its one `feed` prop. The
+   same names in the data model, the token layer, the prop enums, and the component
+   names — so nothing can drift between data, tokens, and UI without the type
+   checker noticing.
 
 ## The architecture, one screen deep
 
@@ -42,9 +55,10 @@ apps/web (the proof)          apps/storybook (this catalog)
 Dependency direction is enforced: the library depends on **no app and no feature
 code**. Primitives take value objects (`StatusBadge` takes a `status`; it has never
 heard of a queue); domain-bound compositions live in the app's feature slices.
-Atomic tiers ride in the sidebar titles — `atoms/` compose no other component,
-`molecules/` own multi-part anatomy and feed states; organisms/template/page live in
-the app, outside this catalog.
+Atomic tiers ride in the sidebar titles under the `components/` group —
+`components/atoms/` compose no other component, `components/molecules/` own
+multi-part anatomy and feed states; organisms/template/page live in the app,
+outside this catalog.
 
 ## Deliberately out of scope
 

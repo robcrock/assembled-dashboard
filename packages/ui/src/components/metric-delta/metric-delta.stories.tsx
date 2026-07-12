@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite"
 import { MetricDelta } from "@workspace/ui/components/metric-delta"
 
 const meta = {
-  title: "atoms/metric-delta",
+  title: "components/atoms/metric-delta",
   component: MetricDelta,
   parameters: {
     docs: {

@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite"
 import { OrgIdentity } from "@workspace/ui/components/org-identity"
 
 const meta = {
-  title: "molecules/org-identity",
+  title: "components/molecules/org-identity",
   component: OrgIdentity,
   parameters: {
     docs: {

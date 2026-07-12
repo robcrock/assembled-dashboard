@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite"
 import { ErrorState } from "@workspace/ui/components/error-state"
 
 const meta = {
-  title: "molecules/error-state",
+  title: "components/molecules/error-state",
   component: ErrorState,
   parameters: {
     docs: {

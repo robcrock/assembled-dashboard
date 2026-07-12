@@ -1,0 +1,155 @@
+import { Meta } from "@storybook/addon-docs/blocks"
+import {
+  ArrowDown,
+  ArrowUp,
+  ChevronDown,
+  ChevronRight,
+  CircleAlert,
+  Moon,
+  Pause,
+  Play,
+  Sun,
+} from "lucide-react"
+
+import { StatusBadge, StatusDot } from "@workspace/ui/components/status-badge"
+import { IconGrid, IconSpecimen } from "./icon-specimen"
+
+<Meta title="icons" />
+
+# Icons — the glyph carries the verdict
+
+One source: **lucide-react** (already the shadcn-configured set). Stroke glyphs
+only — no icon font, no custom SVGs, no filled variants. And one discipline:
+every icon is **functional**, never ornament. A glyph appears because it carries
+meaning a scanning eye needs (a status, a sort direction, an affordance) — if
+the adjacent text already says everything, the icon doesn't earn its pixels.
+
+## The status trio
+
+Status reads by **glyph shape first, color second** — the palette's one loud
+color is reserved for breach (see the
+[color law](?path=/docs/rules-color-law--docs)), so healthy and at-risk must
+stay legible through shape alone. The mapping lives in exactly one place:
+`STATUS_META` in `status-badge.tsx`, the single map from a status value to
+glyph + label + color. It is deliberately **not exported** — no surface can
+invent its own pairing — so these specimens render the real components rather
+than transcribing the map:
+
+<div className="sb-unstyled bg-background rounded-sm border px-5 py-4">
+  <div className="grid grid-cols-[8rem_minmax(0,1fr)] items-center gap-x-6 gap-y-3">
+    <StatusBadge status="healthy" />
+    <div className="text-muted-foreground font-sans text-xs">
+      `CircleCheck` — the promise is kept. Shared by `adherent`{" "}
+      (<StatusDot status="adherent" className="align-middle" />) — same glyph,
+      the agent-side reading.
+    </div>
+    <StatusBadge status="at_risk" />
+    <div className="text-muted-foreground font-sans text-xs">
+      `Clock` — time is the threat: headroom is shrinking, nothing is broken
+      yet.
+    </div>
+    <StatusBadge status="breached" />
+    <div className="text-muted-foreground font-sans text-xs">
+      `CircleAlert` — a promise is broken. Shared by `out_of_adherence`{" "}
+      (<StatusDot status="out_of_adherence" className="align-middle" />) — the
+      schedule is the promise, so the agent-side breach wears the same glyph
+      and the same reserved accent.
+    </div>
+  </div>
+</div>
+
+`StatusDot` renders the standalone glyph at `size-3.5`, centered in a one-line
+(`h-lh`) wrapper so it baseline-composes beside text. It announces its label to
+assistive tech (`sr-only`) unless marked `decorative` — set that only when
+adjacent text already names the status, so a screen reader doesn't hear it
+twice.
+
+## The working inventory
+
+Every other glyph the system ships, at the size its consumer actually renders —
+transcribed from source, so treat the *used by* column as the audit trail:
+
+<IconGrid>
+  <IconSpecimen
+    icon={ArrowUp}
+    name="ArrowUp"
+    size="size-3"
+    usedBy="DataTable sort header (asc)"
+    meaning="this column sorts ascending"
+    note="Rendered only on the active sort column — the arrow is state, not decoration; aria-sort carries it for AT."
+  />
+  <IconSpecimen
+    icon={ArrowDown}
+    name="ArrowDown"
+    size="size-3"
+    usedBy="DataTable sort header (desc)"
+    meaning="this column sorts descending"
+  />
+  <IconSpecimen
+    icon={ChevronDown}
+    name="ChevronDown"
+    size="size-4"
+    usedBy="DataTable expand toggle (open)"
+    meaning="row detail is expanded"
+  />
+  <IconSpecimen
+    icon={ChevronRight}
+    name="ChevronRight"
+    size="size-4"
+    usedBy="DataTable expand toggle (closed)"
+    meaning="row detail is collapsed"
+  />
+  <IconSpecimen
+    icon={Sun}
+    name="Sun"
+    size="size-4"
+    usedBy="ThemeToggle (light)"
+    meaning="light theme is active"
+    note="No explicit size class — inherits Button's icon slot ([&_svg]:size-4). Sun/Moon swap via dark: visibility classes — the sanctioned dark: idiom (structural swaps, never per-theme color values)."
+  />
+  <IconSpecimen
+    icon={Moon}
+    name="Moon"
+    size="size-4"
+    usedBy="ThemeToggle (dark)"
+    meaning="dark theme is active"
+  />
+  <IconSpecimen
+    icon={Play}
+    name="Play"
+    size="size-3.5"
+    usedBy="dashboard replay control (app-side)"
+    meaning="replay is paused — resume"
+    note="App chrome in apps/web, outside the library — listed so the inventory is the whole truth."
+  />
+  <IconSpecimen
+    icon={Pause}
+    name="Pause"
+    size="size-3.5"
+    usedBy="dashboard replay control (app-side)"
+    meaning="replay is live — pause"
+  />
+  <IconSpecimen
+    icon={CircleAlert}
+    name="CircleAlert"
+    size="size-3.5"
+    usedBy="dashboard error-inject toggle (app-side)"
+    meaning="failure — the breach glyph doing non-status alarm duty"
+  />
+</IconGrid>
+
+## The rules
+
+- **Status glyphs come only from `STATUS_META`.** No surface pairs a status
+  with a glyph on its own; render `StatusDot` / `StatusBadge` and the pairing
+  is structural.
+- **Icons never take a color prop.** Glyphs inherit `currentColor` from their
+  surface's ink; status ink comes from the canonical map, everything else
+  stays in the quiet foreground/muted registers.
+- **Icon-only surfaces speak.** `aria-hidden` on the SVG, an `sr-only` label
+  beside it — unless the glyph is `decorative` because adjacent text already
+  says it (StatusDot's contract).
+- **Sizing rides the stock `size-*` steps** — `size-3` (dense table
+  affordances), `size-3.5` (inline-with-text glyphs), `size-4` (buttons and
+  row-level controls). No icon has ever needed a minted size token; don't be
+  the first without a second consumer.

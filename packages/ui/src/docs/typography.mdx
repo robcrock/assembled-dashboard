@@ -1,12 +1,12 @@
 import { Meta } from "@storybook/addon-docs/blocks"
 import { TypeRamp, TypeScale, TypeSpecimen } from "./type-specimen"
 
-<Meta title="system/typography" />
+<Meta title="typography" />
 
 # Typography — two families, three voices
 
 Inter carries prose and numerics; JetBrains Mono carries labels — the pairing is
-the brand's (see [brand](?path=/docs/system-brand--docs)). The ramp is deliberately
+the brand's (see [brand](?path=/docs/rules-brand--docs)). The ramp is deliberately
 small: the prose steps are **stock Tailwind utilities** (no composites to learn),
 and the only custom type utilities are the five composites below — four tabular
 `text-metric-*` steps and the mono `text-label` tier. Hierarchy is carried by size
@@ -212,7 +212,7 @@ the pairing with `text-muted-foreground` is part of the recipe, not optional.
 - **Every new `text-*` composite must be registered in `extendTailwindMerge`**
   (`packages/ui/src/lib/utils.ts`) or `cn()` classifies it as a text color and
   silently drops it — the long-form rationale lives in
-  [tokens](?path=/docs/system-tokens--docs).
+  [tokens](?path=/docs/rules-token-tiers--docs).
 - **Don't mint new ramp steps.** The monogram's `text-xl` is the only shipped
   off-ramp, and it needed a reason.
 
@@ -224,4 +224,4 @@ the pairing with `text-muted-foreground` is part of the recipe, not optional.
 - Everything else is prose → the stock ramp, `text-xs` → `text-2xl`.
 
 For the component-level version of this decision, see
-[choosing-a-data-primitive](?path=/docs/system-choosing-a-data-primitive--docs).
+[choosing-a-data-primitive](?path=/docs/skills-choosing-a-data-primitive--docs).

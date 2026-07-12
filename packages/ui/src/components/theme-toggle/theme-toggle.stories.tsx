@@ -5,7 +5,7 @@ import { ThemeToggle } from "@workspace/ui/components/theme-toggle"
 
 // next-themes is framework-agnostic; the story provides its own provider.
 const meta: Meta<typeof ThemeToggle> = {
-  title: "atoms/theme-toggle",
+  title: "components/atoms/theme-toggle",
   component: ThemeToggle,
   parameters: {
     docs: {

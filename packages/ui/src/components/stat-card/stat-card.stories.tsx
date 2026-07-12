@@ -7,7 +7,7 @@ import { StatCard } from "@workspace/ui/components/stat-card"
 const ATTAINMENT_TREND = [97, 96, 95, 93, 90, 87, 84, 82, 84, 86]
 
 const meta = {
-  title: "molecules/stat-card",
+  title: "components/molecules/stat-card",
   component: StatCard,
   parameters: {
     docs: {

@@ -20,7 +20,8 @@ pnpm --filter storybook dev   # catalog only
 
 No local setup at all: the catalog is deployed at
 **<https://assembled-dashboard-storybook.vercel.app>** — every primitive across
-every state and variant, plus the `system/` docs pages.
+every state and variant, plus the system docs pages (introduction, typography,
+colors, icons, spacing & misc., rules, skills).
 
 ### Demo walkthrough (the live-data story)
 
@@ -57,10 +58,11 @@ Chat breaches mid-replay and jumps to the top; the final frame shows Billing
   below. **Storybook 10** (react-vite) is the catalog *and the system's
   documentation home*: stories live colocated with their components in
   `packages/ui`, every component gets an autodocs page (JSDoc props table +
-  when-to-use/deliberately-omitted notes), and the system's rules are MDX
-  pages under the sidebar's `system/` group — introduction, tokens,
-  color-law, feed-states, a choosing-a-data-primitive decision table, and
-  the brand layer.
+  when-to-use/deliberately-omitted notes), and the system's docs are MDX
+  pages organized Magic Patterns-style: a root introduction, reference pages
+  (typography, colors, icons, spacing & misc.), governance under `rules/`
+  (token-tiers, color-law, feed-states, brand), and task guidance under
+  `skills/` (the choosing-a-data-primitive decision table).
 
 ## The domain model (ubiquitous language)
 
@@ -124,7 +126,9 @@ composite / component ──▶ semantic ──▶ primitive
 ## The atomic mapping
 
 Atomic design is the system's organizing language, expressed in place — Storybook
-titles carry the tier, folders and import paths stay flat:
+titles carry the tier under one `components/` sidebar group
+(`components/atoms/<name>`, `components/molecules/<name>`), folders and import
+paths stay flat:
 
 | Tier | Lives at | Contents |
 |---|---|---|

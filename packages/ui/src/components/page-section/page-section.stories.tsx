@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite"
 import { PageSection } from "@workspace/ui/components/page-section"
 
 const meta = {
-  title: "molecules/page-section",
+  title: "components/molecules/page-section",
   component: PageSection,
   parameters: {
     docs: {

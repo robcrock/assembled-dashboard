@@ -22,20 +22,22 @@ const preview: Preview = {
     // body bg/text come from the token stylesheet; SB backgrounds would lie
     backgrounds: { disable: true },
     options: {
-      // The system pages are a reading order, not a list — alphabetical would
-      // bury the introduction. Component groups keep default order under "*".
+      // The docs pages are a reading order, not a list — alphabetical would
+      // bury the introduction. Component groups keep default order inside
+      // their tier. Entries are exact title-segment strings, so
+      // "spacing & misc." must match the Meta title verbatim.
       storySort: {
         order: [
-          "system",
-          [
-            "introduction",
-            "brand",
-            "tokens",
-            "typography",
-            "color-law",
-            "feed-states",
-            "choosing-a-data-primitive",
-          ],
+          "introduction",
+          "components",
+          ["atoms", "molecules"],
+          "typography",
+          "colors",
+          "icons",
+          "spacing & misc.",
+          "rules",
+          ["token-tiers", "color-law", "feed-states", "brand"],
+          "skills",
           "*",
         ],
       },

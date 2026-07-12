@@ -2,7 +2,7 @@ import { Fragment, type ReactNode } from "react"
 
 import { cn } from "@workspace/ui/lib/utils"
 
-// Docs-only helpers for the system/typography MDX page — NOT part of the
+// Docs-only helpers for the typography MDX page — NOT part of the
 // library surface (the exports map doesn't expose ./docs/*, and the stories
 // glob only matches *.stories.tsx, so this can never leak into app code or
 // the sidebar). The sample is LIVE: it renders with the real utility class,
