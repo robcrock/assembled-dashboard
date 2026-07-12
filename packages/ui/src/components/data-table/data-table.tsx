@@ -28,6 +28,14 @@ import { cn } from "@workspace/ui/lib/utils"
 // under the real header (no layout shift); stale dims the body and shows the
 // StaleIndicator but never blanks; error offers retry.
 
+// One fixed rhythm for every body row — skeleton and resolved alike — so
+// loading -> live cannot shift (the states contract) and row height stops
+// depending on WHICH cell content sets the line-box (a badge's svg-first
+// flex baseline inflates it unpredictably vs a text-only row). 40px sits on
+// the Braun 8px grid; td height acts as min-height, so a consumer's taller
+// custom cells still grow past it.
+const ROW_RHYTHM = "h-10"
+
 export interface DataTableColumn<Row> {
   /** Stable id; also the sort key. */
   key: string
@@ -194,7 +202,9 @@ function DataTable<Row>({
         <TableBody className={cn(status === "stale" && "stale-dim")}>
           {status === "loading" ? (
             Array.from({ length: skeletonRows }, (_, i) => (
-              <TableRow key={i}>
+              // ROW_RHYTHM makes skeleton rows and resolved rows the same
+              // height by construction — no line-box forensics.
+              <TableRow key={i} className={ROW_RHYTHM}>
                 {expandable && <TableCell className="w-8" />}
                 {columns.map((column) => (
                   <TableCell key={column.key} className={column.className}>
@@ -234,7 +244,10 @@ function DataTable<Row>({
                   <TableRow
                     // de-emphasis is color-only: muted-foreground keeps AA
                     // contrast; stacking opacity on top would crush it (~2.2:1)
-                    className={cn(tone === "muted" && "text-muted-foreground")}
+                    className={cn(
+                      ROW_RHYTHM,
+                      tone === "muted" && "text-muted-foreground",
+                    )}
                   >
                     {expandable && (
                       <TableCell className="w-8 py-1">

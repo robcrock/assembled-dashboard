@@ -71,7 +71,9 @@ function StatCard({
       {status === "loading" ? (
         <>
           <Skeleton className={SKELETON_SIZE[size]} />
-          {children && <Skeleton className="mt-1 h-5 w-16" />}
+          {/* no extra margin: the container's gap already separates value from
+              trend in the live layout, so any margin here IS resolve shift */}
+          {children && <Skeleton className="h-5 w-16" />}
         </>
       ) : status === "error" ? (
         <ErrorState

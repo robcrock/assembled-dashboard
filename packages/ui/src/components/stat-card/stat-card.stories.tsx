@@ -135,10 +135,54 @@ export const SizeLg: Story = {
     docs: {
       description: {
         story:
-          "Overview-band hero count: lg size, alarm ink carried by the value node (the ink decision is the consumer's — breach red only when it means it).",
+          "Overview-band hero count: lg size, alarm ink carried by the value node (the ink decision is the consumer's — breach orange only when it means it).",
       },
     },
   },
+}
+
+// The one interactive story: every other state story couples its data to the
+// state; this one holds FILLED data constant so flipping the control swaps
+// only the state and any resolve-time layout shift becomes visible.
+const PLAYGROUND_STATES = ["loading", "live", "stale", "error", "empty"] as const
+
+export const States: StoryObj<{ state: (typeof PLAYGROUND_STATES)[number] }> = {
+  name: "States (playground)",
+  argTypes: {
+    state: { control: "select", options: [...PLAYGROUND_STATES] },
+  },
+  args: { state: "loading" },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Playground: flip `state` to watch the transitions in place — the sidebar state stories re-mount on every click, so only this control shows the reflow. The contract under test is **loading → live: no layout shift** (the skeleton mirrors the final anatomy). Stale *adding* its dated line and empty swapping to the em dash are designed differences, not shift bugs.",
+      },
+    },
+  },
+  render: ({ state }) => (
+    <StatCard
+      label="SLA attainment"
+      value={state === "empty" ? undefined : "86%"}
+      delta={state === "empty" ? undefined : <MetricDelta value={2} />}
+      feed={
+        state === "loading"
+          ? { status: "loading" }
+          : state === "error"
+            ? { status: "error", onRetry: () => {} }
+            : state === "stale"
+              ? { status: "stale", lastUpdatedAt: Date.now() - 42_000 }
+              : { status: "live" }
+      }
+    >
+      {state === "empty" ? null : (
+        <Sparkline
+          points={ATTAINMENT_TREND}
+          label="Attainment recovering from 82% to 86%"
+        />
+      )}
+    </StatCard>
+  ),
 }
 
 export const Strip: Story = {
