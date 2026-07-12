@@ -116,6 +116,7 @@ together as one value object rather than a param clump. The essentials:
 | `Meter` | normalized `value`/`max`, `label`, optional `status` tint (from the one canonical `statusFillClass`) | magnitude labels (the meter shows *saturation*; the number that says how far over rides beside it in a `MetricDelta`); a fourth severity color |
 | `DeviationBar` | signed `value` (± % around a center baseline dot), `label`, `range` clamp per half | color entirely — one neutral muted fill (verdict color lives on the badges beside it); a direction/`invert` prop (the sign IS the direction — over extends right past the dot, under extends left); a rendered number (the exact figure rides beside it); threshold markers |
 | `Sparkline` | `points`, optional `status` tint, computed a11y label with override | chart deps, axes, tooltips, animation (snaps on tick) |
+| `Gauge` | normalized `value` (0–100), `label`, center content via **children** (the gauge owns only the arc — it never formats numbers) | gradient / threshold zones / needle (tokens only: muted track, `currentColor` arc); animation; internal number formatting |
 | `SparkBars` | `points`, `threshold` (bars past it take the reserved breach accent, others muted), computed a11y label | a configurable tint (the breach accent is not overridable — a red bar always means "over threshold") |
 | `DataTable<Row>` | generic column config (`key/header/cell/sortValue/align`), required sr-only `caption`, `rowTone` de-emphasis, optional expandable rows (`getExpandedContent` + `expandLabel`, `aria-controls`-linked), `defaultSort`, one `feed` object | compound/context API (only shared state is one sort tuple); pagination/virtualization (~19 rows total); selection; **row navigation** (rows expand to an inline detail panel, they don't link out) |
 | `Duration` | `seconds` → semantic `<time>` | live ticking (compressed replay time would contradict the wall clock — `StaleIndicator` is the only wall-clock surface) |
@@ -139,6 +140,10 @@ not a primitive).
 
 ## Product tradeoffs
 
+- **The overview is three numbers, not a KPI strip**: an SLA-attainment arc
+  gauge (the org-level promise) plus the two alarm counts — queues breaching,
+  agents out of adherence — each previewing the section that explains it.
+  Everything else lives beside the data that gives it meaning.
 - **Triage order is the default everywhere**: breaching first, then at-risk,
   healthy last — and the healthy tail **dims** rather than collapses (six
   queues fit on screen; hiding rows a manager still scans costs more than it

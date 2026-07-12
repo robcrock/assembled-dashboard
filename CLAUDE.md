@@ -217,7 +217,12 @@ compositions wire them to this dashboard's data and live in `apps/web` feature s
   color — **without exception**: even the queue table's headroom percent stays neutral, since
   that row's SLA verdict already lives in its Status badge. Verdict color rides on the status
   surfaces (badges, `Sparkline` tint) alone; red is reserved for breach.
-- `Sparkline` — line trend (used in the summary strip); `status`-tinted, accessible aria-label.
+- `Sparkline` — line trend; `status`-tinted, accessible aria-label. (Catalog primitive — its
+  summary-strip consumer was replaced by the gauge overview.)
+- `Gauge` — one normalized value (0–100) as an open-bottom arc; center content via children
+  (the gauge owns only the arc, never number formatting). Muted track + `currentColor` value
+  arc — no gradient, no threshold zones, no needle, no animation. The dashboard's org-level
+  SLA-attainment reading.
 - `SparkBars` — bar trend for `wait_trend_sec` in the queue table; bars past a `threshold` take
   the reserved breach accent, the rest stay muted (the tint is not overridable).
 - `Meter` — normalized 0→max fill for utilization-type saturation; tint from the one canonical
@@ -237,8 +242,10 @@ compositions wire them to this dashboard's data and live in `apps/web` feature s
   degraded styling).
 - `ThemeToggle`.
 
-**Compositions — `apps/web` feature slices:** `SummaryBar` (`features/summary`), `QueueHealthTable`
-or a `QueueCard` grid (`features/queue-health`), `AgentAdherenceTable` (`features/agent-adherence`).
+**Compositions — `apps/web` feature slices:** `AttainmentOverview` (`features/summary` — the
+SLA-attainment gauge; it replaced the old `SummaryBar` KPI strip, and the section-level alarm
+counts render as `AlarmStat` tiles in the composition root beside it), `QueueHealthTable`
+(`features/queue-health`), `AgentAdherenceTable` (`features/agent-adherence`).
 
 **Component API discipline:** discriminated `state`/`status` props, not boolean soup. Children
 over `renderX` props. Compound-component/context machinery only where shared state justifies it

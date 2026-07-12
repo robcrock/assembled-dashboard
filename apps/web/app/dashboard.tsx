@@ -6,7 +6,10 @@
 // from the feed and can only render inside the data boundary.
 //
 // Page hierarchy, top to bottom, is the eye's travel: identity + freshness
-// chrome → floor vitals → queues by trouble → missing capacity.
+// chrome → the overview row (SLA-attainment gauge + the two alarm counts) →
+// queues by trouble → missing capacity. The overview is deliberately three
+// numbers, not a strip of mixed KPIs: attainment is the org-level promise,
+// and each alarm count previews the section that explains it.
 //
 // Demo levers (the failure story, demonstrable from the toolbar or by hand):
 //   Pause button / "p" → pause replay; ~8s later ticks are "late" and the
@@ -23,10 +26,12 @@ import { Button } from "@workspace/ui/components/button"
 import { Skeleton } from "@workspace/ui/components/skeleton"
 import { StaleIndicator } from "@workspace/ui/components/stale-indicator"
 import { ThemeToggle } from "@workspace/ui/components/theme-toggle"
+import type { Feed } from "@workspace/ui/lib/feed"
+import { cn } from "@workspace/ui/lib/utils"
 
 import { AgentAdherenceTable } from "@/features/agent-adherence/components/agent-adherence-table"
 import { QueueHealthTable } from "@/features/queue-health/components/queue-health-table"
-import { SummaryBar } from "@/features/summary/components/summary-bar"
+import { AttainmentOverview } from "@/features/summary/components/attainment-overview"
 import { useDashboardData } from "@/hooks/use-dashboard-data"
 
 function isTypingTarget(target: EventTarget | null) {
@@ -71,6 +76,61 @@ function OrgIdentity({ org }: { org: string | null }) {
   )
 }
 
+/**
+ * A section-level alarm number for the overview row — breach ink when
+ * non-zero, calm otherwise. Fed plain numbers by the composition root so the
+ * summary slice never leaks into the section slices.
+ */
+function AlarmStat({
+  label,
+  count,
+  detail,
+  feed = { status: "live" },
+}: {
+  label: string
+  count?: number
+  detail?: string
+  feed?: Feed
+}) {
+  if (feed.status === "loading") {
+    return (
+      <div className="flex min-w-0 flex-col gap-1">
+        <div className="text-muted-foreground truncate text-xs font-medium">
+          {label}
+        </div>
+        <Skeleton className="h-10 w-14" />
+        <Skeleton className="h-4 w-24" />
+      </div>
+    )
+  }
+
+  return (
+    <div
+      className={cn(
+        "flex min-w-0 flex-col gap-1",
+        feed.status === "stale" && "opacity-60",
+      )}
+    >
+      <div className="text-muted-foreground truncate text-xs font-medium">
+        {label}
+      </div>
+      <div
+        className={cn(
+          "text-4xl font-medium tabular-nums",
+          count !== undefined && count > 0
+            ? "text-sla-breach"
+            : "text-foreground",
+        )}
+      >
+        {count ?? <span className="text-muted-foreground">—</span>}
+      </div>
+      {detail && (
+        <div className="text-muted-foreground text-metric-sm">{detail}</div>
+      )}
+    </div>
+  )
+}
+
 export function Dashboard() {
   const [paused, setPaused] = useState(false)
   const [injectError, setInjectError] = useState(false)
@@ -95,6 +155,8 @@ export function Dashboard() {
       ),
     [data],
   )
+
+  const summary = data?.summary ?? null
 
   return (
     <div className="isolate min-h-svh">
@@ -149,11 +211,34 @@ export function Dashboard() {
 
       <main className="mx-auto w-full max-w-6xl px-6 py-8">
         <div className="flex flex-col gap-10">
-          <SummaryBar
-            summary={data?.summary ?? null}
-            ts={data?.ts ?? null}
-            feed={feed}
-          />
+          {/* Overview row: the org-level promise, then the two alarm counts
+              that preview the sections beneath. */}
+          <section
+            aria-label="Floor overview"
+            className="flex flex-wrap items-center gap-x-14 gap-y-6"
+          >
+            <AttainmentOverview
+              summary={summary}
+              ts={data?.ts ?? null}
+              feed={feed}
+            />
+            <AlarmStat
+              label="Queues breaching"
+              count={summary?.queues_breaching}
+              detail={
+                summary
+                  ? `${summary.queues_at_risk} at risk · ${summary.tickets_waiting_total} waiting`
+                  : undefined
+              }
+              feed={feed}
+            />
+            <AlarmStat
+              label="Out of adherence"
+              count={summary?.agents_out_of_adherence}
+              detail={summary ? `of ${summary.agents_online} online` : undefined}
+              feed={feed}
+            />
+          </section>
 
           <section aria-labelledby="queues-heading" className="flex flex-col gap-4">
             <div className="flex flex-col gap-1">
