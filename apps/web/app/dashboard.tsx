@@ -25,6 +25,9 @@
 //                        section shows ErrorState with retry; toggle off to
 //                        recover
 //   /?fail=1, /?delay=4000 → same failure paths, URL-driven
+//   (no lever needed)  → the replay exhausts ~30s in and the feed decays to
+//                        stale on its own — an exhausted feed ages honestly;
+//                        reload restarts the replay
 
 import { useEffect, useMemo, useState, type ReactNode } from "react"
 import { CircleAlert, Pause, Play } from "lucide-react"

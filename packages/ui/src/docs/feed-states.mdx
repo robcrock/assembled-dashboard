@@ -52,5 +52,7 @@ keeps every number readable. Degrade honestly rather than lie about liveness.
 
 Every owner has a story per state in this catalog. On the live dashboard: **p**
 pauses the replay (→ stale after the missed tick), the *Inject error* control makes
-the route handler fail (→ error with retry). See each component's docs page for its
+the route handler fail (→ error with retry), and once the fixture replay exhausts
+(~30s in) the feed decays to stale on its own — the honest reading of a feed that
+stopped ticking; reload restarts it. See each component's docs page for its
 state stories.
