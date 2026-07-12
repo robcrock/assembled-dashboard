@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite"
 import { DeviationBar } from "@workspace/ui/components/deviation-bar"
 
 const meta = {
-  title: "atoms/deviation-bar",
+  title: "components/atoms/deviation-bar",
   component: DeviationBar,
   parameters: {
     docs: {

@@ -9,7 +9,7 @@ import {
 } from "@workspace/ui/components/card"
 
 const meta = {
-  title: "atoms/card",
+  title: "components/atoms/card",
   component: Card,
   parameters: {
     docs: {

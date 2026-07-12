@@ -291,7 +291,7 @@ const baseArgs = {
 }
 
 const meta: Meta<typeof DataTable<SampleRow>> = {
-  title: "molecules/data-table",
+  title: "components/molecules/data-table",
   component: DataTable,
   parameters: {
     docs: {

@@ -8,7 +8,7 @@ const VIP_RECOVERING = [60, 65, 80, 120, 190, 260, 310, 330, 300, 250]
 const TIER2_STEADY = [180, 190, 200, 210, 230, 250, 260, 255, 240, 230]
 
 const meta = {
-  title: "atoms/sparkline",
+  title: "components/atoms/sparkline",
   component: Sparkline,
   parameters: {
     docs: {

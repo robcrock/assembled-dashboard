@@ -1,43 +1,21 @@
 import { Meta, ColorPalette, ColorItem } from "@storybook/addon-docs/blocks"
 
-<Meta title="system/tokens" />
+<Meta title="colors" />
 
-# Tokens — the ions
+# Colors — the palette
 
-Four tiers in `packages/ui/src/styles/globals.css`, all color in **oklch**:
-
-```
-composite / component ──▶ semantic ──▶ primitive
-```
-
-- **Primitive** (`--primitive-<hue>-<step>`) — context-free raw values. Defined in
-  `:root` only, **never in `@theme`**: that's the enforcement trick, not a style
-  preference — Tailwind generates *no utilities* for them, so a component
-  structurally cannot consume a raw value by class. Never themed. Every hue ships
-  the **full 50–950 scale** (Primer-style uniform ramps — a semantic role's first
-  use of a step is a token pick, not a mint), and roles pick steps from documented
-  usage bands: **50–200** tints, **200–300** hairlines, **400–500** anchors/fills +
-  dark-theme inks (never light-theme body ink — anchors measure ~3–4:1),
-  **600–800** light-theme AA text inks, **900–950** near-ink solids + dark tints.
-- **Semantic** (`--background`, `--muted`, `--status-*`, `--sla-breach`…) — roles
-  that reference primitives. Light/dark remaps happen at **this tier only**: `.dark`
-  re-points roles; pure aliases (`--status-breached`, `--destructive`, `--ring`)
-  are declared once and chase their targets through the remap.
-- **Component** (`--<component>-<part>`) — the earning rule: minted only when two
-  consumers need *different values for the same semantic role*. **Zero exist.** A
-  knob nobody overrides is dead weight.
-- **Composite** — multi-property bundles: `shadow-hairline` (elevation by border,
-  never shadow), the `text-metric-*` tabular ramp, `text-label` (the mono label
-  tier), `stale-dim`, `focus-ring`. Where Tailwind has a namespace they live in
-  `@theme`; otherwise they're an `@utility`. **Every custom `text-*` composite must
-  also be registered in `extendTailwindMerge`** (`packages/ui/src/lib/utils.ts`) —
-  unregistered, tailwind-merge classifies it as a text *color* and silently drops
-  it or the real color in `cn()` merges.
+Every color in `packages/ui/src/styles/globals.css`, all in **oklch**, shown live —
+the swatches read the actual CSS variables, so this page is always the shipped
+truth. This is the reference; the governance lives under rules: how the tiers
+relate and why primitives generate no utilities is
+[token-tiers](?path=/docs/rules-token-tiers--docs), and where each color may be
+*spent* is the [color law](?path=/docs/rules-color-law--docs).
 
 ## Primitive ramps
 
 The raw material — shown for reference only: **no Tailwind utilities exist for
-these, by design** (the `@theme` exclusion above). Anchor steps carry the
+these, by design** (the `@theme` exclusion — see
+[token-tiers](?path=/docs/rules-token-tiers--docs)). Anchor steps carry the
 provenance; everything else is OKLab-generated around them. Primitives are never
 themed, so these swatches do not remap with the toolbar toggle — that's the tier
 working as designed.
@@ -180,4 +158,4 @@ toggle the toolbar theme and they remap.
 
 Two families, three voices — Inter prose, Inter tabular numerics, JetBrains Mono
 labels. The full ramp — live specimens, sizes, weights, and the voice rules —
-lives in [typography](?path=/docs/system-typography--docs).
+lives in [typography](?path=/docs/typography--docs).

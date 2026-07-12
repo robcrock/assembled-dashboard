@@ -4,7 +4,7 @@ import { Gauge } from "@workspace/ui/components/gauge"
 import { MetricDelta } from "@workspace/ui/components/metric-delta"
 
 const meta = {
-  title: "atoms/gauge",
+  title: "components/atoms/gauge",
   component: Gauge,
   parameters: {
     docs: {

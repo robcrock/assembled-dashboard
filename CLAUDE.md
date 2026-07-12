@@ -72,9 +72,11 @@ and `pnpm typecheck` before considering a change done.
   the global `autodocs` tag): every component gets a Docs page — prop JSDoc becomes the props
   table, each meta's `parameters.docs.description.component` carries the when-to-use /
   deliberately-omitted reasoning, and story-level scenario notes live in story descriptions
-  (not code comments). System-level rules are MDX pages in `packages/ui/src/docs/` under the
-  `system/` title group (introduction, tokens, color-law, feed-states,
-  choosing-a-data-primitive, brand). `@storybook/addon-docs` must be a devDependency of
+  (not code comments). System-level docs are MDX pages in `packages/ui/src/docs/`, organized
+  Magic Patterns-style: a root `introduction`, reference pages (`typography`, `colors`,
+  `icons`, `spacing & misc.`), governance under `rules/` (token-tiers, color-law,
+  feed-states, brand), and task guidance under `skills/` (choosing-a-data-primitive).
+  `@storybook/addon-docs` must be a devDependency of
   **both** `apps/storybook` and `packages/ui` — MDX under `packages/ui` resolves imports from
   the package side under pnpm isolation. `!**/*.stories.*` and `!**/*.mdx` stay in the shared
   `build` task `inputs` in `turbo.json` so editing a story or docs page never busts the app
@@ -421,8 +423,9 @@ contrast check on status colors light and dark, one story per state per componen
   `./src/components/*/index.ts`, so consumers always import `@workspace/ui/components/<name>`
   — never a deep file path. The library typechecks with `moduleResolution: "Bundler"` to match
   how it is actually consumed (Next/Turbopack and Vite), same as the app.
-- **Storybook titles carry the atomic tier**: `atoms/<name>` or `molecules/<name>` per the
-  atomic mapping table — the catalog sidebar IS the taxonomy (folders stay flat).
+- **Storybook titles carry the atomic tier under one `components/` group**:
+  `components/atoms/<name>` or `components/molecules/<name>` per the atomic mapping table —
+  the catalog sidebar IS the taxonomy (folders stay flat).
 
 ## Out of scope / anti-goals
 

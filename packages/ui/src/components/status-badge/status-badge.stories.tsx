@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite"
 import { StatusBadge, StatusDot } from "@workspace/ui/components/status-badge"
 
 const meta = {
-  title: "molecules/status-badge",
+  title: "components/molecules/status-badge",
   component: StatusBadge,
   parameters: {
     docs: {

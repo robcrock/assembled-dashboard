@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite"
 import { Callout } from "@workspace/ui/components/callout"
 
 const meta = {
-  title: "atoms/callout",
+  title: "components/atoms/callout",
   component: Callout,
   parameters: {
     docs: {

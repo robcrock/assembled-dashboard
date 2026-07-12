@@ -10,7 +10,7 @@ import {
 } from "@workspace/ui/components/table"
 
 const meta = {
-  title: "atoms/table",
+  title: "components/atoms/table",
   component: Table,
   parameters: {
     docs: {

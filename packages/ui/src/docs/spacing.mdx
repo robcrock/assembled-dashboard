@@ -1,0 +1,130 @@
+import { Meta } from "@storybook/addon-docs/blocks"
+
+<Meta title="spacing & misc." />
+
+# Spacing & misc. — the quiet defaults
+
+The tiers that don't get a swatch page: spacing, radius, elevation, and the two
+composite utilities. Half of this page documents things the system deliberately
+does **not** mint — and per the system's rules, the non-mint is only real once
+it's written down. This is where it's written down.
+
+## Spacing — no tokens, on purpose
+
+The system mints **zero `--spacing-*` tokens**. Stock Tailwind's 4px grid *is*
+the scale; `DESIGN.md`'s three named steps land exactly on it, so a parallel
+token tier would be a second name for the same numbers — dead weight, same
+verdict as component tokens nobody overrides (see
+[token-tiers](?path=/docs/rules-token-tiers--docs)).
+
+| DESIGN.md step | Value | Stock utilities |
+| --- | --- | --- |
+| `sm` | 8px | `gap-2` / `p-2` / `space-y-2` |
+| `md` | 16px | `gap-4` / `p-4` / `space-y-4` |
+| `lg` | 32px | `gap-8` / `p-8` / `space-y-8` |
+
+Live — real `gap-*` utilities, so the rendered gaps can't drift:
+
+<div className="sb-unstyled bg-background rounded-sm border px-5 py-4">
+  <div className="flex flex-col gap-5">
+    {[
+      { label: "sm · gap-2 · 8px", gap: "gap-2" },
+      { label: "md · gap-4 · 16px", gap: "gap-4" },
+      { label: "lg · gap-8 · 32px", gap: "gap-8" },
+    ].map(({ label, gap }) => (
+      <div key={label} className="flex items-center gap-6">
+        <div className="text-label text-muted-foreground w-44 shrink-0">
+          {label}
+        </div>
+        <div className={`flex ${gap}`}>
+          <div className="bg-muted h-8 w-16 rounded-sm" />
+          <div className="bg-muted h-8 w-16 rounded-sm" />
+          <div className="bg-muted h-8 w-16 rounded-sm" />
+        </div>
+      </div>
+    ))}
+  </div>
+</div>
+
+Intermediate stock steps (`gap-1`, `gap-3`, `gap-6`, …) stay legal — the named
+steps are the rhythm for section-level composition, not a whitelist for every
+padding. What's banned is the *arbitrary* value: `gap-[13px]` is the magic
+spacing the rules prohibit.
+
+## Radius — the Braun squares
+
+The literal scale from `DESIGN.md` (`rounded`: 0 / 2px / 4px), and a clamp:
+every Tailwind step above `lg` re-points at `--radius` (4px), so vendored
+shadcn internals asking for `rounded-xl` render Braun-square instead of
+soft-cornered.
+
+<div className="sb-unstyled bg-background rounded-sm border px-5 py-4">
+  <div className="flex flex-wrap items-end gap-6">
+    {[
+      { cls: "rounded-sm", label: "rounded-sm · 0px" },
+      { cls: "rounded-md", label: "rounded-md · 2px" },
+      { cls: "rounded-lg", label: "rounded-lg · 4px" },
+      { cls: "rounded-2xl", label: "rounded-2xl · clamps to 4px" },
+    ].map(({ cls, label }) => (
+      <div key={cls} className="flex flex-col items-center gap-2">
+        <div className={`bg-muted border-border size-16 border ${cls}`} />
+        <div className="text-label text-muted-foreground">{label}</div>
+      </div>
+    ))}
+  </div>
+</div>
+
+The documented residuals — `rounded-full` meter/deviation tracks and the
+monogram tile — are deviations recorded at the token that makes them; see the
+[brand deviations register](?path=/docs/rules-brand--docs).
+
+## Elevation — a hairline, never a shadow
+
+Flat on purpose. The one elevation treatment is `shadow-hairline` — an inset
+1px ring in the border token, elevation by *edge*, not by depth. No drop
+shadows anywhere in the system.
+
+<div className="sb-unstyled bg-background rounded-sm border px-5 py-4">
+  <div className="flex flex-wrap gap-6">
+    <div className="bg-card shadow-hairline flex h-20 w-40 items-center justify-center rounded-lg">
+      <span className="text-label text-muted-foreground">shadow-hairline</span>
+    </div>
+    <div className="bg-card flex h-20 w-40 items-center justify-center rounded-lg">
+      <span className="text-label text-muted-foreground">no elevation</span>
+    </div>
+  </div>
+</div>
+
+## Misc. — the two behavioral composites
+
+**`stale-dim`** — opacity 0.6, THE stale-degradation strength. Every stale
+surface dims by exactly this; a fifth surface can't silently pick another
+number. When it applies and who owns it:
+[feed-states](?path=/docs/rules-feed-states--docs).
+
+<div className="sb-unstyled bg-background rounded-sm border px-5 py-4">
+  <div className="flex items-center gap-10">
+    <div className="font-sans">
+      <div className="text-label text-muted-foreground">live</div>
+      <div className="text-metric text-foreground">98.2%</div>
+    </div>
+    <div className="stale-dim font-sans">
+      <div className="text-label text-muted-foreground">stale</div>
+      <div className="text-metric text-foreground">98.2%</div>
+    </div>
+  </div>
+</div>
+
+**`focus-ring`** — the one keyboard-focus treatment: a 3px half-alpha ring in
+the `ring` token, which is foreground *ink*, not a color — focus never
+competes with status (see the
+[color law](?path=/docs/rules-color-law--docs)). Tab to the button:
+
+<div className="sb-unstyled bg-background rounded-sm border px-5 py-4">
+  <button
+    type="button"
+    className="focus-ring bg-card border-border text-foreground rounded-lg border px-4 py-2 font-sans text-sm"
+  >
+    focusable specimen
+  </button>
+</div>
