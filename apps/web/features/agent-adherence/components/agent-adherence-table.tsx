@@ -72,7 +72,6 @@ export function AgentAdherenceTable({
       header: "Out for",
       cell: (a) => <Duration seconds={a.out_of_adherence_sec} />,
       sortValue: (a) => a.out_of_adherence_sec,
-      align: "right",
     },
     {
       key: "queues",

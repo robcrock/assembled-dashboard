@@ -71,7 +71,7 @@ function DeviationCell({
   bar: ReactNode
 }) {
   return (
-    <div className="ml-auto flex w-36 flex-col gap-1.5">
+    <div className="flex w-36 flex-col gap-1.5">
       <div className="flex items-baseline justify-between gap-2">
         {/* the cell's PRIMARY line: row ink, deliberately NOT muted — and it
             must INHERIT (no explicit text-foreground) so rowTone's
@@ -168,14 +168,12 @@ export function QueueHealthTable({
         ),
         // Pressure vs. the queue's own target — never raw seconds.
         sortValue: (q) => q.sla_headroom_pct,
-        align: "right",
       },
       {
         key: "waiting",
         header: "Waiting",
         cell: (q) => q.tickets_waiting,
         sortValue: (q) => q.tickets_waiting,
-        align: "right",
       },
       {
         key: "coverage",
@@ -194,7 +192,7 @@ export function QueueHealthTable({
             recoverable > 0 && `${recoverable} recoverable`,
           ].filter(Boolean)
           return (
-            <div className="flex flex-col items-end">
+            <div className="flex flex-col items-start">
               <span>
                 {q.agents_on_call}
                 {q.agents_on_call === 1 ? " on a call" : " on calls"}
@@ -208,7 +206,6 @@ export function QueueHealthTable({
           )
         },
         sortValue: (q) => q.agents_on_call,
-        align: "right",
       },
       {
         key: "forecast",
@@ -231,7 +228,6 @@ export function QueueHealthTable({
           />
         ),
         sortValue: (q) => q.volume_vs_forecast_pct,
-        align: "right",
       },
       {
         key: "trend",
@@ -243,7 +239,6 @@ export function QueueHealthTable({
             label={`Longest wait trend for ${q.name}: ${q.wait_trend_sec.filter((s) => s > q.sla_target_sec).length} of ${q.wait_trend_sec.length} samples over the ${formatDurationSec(q.sla_target_sec)} target`}
           />
         ),
-        align: "right",
       },
     ],
     [coverageByQueue],
