@@ -12,6 +12,12 @@
       "runtimeExecutable": "pnpm",
       "runtimeArgs": ["--filter", "storybook", "exec", "storybook", "dev", "-p", "6007", "--no-open"],
       "port": 6007
+    },
+    {
+      "name": "storybook-typography",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--filter", "storybook", "exec", "storybook", "dev", "-p", "6017", "--no-open"],
+      "port": 6017
     }
   ]
 }

@@ -6,6 +6,9 @@
 @source "../../../apps/**/*.{ts,tsx}";
 @source "../../../components/**/*.{ts,tsx}";
 @source "../**/*.{ts,tsx}";
+/* docs MDX composes utilities in inline JSX (system/typography specimens) —
+   without this glob those classes are never generated */
+@source "../**/*.mdx";
 
 /* ---------------------------------------------------------------------------
  * Token architecture — four tiers, all color in oklch. (ROB-63)

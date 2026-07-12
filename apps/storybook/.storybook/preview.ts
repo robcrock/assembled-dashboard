@@ -21,6 +21,25 @@ const preview: Preview = {
     layout: "centered",
     // body bg/text come from the token stylesheet; SB backgrounds would lie
     backgrounds: { disable: true },
+    options: {
+      // The system pages are a reading order, not a list — alphabetical would
+      // bury the introduction. Component groups keep default order under "*".
+      storySort: {
+        order: [
+          "system",
+          [
+            "introduction",
+            "brand",
+            "tokens",
+            "typography",
+            "color-law",
+            "feed-states",
+            "choosing-a-data-primitive",
+          ],
+          "*",
+        ],
+      },
+    },
   },
 }
 
