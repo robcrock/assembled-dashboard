@@ -10,7 +10,7 @@ const meta = {
     docs: {
       description: {
         component: `
-A single normalized value (0–100) as an open-bottom arc (~240° sweep) — the "how are we doing overall" **hero reading** (the dashboard's org-level SLA attainment).
+A single normalized value (0–100) as an open-bottom arc (~240° sweep) — the "how are we doing overall" **hero reading**. (Catalog primitive: the dashboard's overview replaced the arc with an attainment tile — StatCard + a \`Meter\` fill line — to match the KPI band's rhythm; the Gauge is kept deliberately, awaiting a hero-reading consumer.)
 
 **Use it for:** one headline reading, with the big figure, delta, and caption composed into the center slot via \`children\` — the gauge owns ONLY the arc and never formats numbers.
 

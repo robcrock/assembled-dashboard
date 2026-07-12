@@ -272,16 +272,17 @@ tuple). Components below the template never fetch.
   that row's SLA verdict already lives in its Status badge. Verdict color rides on the status
   surfaces (badges, `Sparkline` tint) alone; orange is reserved for breach.
 - `Sparkline` — line trend; `status`-tinted, accessible aria-label. (Catalog primitive — its
-  summary-strip consumer was replaced by the gauge overview.)
+  summary-strip consumer was replaced by the attainment overview.)
 - `Gauge` — one normalized value (0–100) as an open-bottom arc; center content via children
   (the gauge owns only the arc, never number formatting). Muted track + `currentColor` value
-  arc — no gradient, no threshold zones, no needle, no animation. The dashboard's org-level
-  SLA-attainment reading.
+  arc — no gradient, no threshold zones, no needle, no animation. (Catalog primitive — the
+  overview replaced the arc with the attainment tile's Meter line; kept deliberately,
+  awaiting a hero-reading consumer.)
 - `SparkBars` — bar trend for `wait_trend_sec` in the queue table; bars past a `threshold` take
   the reserved breach accent, the rest stay muted (the tint is not overridable).
-- `Meter` — normalized 0→max fill for utilization-type saturation; tint from the one canonical
-  `statusFillClass` (never a fourth severity color). (Catalog primitive — no app consumer
-  since DeviationBar took over headroom; kept deliberately, awaiting utilization-type data.)
+- `Meter` — normalized 0→max fill for bounded-fill/saturation readings; tint from the one
+  canonical `statusFillClass` (never a fourth severity color). The dashboard's consumer: the
+  attainment tile's 0–100 fill line, neutral/untinted (a reading, not a verdict).
 - `DeviationBar` — signed deviation around a center baseline dot (the target): over extends
   right, under extends left, sign IS the direction (no `invert` prop). Deliberately
   **colorless** — one neutral muted fill, no status tint (verdict lives on the badges beside
@@ -304,8 +305,9 @@ tuple). Components below the template never fetch.
   renders layout-mirroring skeletons. No logo upload, no size prop until a second consumer.
 
 **Compositions — `apps/web` feature slices:** `AttainmentOverview` (`features/summary` — the
-SLA-attainment gauge; it replaced the old `SummaryBar` KPI strip; the section-level alarm
-counts beside it are `StatCard size="lg"` tiles fed breach-ink values by the template),
+SLA-attainment tile: `StatCard size="lg"` + a neutral `Meter` fill line; it replaced the old
+`SummaryBar` KPI strip and later the arc gauge; the section-level alarm counts beside it are
+sibling `StatCard size="lg"` tiles fed breach-ink values by the template),
 `QueueHealthTable` (`features/queue-health`), `AgentAdherenceTable` (`features/agent-adherence`).
 
 **Component API discipline:** discriminated `state`/`status` props, not boolean soup. Children

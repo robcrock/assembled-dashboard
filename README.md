@@ -175,10 +175,12 @@ not a primitive).
 
 ## Product tradeoffs
 
-- **The overview is three numbers, not a KPI strip**: an SLA-attainment arc
-  gauge (the org-level promise) plus the two alarm counts — queues breaching,
-  agents out of adherence — each previewing the section that explains it.
-  Everything else lives beside the data that gives it meaning.
+- **The overview is three numbers, not a KPI strip**: an SLA-attainment
+  tile — hero number over a 0–100 `Meter` fill line (the org-level promise,
+  a reading in neutral ink, not a verdict) — plus the two alarm counts —
+  queues breaching, agents out of adherence — each previewing the section
+  that explains it. All three are `StatCard size="lg"` siblings with one
+  rhythm. Everything else lives beside the data that gives it meaning.
 - **Triage order is the default everywhere**: breaching first, then at-risk,
   healthy last — and the healthy tail keeps **full ink** (muted text is
   reserved for genuine sub-text, never whole rows a manager still reads);

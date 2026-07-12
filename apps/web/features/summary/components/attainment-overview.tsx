@@ -1,24 +1,26 @@
 "use client"
 
-// The org-level overview: one hero number — SLA attainment — as an arc gauge.
-// This replaced a row of mixed KPIs with the single number that answers "is
-// the floor keeping its promise?"; the section-level alarm counts (queues
-// breaching, agents out of adherence) render beside it, fed by the
-// composition root.
+// The org-level overview: SLA attainment as the first of the band's three
+// KPI tiles — the SAME StatCard anatomy as the alarm counts beside it (mono
+// label / hero number / muted sub-line), so the rhythm match is structural,
+// not imitative. The one thing only this tile carries: the promise as a
+// 0–100 Meter line anchored at the bottom. (The arc gauge this replaced
+// broke the band's rhythm; the quiet bar keeps the graphical read.) The
+// fill is neutral ink — attainment is a reading, not a verdict; orange
+// stays on the alarm counts beside it.
 //
 // Owns a render-time ring buffer of recent ticks (same idempotent last-ts
 // pattern the old summary strip used) so the delta is tick-over-tick without
-// widening the store's API.
+// widening the store's API. Rendering delegates to StatCard, so all four
+// feed states come from the one owner every KPI tile uses — the hand-rolled
+// skeleton/error/stale this component used to carry is gone.
 
 import { useRef } from "react"
 
-import { ErrorState } from "@workspace/ui/components/error-state"
-import { Gauge } from "@workspace/ui/components/gauge"
+import { Meter } from "@workspace/ui/components/meter"
 import { MetricDelta } from "@workspace/ui/components/metric-delta"
-import { Skeleton } from "@workspace/ui/components/skeleton"
-import { StaleIndicator } from "@workspace/ui/components/stale-indicator"
+import { StatCard } from "@workspace/ui/components/stat-card"
 import type { Feed } from "@workspace/ui/lib/feed"
-import { cn } from "@workspace/ui/lib/utils"
 
 import type { Summary } from "@/features/summary/model/summary"
 
@@ -41,8 +43,6 @@ export function AttainmentOverview({
   feed = { status: "live" },
   className,
 }: AttainmentOverviewProps) {
-  const { status, lastUpdatedAt = null, onRetry } = feed
-
   // History accumulates in a ref during render, appended only when a new tick
   // (`ts`) arrives — idempotent under repeat renders / StrictMode.
   const entriesRef = useRef<AttainmentEntry[]>([])
@@ -58,54 +58,33 @@ export function AttainmentOverview({
   }
   const previous = [...entriesRef.current].reverse().find((e) => e.ts !== ts)
 
-  if (status === "loading") {
-    return <Skeleton className={cn("size-44 shrink-0 rounded-full", className)} />
-  }
-
-  if (status === "error") {
-    return (
-      <ErrorState
-        title="Overview unavailable"
-        onRetry={onRetry}
-        className={className}
-      />
-    )
-  }
-
   return (
-    <div
-      className={cn(
-        "flex shrink-0 flex-col items-center gap-1",
-        status === "stale" && "stale-dim",
-        className,
-      )}
+    <StatCard
+      variant="plain"
+      size="lg"
+      feed={feed}
+      label="SLA attainment"
+      value={summary ? `${summary.sla_attainment_pct}%` : undefined}
+      className={className}
     >
-      <Gauge
-        value={summary?.sla_attainment_pct ?? 0}
-        label={`SLA attainment ${summary ? `${summary.sla_attainment_pct}%` : "unavailable"}`}
-      >
-        <div className="text-metric-xl">
-          {summary ? (
-            `${summary.sla_attainment_pct}%`
-          ) : (
-            <span className="text-muted-foreground">—</span>
-          )}
+      {summary && (
+        <div className="flex flex-col gap-2">
+          {/* Renders even at 0pp so the tile never changes height between
+              ticks; "pp" = percentage points, the WFM idiom. */}
+          <MetricDelta
+            value={
+              previous ? summary.sla_attainment_pct - previous.attainment : 0
+            }
+            unit="pp"
+          />
+          <Meter
+            value={summary.sla_attainment_pct}
+            max={100}
+            label={`SLA attainment: ${summary.sla_attainment_pct} of 100 percent`}
+            className="w-full"
+          />
         </div>
-        {summary &&
-          previous &&
-          summary.sla_attainment_pct !== previous.attainment && (
-            <MetricDelta
-              value={summary.sla_attainment_pct - previous.attainment}
-              unit="pp"
-            />
-          )}
-        <div className="text-muted-foreground text-label">
-          SLA attainment
-        </div>
-      </Gauge>
-      {status === "stale" && (
-        <StaleIndicator lastUpdatedAt={lastUpdatedAt} tone="stale" />
       )}
-    </div>
+    </StatCard>
   )
 }

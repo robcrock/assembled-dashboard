@@ -11,7 +11,7 @@ const meta = {
         component: `
 A normalized 0→max fill against a bound — the **saturation** reading.
 
-**Use it for:** "how full is this against its limit" — utilization-type readings. Tint comes only from the canonical status scale (\`statusFillClass\`) via \`status\`; neutral when omitted — so meters can never invent a fourth severity color or drift from the badges. (Catalog primitive: the dashboard currently has no consumer — \`DeviationBar\` took over the headroom column — kept deliberately, awaiting utilization-type data.)
+**Use it for:** "how full is this against its limit" — bounded-fill readings. Tint comes only from the canonical status scale (\`statusFillClass\`) via \`status\`; neutral when omitted — so meters can never invent a fourth severity color or drift from the badges. Its dashboard consumer: the overview's SLA-attainment tile renders attainment-toward-100% as the tile's bottom fill line, neutral/untinted (a reading, not a verdict).
 
 **Not for:**
 - Signed distance from a target — \`DeviationBar\` (Meter answers saturation, not distance-from-target).

@@ -12,9 +12,9 @@ array of numbers and answer different questions with it.
 |---|---|---|
 | What **shape** has this taken over time? | `Sparkline` | judging each sample against a limit (no threshold concept) — that's SparkBars |
 | How often did we **cross a limit**, tick by tick? | `SparkBars` (`threshold`; over-bars take the breach accent, not overridable) | general trends — if nothing meaningful sits at a cut-off, use Sparkline |
-| How **full / saturated** are we against a bound? | `Meter` (0→max fill; catalog primitive awaiting utilization-type data) | distance from a *target in the middle* — that's DeviationBar |
+| How **full / saturated** are we against a bound? | `Meter` (0→max fill; the attainment tile's bottom line is its consumer) | distance from a *target in the middle* — that's DeviationBar |
 | How far **over or under a baseline** are we, signed? | `DeviationBar` (colorless; the baseline dot IS the target; sign is the direction) | verdict rendering (no status tint — verdicts live on badges beside it); showing the exact number (it renders none) |
-| One **hero reading**, 0–100, at a glance? | `Gauge` (open-bottom arc; center content via children) | more than one value; anything needing number formatting (the gauge owns only the arc) |
+| One **hero reading**, 0–100, at a glance? | `Gauge` (open-bottom arc; center content via children; catalog-only — the dashboard's overview uses a StatCard + Meter tile instead) | more than one value; anything needing number formatting (the gauge owns only the arc) |
 | A **labeled number** with live-feed states? | `StatCard` (`variant` card/plain, `size` default/lg, one `feed` prop) | color-by-status cards (alarm ink is the consumer's, passed in the value node) |
 | Many **entities, compared and ranked**? | `DataTable` (sortable, keyboard-navigable, expandable rows, owns feed states) | tiny fixed lists where a table's chrome outweighs three values |
 | A **duration** in human terms? | `Duration` (semantic `<time>`) | wall-clock "updated Xs ago" — that's StaleIndicator, the only wall-clock surface |
