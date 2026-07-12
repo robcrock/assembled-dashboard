@@ -13,6 +13,7 @@ interface SparklineProps {
   points: number[]
   /** Tint from the canonical status scale; neutral (muted) when omitted. */
   status?: Status
+  /** ViewBox + rendered size; overridable so a future dense/hero context can rescale without a fork. No consumer overrides yet. */
   width?: number
   height?: number
   /** Accessible summary; defaults to a computed "rising trend from X to Y". */
@@ -74,7 +75,9 @@ function Sparkline({
       width={width}
       height={height}
       fill="none"
-      className={cn("shrink-0", tint, className)}
+      // tint merged LAST: className can adjust layout but never re-tint —
+      // the canonical status scale is not per-call negotiable
+      className={cn("shrink-0", className, tint)}
     >
       {points.length === 0 ? (
         <line

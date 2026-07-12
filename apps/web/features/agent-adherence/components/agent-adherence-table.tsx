@@ -18,15 +18,8 @@ import { Duration } from "@workspace/ui/components/duration"
 import { StatusBadge } from "@workspace/ui/components/status-badge"
 import type { Feed } from "@workspace/ui/lib/feed"
 
-import type { Agent, AgentState } from "@/features/agent-adherence/model/agent"
-
-const STATE_LABEL: Record<AgentState, string> = {
-  available: "Available",
-  on_call: "On call",
-  on_break: "On break",
-  in_meeting: "In meeting",
-  offline: "Offline",
-}
+import { AGENT_STATE_LABEL } from "@/lib/agent-state"
+import type { Agent } from "@/features/agent-adherence/model/agent"
 
 interface AgentAdherenceTableProps {
   agents: Agent[]
@@ -65,14 +58,14 @@ export function AgentAdherenceTable({
       header: "State",
       cell: (a) => (
         <span>
-          {STATE_LABEL[a.state]}
+          {AGENT_STATE_LABEL[a.state]}
           <span className="text-muted-foreground">
             {" "}
             · <Duration seconds={a.state_duration_sec} />
           </span>
         </span>
       ),
-      sortValue: (a) => STATE_LABEL[a.state],
+      sortValue: (a) => AGENT_STATE_LABEL[a.state],
     },
     {
       key: "out-for",

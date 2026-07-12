@@ -21,7 +21,7 @@ export const Reading: Story = {
     label: "SLA attainment 86%",
     children: (
       <>
-        <div className="text-4xl font-medium tabular-nums">86%</div>
+        <div className="text-metric-xl">86%</div>
         <MetricDelta value={2} unit="pp" />
         <div className="text-muted-foreground text-xs font-medium">
           SLA attainment
@@ -35,7 +35,7 @@ export const Low: Story = {
   args: {
     value: 12,
     label: "SLA attainment 12%",
-    children: <div className="text-4xl font-medium tabular-nums">12%</div>,
+    children: <div className="text-metric-xl">12%</div>,
   },
 }
 
@@ -43,7 +43,7 @@ export const Full: Story = {
   args: {
     value: 100,
     label: "SLA attainment 100%",
-    children: <div className="text-4xl font-medium tabular-nums">100%</div>,
+    children: <div className="text-metric-xl">100%</div>,
   },
 }
 
@@ -52,7 +52,7 @@ export const Zero: Story = {
   args: {
     value: 0,
     label: "SLA attainment 0%",
-    children: <div className="text-4xl font-medium tabular-nums">0%</div>,
+    children: <div className="text-metric-xl">0%</div>,
   },
 }
 

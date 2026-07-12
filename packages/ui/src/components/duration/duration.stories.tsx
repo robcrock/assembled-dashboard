@@ -30,7 +30,9 @@ export const Zero: Story = {
   args: { seconds: 0 },
 }
 
-// Tabular figures: a ticking column keeps its width stable.
+// Tabular figures: a ticking column keeps its width stable. text-metric
+// carries no weight — the consumer chooses emphasis (bare here = the same
+// normal weight table cells render).
 export const Column: Story = {
   args: { seconds: 0 },
   render: () => (

@@ -16,15 +16,16 @@ import { cn } from "@workspace/ui/lib/utils"
 // - "card"  — a standalone bordered card (the default).
 // - "plain" — bare content, for divider-separated KPI rows where the row's
 //   container owns the separation (whitespace/dividers beat card chrome for
-//   sibling stats in a shared context).
+//   sibling stats in a shared context). Divider convention for plain rows:
+//   the CONTAINER owns the rules — first item pr-only, middle items
+//   border-l + px, last item border-l + pl (reconfigure per breakpoint).
 //
-// Two sizes, one anatomy: "default" for dense strips (metric ramp), "lg" for
-// overview-band hero counts (text-4xl) — the size changes the value's type
-// scale only, never the structure or states.
+// Two sizes, one anatomy: "default" for dense strips, "lg" for overview-band
+// hero counts — the size swaps one metric-ramp step, never structure/states.
 
 const VALUE_SIZE = {
   default: "text-metric-lg",
-  lg: "text-4xl font-medium tabular-nums",
+  lg: "text-metric-xl",
 } as const
 
 const SKELETON_SIZE = {
@@ -83,7 +84,7 @@ function StatCard({
           <div
             className={cn(
               "flex items-baseline gap-2",
-              status === "stale" && "opacity-60",
+              status === "stale" && "stale-dim",
             )}
           >
             <div className={cn("text-foreground", VALUE_SIZE[size])}>
@@ -92,7 +93,7 @@ function StatCard({
             {delta}
           </div>
           {children && (
-            <div className={cn(status === "stale" && "opacity-60")}>
+            <div className={cn(status === "stale" && "stale-dim")}>
               {children}
             </div>
           )}

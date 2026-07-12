@@ -13,6 +13,13 @@ import { cn } from "@workspace/ui/lib/utils"
 interface StaleIndicatorProps {
   /** Wall-clock ms when the last tick arrived; null renders an em dash. */
   lastUpdatedAt: number | null
+  /**
+   * Presentational, deliberately narrower than FeedStatus: this surface has
+   * exactly two visual treatments (calm vs degraded), so callers map
+   * `feed.status === "stale"` at the seam. Page chrome renders it always
+   * (loading shows the em-dash placeholder); stale-gated surfaces mount it
+   * only when degraded.
+   */
   tone?: "live" | "stale"
   className?: string
 }

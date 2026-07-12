@@ -143,7 +143,9 @@ drifts between data, tokens, and UI. Model straight from the fixture:
 - **Value concepts cutting across both:**
   - `SlaStatus` = `healthy | at_risk | breached`
   - `AdherenceStatus` = `adherent | out_of_adherence`
-  - `AgentState` = `available | on_call | on_break | in_meeting | offline`
+  - `AgentState` = `available | on_call | on_break | in_meeting | offline` — `on_call` means
+    OCCUPIED on a contact ("On a call"), distinct from `available` (idle, ready to take one);
+    per-queue `agents_on_call` counts skilled agents in that state
   - `Duration` (seconds → human), a **signed delta vs. a target** (semantic over/under
     direction), and **freshness** (tick `ts` vs. now — this is the stale state).
 
@@ -250,7 +252,8 @@ tuple). Components below the template never fetch.
 - `SparkBars` — bar trend for `wait_trend_sec` in the queue table; bars past a `threshold` take
   the reserved breach accent, the rest stay muted (the tint is not overridable).
 - `Meter` — normalized 0→max fill for utilization-type saturation; tint from the one canonical
-  `statusFillClass` (never a fourth severity color).
+  `statusFillClass` (never a fourth severity color). (Catalog primitive — no app consumer
+  since DeviationBar took over headroom; kept deliberately, awaiting utilization-type data.)
 - `DeviationBar` — signed deviation around a center baseline dot (the target): over extends
   right, under extends left, sign IS the direction (no `invert` prop). Deliberately
   **colorless** — one neutral muted fill, no status tint (verdict lives on the badges beside
@@ -280,6 +283,12 @@ counts beside it are `StatCard size="lg"` tiles fed breach-ink values by the tem
 **Component API discipline:** discriminated `state`/`status` props, not boolean soup. Children
 over `renderX` props. Compound-component/context machinery only where shared state justifies it
 (`DataTable`, the data store) — never on leaf primitives. Don't over-memoize.
+
+**Vendored surface:** the shadcn base components keep their full stock variant sets even where
+unused — as-shipped fidelity keeps upstream upgrades cheap. `StatusBadge` composes
+`Badge variant="outline"` + `border-transparent` because no stock Badge variant takes a
+status-parameterized tint (`destructive` is tinted but hard-wired to the action color);
+adding one would fork the vendored file for zero reuse.
 
 ## States every component must handle
 

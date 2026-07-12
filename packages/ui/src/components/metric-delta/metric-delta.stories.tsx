@@ -10,8 +10,8 @@ const meta = {
 export default meta
 type Story = StoryObj<typeof meta>
 
-// Deltas are colorless annotations: the thin arrow carries direction, and
-// good/bad verdicts belong to the status surfaces (badges, meters, bars).
+// Deltas are colorless, glyph-free annotations: the explicit +/− sign carries
+// direction, and good/bad verdicts belong to the status surfaces (badges).
 export const Up: Story = {
   args: { value: 4 },
 }

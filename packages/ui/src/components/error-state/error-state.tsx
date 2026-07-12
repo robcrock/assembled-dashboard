@@ -3,6 +3,10 @@ import { cn } from "@workspace/ui/lib/utils"
 
 // Failed-load surface with the retry affordance. role="alert" so assistive
 // tech announces the failure when it appears.
+//
+// Breach ink deliberately: a feed that fails is a broken promise to the
+// operator, so this surface takes the raw reserved accent (--sla-breach) —
+// the status alias (--status-breached) is for SLA-status surfaces.
 
 interface ErrorStateProps {
   /** Defaults to a generic headline; pass the upstream message via description. */
@@ -23,11 +27,11 @@ function ErrorState({
     <div
       role="alert"
       className={cn(
-        "border-status-breached-bg flex flex-col items-center justify-center gap-1 rounded-lg border px-6 py-10 text-center",
+        "border-sla-breach-bg flex flex-col items-center justify-center gap-1 rounded-lg border px-6 py-10 text-center",
         className,
       )}
     >
-      <p className="text-status-breached text-sm font-medium">{title}</p>
+      <p className="text-sla-breach text-sm font-medium">{title}</p>
       {description && (
         <p className="text-muted-foreground text-sm">{description}</p>
       )}

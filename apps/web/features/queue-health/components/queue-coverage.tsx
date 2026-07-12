@@ -8,19 +8,11 @@
 import { Duration } from "@workspace/ui/components/duration"
 import { StatusDot } from "@workspace/ui/components/status-badge"
 
+import { AGENT_STATE_LABEL } from "@/lib/agent-state"
 import type {
-  CoverageAgentState,
   CoverageCandidate,
   QueueCoverage,
 } from "@/features/queue-health/model/coverage"
-
-const STATE_LABEL: Record<CoverageAgentState, string> = {
-  available: "Available",
-  on_call: "On a call",
-  on_break: "On break",
-  in_meeting: "In meeting",
-  offline: "Offline",
-}
 
 function PulledFromNote({ candidate }: { candidate: CoverageCandidate }) {
   if (candidate.pulledFrom.length === 0) {
@@ -78,7 +70,7 @@ export function QueueCoveragePanel({
                 <StatusDot status="out_of_adherence" decorative />
                 <span className="font-medium">{agent.name}</span>
                 <span className="text-muted-foreground">
-                  {STATE_LABEL[agent.state]} ·{" "}
+                  {AGENT_STATE_LABEL[agent.state]} ·{" "}
                   <Duration seconds={agent.out_of_adherence_sec} /> out of
                   adherence
                 </span>
@@ -101,7 +93,7 @@ export function QueueCoveragePanel({
                 <StatusDot status="adherent" decorative />
                 <span className="font-medium">{agent.name}</span>
                 <span className="text-muted-foreground">
-                  {STATE_LABEL[agent.state]} ·{" "}
+                  {AGENT_STATE_LABEL[agent.state]} ·{" "}
                   <Duration seconds={agent.state_duration_sec} />
                 </span>
                 <PulledFromNote candidate={{ agent, pulledFrom }} />

@@ -5,6 +5,9 @@
 // would buy nothing but drift. Pre-computed fields (sla_status, *_pct) are
 // trusted as-is — the server is the source of truth for classification; the
 // raw inputs (longest_wait_sec, sla_target_sec) stay available for display.
+// A mirrored field may lead its rendering by a while (agents_available sat
+// unrendered until the Coverage cell earned it) — the typed wire contract is
+// the point, not the current render coverage.
 
 export type SlaStatus = "healthy" | "at_risk" | "breached"
 

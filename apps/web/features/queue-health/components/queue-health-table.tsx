@@ -125,10 +125,11 @@ export function QueueHealthTable({
           const overSec = q.longest_wait_sec - q.sla_target_sec
           return (
             <StatusBadge status={q.sla_status}>
+              {/* full-alpha ink: dimming tinted text stacks opacity on color —
+                  the exact contrast hazard the muted-row comment warns about;
+                  the middot already de-emphasizes */}
               {q.sla_status === "breached" && overSec > 0 && (
-                <span className="opacity-80">
-                  · {formatDurationSec(overSec)} over
-                </span>
+                <span>· {formatDurationSec(overSec)} over</span>
               )}
             </StatusBadge>
           )
@@ -176,20 +177,30 @@ export function QueueHealthTable({
       {
         key: "coverage",
         header: "Coverage",
+        // Occupancy + levers. on_call = OCCUPIED on a contact (see
+        // lib/agent-state.ts), so the primary line reads "on calls" — "on
+        // call" would misread as rostered. The levers (idle capacity,
+        // recoverable capacity) are GOOD news, so they read in calm muted
+        // ink and appear only when non-zero: an absent lever line IS the
+        // no-slack signal.
         cell: (q) => {
           const recoverable =
             coverageByQueue.get(q.queue_id)?.recoverable.length ?? 0
+          const levers = [
+            q.agents_available > 0 && `${q.agents_available} available`,
+            recoverable > 0 && `${recoverable} recoverable`,
+          ].filter(Boolean)
           return (
             <div className="flex flex-col items-end">
               <span>
                 {q.agents_on_call}
-                <span className="text-muted-foreground"> on call</span>
+                <span className="text-muted-foreground">
+                  {q.agents_on_call === 1 ? " on a call" : " on calls"}
+                </span>
               </span>
-              {/* recoverability is GOOD news (capacity you can get back), so
-                  it reads in the calm muted ink, not a warning tint */}
-              {recoverable > 0 && (
+              {levers.length > 0 && (
                 <span className="text-muted-foreground text-metric-sm">
-                  {recoverable} recoverable
+                  {levers.join(" · ")}
                 </span>
               )}
             </div>

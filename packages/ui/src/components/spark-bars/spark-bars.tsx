@@ -21,9 +21,12 @@ interface SparkBarsProps {
    * The rolling window: the chart always reserves exactly this many bar
    * slots and shows the LAST `bands` points. Fewer points leave empty slots
    * on the LEFT — the newest sample always sits flush against the right
-   * edge, so bar width never jumps as the window fills.
+   * edge, so bar width never jumps as the window fills. Exercised on every
+   * replay walkthrough (history frames carry growing 1→10-point windows);
+   * no consumer overrides the default, which matches the full window.
    */
   bands?: number
+  /** ViewBox + rendered size; overridable so a denser/hero context can rescale without a fork. No consumer overrides yet. */
   width?: number
   height?: number
   /** Accessible summary; defaults to a computed "N of M above threshold". */

@@ -171,7 +171,7 @@ function DataTable<Row>({
                       type="button"
                       onClick={() => toggleSort(column.key)}
                       className={cn(
-                        "focus-visible:ring-ring/50 -mx-1 inline-flex items-center gap-1 rounded-sm px-1 py-0.5 hover:text-foreground focus-visible:ring-[3px] focus-visible:outline-none",
+                        "focus-ring -mx-1 inline-flex items-center gap-1 rounded-sm px-1 py-0.5 hover:text-foreground",
                         active && "text-foreground",
                       )}
                     >
@@ -191,7 +191,7 @@ function DataTable<Row>({
             })}
           </TableRow>
         </TableHeader>
-        <TableBody className={cn(status === "stale" && "opacity-60")}>
+        <TableBody className={cn(status === "stale" && "stale-dim")}>
           {status === "loading" ? (
             Array.from({ length: skeletonRows }, (_, i) => (
               <TableRow key={i}>
@@ -247,7 +247,7 @@ function DataTable<Row>({
                             aria-label={`${isExpanded ? "Collapse" : "Expand"} ${
                               expandLabel?.(row) ?? "details"
                             }`}
-                            className="focus-visible:ring-ring/50 hover:text-foreground text-muted-foreground inline-flex size-6 items-center justify-center rounded-sm focus-visible:ring-[3px] focus-visible:outline-none"
+                            className="focus-ring hover:text-foreground text-muted-foreground inline-flex size-6 items-center justify-center rounded-sm"
                           >
                             {isExpanded ? (
                               <ChevronDown aria-hidden className="size-4" />
@@ -262,7 +262,7 @@ function DataTable<Row>({
                       <TableCell
                         key={column.key}
                         className={cn(
-                          "text-metric font-normal",
+                          "text-metric",
                           column.align === "right" && "text-right",
                           column.className,
                         )}
