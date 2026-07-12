@@ -13,7 +13,12 @@ composite / component ──▶ semantic ──▶ primitive
 - **Primitive** (`--primitive-<hue>-<step>`) — context-free raw values. Defined in
   `:root` only, **never in `@theme`**: that's the enforcement trick, not a style
   preference — Tailwind generates *no utilities* for them, so a component
-  structurally cannot consume a raw value by class. Never themed.
+  structurally cannot consume a raw value by class. Never themed. Every hue ships
+  the **full 50–950 scale** (Primer-style uniform ramps — a semantic role's first
+  use of a step is a token pick, not a mint), and roles pick steps from documented
+  usage bands: **50–200** tints, **200–300** hairlines, **400–500** anchors/fills +
+  dark-theme inks (never light-theme body ink — anchors measure ~3–4:1),
+  **600–800** light-theme AA text inks, **900–950** near-ink solids + dark tints.
 - **Semantic** (`--background`, `--muted`, `--status-*`, `--sla-breach`…) — roles
   that reference primitives. Light/dark remaps happen at **this tier only**: `.dark`
   re-points roles; pure aliases (`--status-breached`, `--destructive`, `--ring`)
@@ -28,6 +33,77 @@ composite / component ──▶ semantic ──▶ primitive
   also be registered in `extendTailwindMerge`** (`packages/ui/src/lib/utils.ts`) —
   unregistered, tailwind-merge classifies it as a text *color* and silently drops
   it or the real color in `cn()` merges.
+
+## Primitive ramps
+
+The raw material — shown for reference only: **no Tailwind utilities exist for
+these, by design** (the `@theme` exclusion above). Anchor steps carry the
+provenance; everything else is OKLab-generated around them. Primitives are never
+themed, so these swatches do not remap with the toolbar toggle — that's the tier
+working as designed.
+
+<ColorPalette>
+  <ColorItem
+    title="concrete"
+    subtitle="the Braun neutral — anchors are DESIGN.md literals (50 = surface #F3F1EC, 100 = neutral #E7E5E1, 500 = secondary #6B6F74, 950 = primary #0F1113); 600 is the AA-solved light ink"
+    colors={{
+      50: "var(--primitive-concrete-50)", 100: "var(--primitive-concrete-100)",
+      200: "var(--primitive-concrete-200)", 300: "var(--primitive-concrete-300)",
+      400: "var(--primitive-concrete-400)", 500: "var(--primitive-concrete-500)",
+      600: "var(--primitive-concrete-600)", 700: "var(--primitive-concrete-700)",
+      800: "var(--primitive-concrete-800)", 900: "var(--primitive-concrete-900)",
+      950: "var(--primitive-concrete-950)",
+    }}
+  />
+  <ColorItem
+    title="orange"
+    subtitle="the reserved breach accent — anchor #D95600 at 500 (DESIGN.md tertiary); 700/400 are the AA-solved light/dark inks"
+    colors={{
+      50: "var(--primitive-orange-50)", 100: "var(--primitive-orange-100)",
+      200: "var(--primitive-orange-200)", 300: "var(--primitive-orange-300)",
+      400: "var(--primitive-orange-400)", 500: "var(--primitive-orange-500)",
+      600: "var(--primitive-orange-600)", 700: "var(--primitive-orange-700)",
+      800: "var(--primitive-orange-800)", 900: "var(--primitive-orange-900)",
+      950: "var(--primitive-orange-950)",
+    }}
+  />
+  <ColorItem
+    title="amber"
+    subtitle="the at-risk middle register — Tailwind v4 stock values verbatim; 800 is the AA-solved light ink (700 fails on cream)"
+    colors={{
+      50: "var(--primitive-amber-50)", 100: "var(--primitive-amber-100)",
+      200: "var(--primitive-amber-200)", 300: "var(--primitive-amber-300)",
+      400: "var(--primitive-amber-400)", 500: "var(--primitive-amber-500)",
+      600: "var(--primitive-amber-600)", 700: "var(--primitive-amber-700)",
+      800: "var(--primitive-amber-800)", 900: "var(--primitive-amber-900)",
+      950: "var(--primitive-amber-950)",
+    }}
+  />
+  <ColorItem
+    title="red"
+    subtitle="negative-sentiment reserve — anchor #C0392B at 500, inspiration-derived (off-spec, see brand); 600/400 are the AA-solved light/dark inks"
+    colors={{
+      50: "var(--primitive-red-50)", 100: "var(--primitive-red-100)",
+      200: "var(--primitive-red-200)", 300: "var(--primitive-red-300)",
+      400: "var(--primitive-red-400)", 500: "var(--primitive-red-500)",
+      600: "var(--primitive-red-600)", 700: "var(--primitive-red-700)",
+      800: "var(--primitive-red-800)", 900: "var(--primitive-red-900)",
+      950: "var(--primitive-red-950)",
+    }}
+  />
+  <ColorItem
+    title="teal"
+    subtitle="positive-sentiment reserve — anchor #5F9EA0 at 500, inspiration-derived (off-spec, see brand); deliberately low-chroma; 700/400 are the AA-solved light/dark inks"
+    colors={{
+      50: "var(--primitive-teal-50)", 100: "var(--primitive-teal-100)",
+      200: "var(--primitive-teal-200)", 300: "var(--primitive-teal-300)",
+      400: "var(--primitive-teal-400)", 500: "var(--primitive-teal-500)",
+      600: "var(--primitive-teal-600)", 700: "var(--primitive-teal-700)",
+      800: "var(--primitive-teal-800)", 900: "var(--primitive-teal-900)",
+      950: "var(--primitive-teal-950)",
+    }}
+  />
+</ColorPalette>
 
 ## The live palette
 
@@ -81,6 +157,22 @@ toggle the toolbar theme and they remap.
     title="adherence"
     subtitle="aliases of the status scale — own names so the domain language survives; out = the agent-side breach"
     colors={{ ok: "var(--adherence-ok)", out: "var(--adherence-out)" }}
+  />
+  <ColorItem
+    title="sentiment — reserved, unspent"
+    subtitle="the annotation register (valence), not verdicts — no component consumes these yet; deltas stay colorless (see color-law)"
+    colors={{
+      positive: "var(--sentiment-positive)",
+      negative: "var(--sentiment-negative)",
+    }}
+  />
+  <ColorItem
+    title="sentiment tints"
+    subtitle="the -bg steps, minted alongside the inks so a future consumer inherits the full role anatomy"
+    colors={{
+      "positive-bg": "var(--sentiment-positive-bg)",
+      "negative-bg": "var(--sentiment-negative-bg)",
+    }}
   />
 </ColorPalette>
 

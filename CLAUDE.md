@@ -201,7 +201,15 @@ clamp to 4px), and type is Inter + a JetBrains Mono `text-label` tier. Deviation
 documented at the token that makes them: text inks use AA-solved ramp steps where spec
 literals fail 4.5:1 on their own surfaces; borders are a quiet concrete hairline, not the
 spec grid stroke; the dark theme is an authored inversion the spec doesn't ship; amber
-stays (below).
+stays (below); red/teal exist as reserved sentiment ramps (below).
+
+Primitive ramps are **uniform full 50–950 scales** (Primer-style: every hue ships all 11
+steps, OKLab-generated, even where unconsumed — a role's first use of a step is a token
+pick, not a mint). Semantic roles pick steps from documented usage bands (see the tier
+comment in `globals.css`): 50–200 tints, 200–300 hairlines, 400–500 anchors/fills +
+dark-theme inks (never light-theme body ink), 600–800 light-theme AA text inks, 900–950
+near-ink solids + dark tints. Primitives stay excluded from `@theme`, so components
+structurally cannot consume them.
 
 - **Inherited from shadcn** (semantic, oklch, `:root` + `.dark`): `background/foreground`,
   `card`, `popover`, `primary`, `secondary`, `muted`, `accent`, `destructive`, `border`,
@@ -224,6 +232,12 @@ stays (below).
     single-accent rule, paid for triage scanning: a two-severity floor needs a middle
     register between quiet and alarm.
   - Adherence: `--adherence-ok`, `--adherence-out`.
+  - Sentiment (**reserved, unspent**): `--sentiment-positive` (teal) / `--sentiment-negative`
+    (red) (+ `-foreground`, `-bg`) — the *annotation* register (valence: did a number move in
+    a welcome direction?), distinct from the status *verdict* register. Inspiration-derived,
+    off-spec (brand.mdx deviations register). Minted with full role anatomy in both themes but
+    consumed by **nothing** — deltas remain colorless; a future consumer is a domain
+    conversation first (color-law.mdx), and then a token pick, not a color invention.
   - A small type ramp with **tabular figures** (`font-variant-numeric: tabular-nums`) for dense,
     ticking metrics, plus the mono `text-label` tier for labels and table headers.
 

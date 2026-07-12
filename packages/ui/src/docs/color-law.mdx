@@ -28,12 +28,40 @@ Healthy deliberately speaks in the page's **muted ink** — a calm floor should
 color second; `STATUS_META` is the single source for glyph + label + color, so no
 surface can invent its own pairing).
 
+## The sentiment register — reserved, unspent
+
+The system has two chromatic registers, and only one of them is spent:
+
+- **The verdict register** — the status scale. *Is a promise kept?* Healthy /
+  at-risk / breached, spent on badges, dots, rows, meters. Fully allocated.
+- **The annotation register** — sentiment. *Did a number move in a welcome or an
+  unwelcome direction?* `--sentiment-positive` (teal) and `--sentiment-negative`
+  (red), minted with the full role anatomy (`-foreground`, `-bg`, both themes,
+  AA-solved inks) — and consumed by **nothing**.
+
+**Red is not orange.** Orange is the alarm: a broken promise, page-level urgency,
+allowed on fills, badges, and bars. Red-as-negative — if it is ever spent —
+annotates *direction* on a figure whose verdict already lives elsewhere; it would
+appear as ink on numerics only, never as a fill, badge, or alarm surface. The hues
+are separated on purpose (red sits at hue 29.7, a full step from the accent's
+43.6, at darker, lower-chroma ink steps), so a red annotation cannot be mistaken
+for a breach pixel. Teal is quieter still — the anchor is low-chroma by nature, a
+murmur next to the alarm hues.
+
+Why mint tokens nothing uses? So that when a consumer finally earns one — a
+domain conversation, not a CSS one — the change is a *token pick*, not a color
+invention. The law below still holds in full; amending it would be a one-token
+edit instead of a per-component negotiation.
+
 ## No exceptions — and the debt each one would create
 
 - **Deltas are colorless, without exception.** `MetricDelta` renders muted ink and
   an explicit +/− sign — even the queue table's headroom percent. The verdict
   already lives in that row's Status badge; a second colored number would compete
   with it, and the first "small red delta" is the precedent that dissolves the law.
+  The sentiment tokens do not change this — they exist so that if the law is ever
+  amended, it's amended at one token, not per-component; today no component
+  consumes them.
 - **Deviation bars are colorless.** Over-forecast is an *indicator* (the leading
   signal of the next breach), not a verdict — tint it and every over-forecast bar
   becomes a false alarm that trains the eye to ignore orange.
