@@ -4,7 +4,7 @@ import { Badge } from "@workspace/ui/components/badge"
 
 // The vendored shadcn Badge, across its variants. StatusBadge composes this.
 const meta = {
-  title: "base/badge",
+  title: "atoms/badge",
   component: Badge,
 } satisfies Meta<typeof Badge>
 

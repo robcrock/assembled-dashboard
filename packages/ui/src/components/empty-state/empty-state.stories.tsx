@@ -4,7 +4,7 @@ import { Button } from "@workspace/ui/components/button"
 import { EmptyState } from "@workspace/ui/components/empty-state"
 
 const meta = {
-  title: "primitives/empty-state",
+  title: "molecules/empty-state",
   component: EmptyState,
 } satisfies Meta<typeof EmptyState>
 

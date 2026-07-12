@@ -17,6 +17,20 @@ import { cn } from "@workspace/ui/lib/utils"
 // - "plain" — bare content, for divider-separated KPI rows where the row's
 //   container owns the separation (whitespace/dividers beat card chrome for
 //   sibling stats in a shared context).
+//
+// Two sizes, one anatomy: "default" for dense strips (metric ramp), "lg" for
+// overview-band hero counts (text-4xl) — the size changes the value's type
+// scale only, never the structure or states.
+
+const VALUE_SIZE = {
+  default: "text-metric-lg",
+  lg: "text-4xl font-medium tabular-nums",
+} as const
+
+const SKELETON_SIZE = {
+  default: "h-8 w-20",
+  lg: "h-10 w-14",
+} as const
 
 interface StatCardProps {
   label: string
@@ -28,6 +42,8 @@ interface StatCardProps {
   feed?: Feed
   /** Presentation: standalone bordered card, or bare content for divider rows. */
   variant?: "card" | "plain"
+  /** Value type scale: dense-strip default, or lg for overview hero counts. */
+  size?: "default" | "lg"
   /** Trend slot (e.g. a <Sparkline>), rendered under the value. */
   children?: React.ReactNode
   className?: string
@@ -39,6 +55,7 @@ function StatCard({
   delta,
   feed = { status: "live" },
   variant = "card",
+  size = "default",
   children,
   className,
 }: StatCardProps) {
@@ -52,7 +69,7 @@ function StatCard({
 
       {status === "loading" ? (
         <>
-          <Skeleton className="h-8 w-20" />
+          <Skeleton className={SKELETON_SIZE[size]} />
           {children && <Skeleton className="mt-1 h-5 w-16" />}
         </>
       ) : status === "error" ? (
@@ -69,7 +86,7 @@ function StatCard({
               status === "stale" && "opacity-60",
             )}
           >
-            <div className="text-metric-lg text-foreground">
+            <div className={cn("text-foreground", VALUE_SIZE[size])}>
               {value ?? <span className="text-muted-foreground">—</span>}
             </div>
             {delta}

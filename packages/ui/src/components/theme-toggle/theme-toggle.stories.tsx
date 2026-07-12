@@ -7,7 +7,7 @@ import { ThemeToggle } from "@workspace/ui/components/theme-toggle"
 // Note: clicking the toggle here changes the same .dark class the Storybook
 // toolbar controls — both drive the real token remap.
 const meta: Meta<typeof ThemeToggle> = {
-  title: "primitives/theme-toggle",
+  title: "atoms/theme-toggle",
   component: ThemeToggle,
   decorators: [
     (Story) => (

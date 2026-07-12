@@ -7,7 +7,7 @@ import { StatCard } from "@workspace/ui/components/stat-card"
 const ATTAINMENT_TREND = [97, 96, 95, 93, 90, 87, 84, 82, 84, 86]
 
 const meta = {
-  title: "primitives/stat-card",
+  title: "molecules/stat-card",
   component: StatCard,
 } satisfies Meta<typeof StatCard>
 
@@ -87,6 +87,22 @@ export const PlainRow: Story = {
       <StatCard variant="plain" className="border-l pl-6" label="Tickets waiting" value="84" />
     </div>
   ),
+}
+
+// Overview-band hero count: lg size, alarm ink carried by the value node
+// (the ink decision is the consumer's — breach red only when it means it).
+export const SizeLg: Story = {
+  args: {
+    label: "Queues breaching",
+    value: <span className="text-sla-breach">2</span>,
+    variant: "plain",
+    size: "lg",
+    children: (
+      <div className="text-muted-foreground text-metric-sm">
+        1 at risk · 84 waiting
+      </div>
+    ),
+  },
 }
 
 // Density: the summary strip shape — four vitals side by side.

@@ -6,7 +6,7 @@ import {
 } from "@workspace/ui/components/status-badge"
 
 const meta = {
-  title: "primitives/status-badge",
+  title: "molecules/status-badge",
   component: StatusBadge,
 } satisfies Meta<typeof StatusBadge>
 

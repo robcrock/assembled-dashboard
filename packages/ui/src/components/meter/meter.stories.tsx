@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite"
 import { Meter } from "@workspace/ui/components/meter"
 
 const meta = {
-  title: "primitives/meter",
+  title: "atoms/meter",
   component: Meter,
 } satisfies Meta<typeof Meter>
 

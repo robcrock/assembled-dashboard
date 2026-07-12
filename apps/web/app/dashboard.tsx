@@ -1,14 +1,15 @@
 "use client"
 
-// The single client boundary. Owns useDashboardData() and passes
-// { data, feed } down — no section fetches on its own. There is no separate
-// header bar: this UI is whitelabel, so the operating company's identity
-// (org) arrives as data and anchors the OVERVIEW BAND — identity large at the
-// left (with the freshness indicator and demo controls as a quiet chrome row
-// beneath it), and the three floor numbers at the right: the SLA-attainment
-// gauge plus the two alarm counts, divider-separated siblings. Attainment is
-// the org-level promise; each alarm count previews the section beneath that
-// explains it.
+// The TEMPLATE in the atomic mapping — and the single client boundary. Owns
+// useDashboardData() plus the page-level UI state (paused, injectError),
+// arranges the organisms, and passes { data-slice, feed } down — no section
+// fetches on its own. There is no separate header bar: the whitelabel
+// identity (OrgIdentity, fed meta.org) anchors the overview band at the left
+// with the demo chrome beneath it, and the three floor numbers sit right —
+// the SLA-attainment gauge plus two alarm counts (StatCard size="lg",
+// breach ink supplied by the template because the ink decision is app
+// semantics). Attainment is the org-level promise; each alarm count previews
+// the section beneath that explains it.
 //
 // Page hierarchy, top to bottom, is the eye's travel: who + how healthy →
 // queues by trouble → missing capacity.
@@ -25,14 +26,15 @@
 //                        recover
 //   /?fail=1, /?delay=4000 → same failure paths, URL-driven
 
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useState, type ReactNode } from "react"
 import { CircleAlert, Pause, Play } from "lucide-react"
 
 import { Button } from "@workspace/ui/components/button"
-import { Skeleton } from "@workspace/ui/components/skeleton"
+import { OrgIdentity } from "@workspace/ui/components/org-identity"
+import { PageSection } from "@workspace/ui/components/page-section"
 import { StaleIndicator } from "@workspace/ui/components/stale-indicator"
+import { StatCard } from "@workspace/ui/components/stat-card"
 import type { Feed } from "@workspace/ui/lib/feed"
-import { cn } from "@workspace/ui/lib/utils"
 
 import { AgentAdherenceTable } from "@/features/agent-adherence/components/agent-adherence-table"
 import { QueueHealthTable } from "@/features/queue-health/components/queue-health-table"
@@ -50,88 +52,71 @@ function isTypingTarget(target: EventTarget | null) {
 }
 
 /**
- * Whitelabel identity: the tenant's name and a monogram tile, both derived
- * from feed data — no hardcoded branding anywhere. Sized as the page's
- * anchor (it leads the overview band). Skeletons mirror the final layout
- * until the first payload lands.
+ * Alarm ink for the overview counts: breach red only when the count is
+ * non-zero — this is APP semantics (what counts as an alarm), so it lives in
+ * the template, not in StatCard.
  */
-function OrgIdentity({ org }: { org: string | null }) {
-  return (
-    <a href="/" aria-label="Homepage" className="flex min-w-0 items-center gap-4">
-      {org ? (
-        <div
-          aria-hidden
-          className="bg-primary text-primary-foreground grid size-14 shrink-0 place-items-center rounded-lg text-xl font-semibold"
-        >
-          {org.charAt(0)}
-        </div>
-      ) : (
-        <Skeleton className="size-14 shrink-0 rounded-lg" />
-      )}
-      <div className="min-w-0">
-        {org ? (
-          <h1 className="truncate text-2xl font-semibold">{org}</h1>
-        ) : (
-          <Skeleton className="h-7 w-56" />
-        )}
-        <p className="text-muted-foreground truncate text-sm">
-          Floor status — real-time operations.
-        </p>
-      </div>
-    </a>
-  )
+function alarmValue(count: number | undefined): ReactNode {
+  if (count === undefined) return undefined
+  return count > 0 ? <span className="text-sla-breach">{count}</span> : count
 }
 
 /**
- * A section-level alarm number for the overview band — breach ink when
- * non-zero, calm otherwise. Fed plain numbers by the composition root so the
- * summary slice never leaks into the section slices.
+ * The quiet chrome row: freshness + the demo levers. Secondary to the
+ * numbers — small outline buttons, muted ink. Local by design: one consumer,
+ * and the lever state belongs to the template.
  */
-function AlarmStat({
-  label,
-  count,
-  detail,
-  feed = { status: "live" },
+function DemoControls({
+  paused,
+  injectError,
+  onTogglePause,
+  onToggleError,
+  feed,
 }: {
-  label: string
-  count?: number
-  detail?: string
-  feed?: Feed
+  paused: boolean
+  injectError: boolean
+  onTogglePause: () => void
+  onToggleError: () => void
+  feed: Feed
 }) {
-  if (feed.status === "loading") {
-    return (
-      <div className="flex min-w-0 flex-col gap-1">
-        <div className="text-muted-foreground truncate text-xs font-medium">
-          {label}
-        </div>
-        <Skeleton className="h-10 w-14" />
-        <Skeleton className="h-4 w-24" />
-      </div>
-    )
-  }
-
   return (
-    <div
-      className={cn(
-        "flex min-w-0 flex-col gap-1",
-        feed.status === "stale" && "opacity-60",
-      )}
-    >
-      <div className="text-muted-foreground truncate text-xs font-medium">
-        {label}
-      </div>
+    <div className="flex flex-wrap items-center gap-3">
+      <StaleIndicator
+        lastUpdatedAt={feed.lastUpdatedAt ?? null}
+        tone={feed.status === "stale" ? "stale" : "live"}
+      />
       <div
-        className={cn(
-          "text-4xl font-medium tabular-nums",
-          count !== undefined && count > 0
-            ? "text-sla-breach"
-            : "text-foreground",
-        )}
+        className="flex items-center gap-2"
+        role="group"
+        aria-label="Demo controls"
       >
-        {count ?? <span className="text-muted-foreground">—</span>}
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={onTogglePause}
+          aria-pressed={paused}
+        >
+          {paused ? (
+            <Play aria-hidden className="size-3.5" />
+          ) : (
+            <Pause aria-hidden className="size-3.5" />
+          )}
+          {paused ? "Resume replay" : "Pause replay"}
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={onToggleError}
+          aria-pressed={injectError}
+        >
+          <CircleAlert aria-hidden className="size-3.5" />
+          {injectError ? "Clear error" : "Inject error"}
+        </Button>
       </div>
-      {detail && (
-        <div className="text-muted-foreground text-metric-sm">{detail}</div>
+      {paused && (
+        <div className="text-muted-foreground text-metric-sm max-lg:hidden">
+          replay paused · goes stale when the next tick is late
+        </div>
       )}
     </div>
   )
@@ -168,55 +153,24 @@ export function Dashboard() {
     <div className="isolate min-h-svh">
       <main className="mx-auto w-full max-w-6xl px-6 py-8">
         <div className="flex flex-col gap-10">
-          {/* Overview band — replaces the old header: identity anchors the
-              left (chrome row beneath), the three floor numbers sit right as
-              divider-separated siblings. Container queries drive the
-              collapse; dividers reconfigure per column change. */}
+          {/* Overview band — identity anchors the left (chrome row beneath),
+              the three floor numbers sit right as divider-separated siblings.
+              Container queries drive the collapse; dividers reconfigure per
+              column change. */}
           <section aria-label="Floor overview" className="@container">
             <div className="flex flex-col gap-8 @4xl:flex-row @4xl:items-center @4xl:gap-10">
               <div className="flex min-w-0 flex-1 flex-col gap-4">
-                <OrgIdentity org={org} />
-                {/* Quiet chrome row: freshness + demo levers — secondary to
-                    the numbers, so small outline buttons and muted ink. */}
-                <div className="flex flex-wrap items-center gap-3">
-                  <StaleIndicator
-                    lastUpdatedAt={feed.lastUpdatedAt ?? null}
-                    tone={feed.status === "stale" ? "stale" : "live"}
-                  />
-                  <div
-                    className="flex items-center gap-2"
-                    role="group"
-                    aria-label="Demo controls"
-                  >
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setPaused((p) => !p)}
-                      aria-pressed={paused}
-                    >
-                      {paused ? (
-                        <Play aria-hidden className="size-3.5" />
-                      ) : (
-                        <Pause aria-hidden className="size-3.5" />
-                      )}
-                      {paused ? "Resume replay" : "Pause replay"}
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setInjectError((e) => !e)}
-                      aria-pressed={injectError}
-                    >
-                      <CircleAlert aria-hidden className="size-3.5" />
-                      {injectError ? "Clear error" : "Inject error"}
-                    </Button>
-                  </div>
-                  {paused && (
-                    <div className="text-muted-foreground text-metric-sm max-lg:hidden">
-                      replay paused · goes stale when the next tick is late
-                    </div>
-                  )}
-                </div>
+                <OrgIdentity
+                  name={org}
+                  tagline="Floor status — real-time operations."
+                />
+                <DemoControls
+                  paused={paused}
+                  injectError={injectError}
+                  onTogglePause={() => setPaused((p) => !p)}
+                  onToggleError={() => setInjectError((e) => !e)}
+                  feed={feed}
+                />
               </div>
 
               {/* KPI trio: gauge, then the two alarm counts. Narrow: gauge on
@@ -232,63 +186,63 @@ export function Dashboard() {
                   />
                 </div>
                 <div className="pr-6 @xl:border-l @xl:px-10">
-                  <AlarmStat
-                    label="Queues breaching"
-                    count={summary?.queues_breaching}
-                    detail={
-                      summary
-                        ? `${summary.queues_at_risk} at risk · ${summary.tickets_waiting_total} waiting`
-                        : undefined
-                    }
+                  <StatCard
+                    variant="plain"
+                    size="lg"
                     feed={feed}
-                  />
+                    label="Queues breaching"
+                    value={alarmValue(summary?.queues_breaching)}
+                  >
+                    {summary && (
+                      <div className="text-muted-foreground text-metric-sm">
+                        {summary.queues_at_risk} at risk ·{" "}
+                        {summary.tickets_waiting_total} waiting
+                      </div>
+                    )}
+                  </StatCard>
                 </div>
                 <div className="border-l pl-6 @xl:pl-10">
-                  <AlarmStat
-                    label="Out of adherence"
-                    count={summary?.agents_out_of_adherence}
-                    detail={
-                      summary ? `of ${summary.agents_online} online` : undefined
-                    }
+                  <StatCard
+                    variant="plain"
+                    size="lg"
                     feed={feed}
-                  />
+                    label="Out of adherence"
+                    value={alarmValue(summary?.agents_out_of_adherence)}
+                  >
+                    {summary && (
+                      <div className="text-muted-foreground text-metric-sm">
+                        of {summary.agents_online} online
+                      </div>
+                    )}
+                  </StatCard>
                 </div>
               </div>
             </div>
           </section>
 
-          <section aria-labelledby="queues-heading" className="flex flex-col gap-4">
-            <div className="flex flex-col gap-1">
-              <h2 id="queues-heading" className="text-base font-semibold">
-                Queues
-              </h2>
-              <p className="text-muted-foreground text-sm">
-                Sorted by severity against each queue&apos;s own target — expand
-                a row to see who can help.
-              </p>
-            </div>
+          <PageSection
+            id="queues"
+            title="Queues"
+            description="Sorted by severity against each queue's own target — expand a row to see who can help."
+          >
             <QueueHealthTable
               queues={data?.queues ?? []}
               agents={data?.agents ?? []}
               feed={feed}
             />
-          </section>
+          </PageSection>
 
-          <section aria-labelledby="agents-heading" className="flex flex-col gap-4">
-            <div className="flex flex-col gap-1">
-              <h2 id="agents-heading" className="text-base font-semibold">
-                Agents needing attention
-              </h2>
-              <p className="text-muted-foreground text-sm">
-                Out of adherence, longest out first, with the queues they cover.
-              </p>
-            </div>
+          <PageSection
+            id="agents"
+            title="Agents needing attention"
+            description="Out of adherence, longest out first, with the queues they cover."
+          >
             <AgentAdherenceTable
               agents={data?.agents ?? []}
               feed={feed}
               queueNamesById={queueNamesById}
             />
-          </section>
+          </PageSection>
         </div>
       </main>
     </div>

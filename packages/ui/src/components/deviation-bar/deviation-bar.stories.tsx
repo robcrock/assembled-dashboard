@@ -7,7 +7,7 @@ import { DeviationBar } from "@workspace/ui/components/deviation-bar"
 // under, at baseline, clamped. The bar is deliberately colorless; verdict
 // color lives on the status surfaces beside it.
 const meta = {
-  title: "primitives/deviation-bar",
+  title: "atoms/deviation-bar",
   component: DeviationBar,
 } satisfies Meta<typeof DeviationBar>
 

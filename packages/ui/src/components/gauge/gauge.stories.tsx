@@ -7,7 +7,7 @@ import { MetricDelta } from "@workspace/ui/components/metric-delta"
 // it, so the states here are the value space plus the center slot. The gauge
 // owns only the arc — every figure in the center arrives via children.
 const meta = {
-  title: "primitives/gauge",
+  title: "atoms/gauge",
   component: Gauge,
 } satisfies Meta<typeof Gauge>
 

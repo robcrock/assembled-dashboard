@@ -101,17 +101,34 @@ composite / component ──▶ semantic ──▶ primitive
   sans + `tabular-nums` (ticking numbers don't jitter; mono reads as code, not
   vitals), weight capped at 500.
 
+## The atomic mapping
+
+Atomic design is the system's organizing language, expressed in place — Storybook
+titles carry the tier, folders and import paths stay flat:
+
+| Tier | Lives at | Contents |
+|---|---|---|
+| **Ions** (tokens) | `packages/ui/src/styles/globals.css` | the 4-tier token architecture above |
+| **Atoms** | `packages/ui` | leaves that compose no other component (badge, skeleton, duration, metric-delta, sparkline, spark-bars, meter, deviation-bar, gauge, …) |
+| **Molecules** | `packages/ui` | compose atoms / own multi-part anatomy + feed states (status-badge, stat-card, data-table, empty/error/stale states, page-section, org-identity) |
+| **Organisms** | `apps/web/features/*` | domain-bound compositions (attainment-overview, queue-health-table, agent-adherence-table) |
+| **Template** | `apps/web/app/dashboard.tsx` | the one client boundary: owns the data hook + page UI state, arranges organisms |
+| **Page / Layout** | `apps/web/app/page.tsx` / `layout.tsx` | route → template; document shell |
+
 ## Component APIs — exposed *and deliberately omitted*
 
 Every primitive owns its loading / empty / error / stale rendering internally;
 consumers forward one `feed` object (`{ status, lastUpdatedAt?, onRetry? }`,
 returned by `useDashboardData()`) and never fetch. The three fields travel
-together as one value object rather than a param clump. The essentials:
+together as one value object rather than a param clump. State ownership runs
+down a ladder: the store owns fetch/replay/staleness → the template owns page
+UI state (pause, injected error) → organisms own per-slice derivation (sort,
+tick history) → molecules/atoms are stateless or self-contained. The essentials:
 
 | Primitive | Exposed | Deliberately omitted (why) |
 |---|---|---|
 | `StatusBadge` / `StatusDot` | `status` (one five-value union covering SLA + adherence) → canonical **glyph + label** (`StatusDot` renders the standalone status glyph); detail `children` that **augment, never replace** the label | color/variant props (the canonical mapping isn't per-call negotiable); size; onClick |
-| `StatCard` | `label`, `value`, `delta` + trend as **ReactNode slots**, and one `feed` object (`{ status, lastUpdatedAt?, onRetry? }`) | card-level color/status (a vital's alarm is its content — tinted cards would compete with the queue table); internal number formatting; navigation |
+| `StatCard` | `label`, `value`, `delta` + trend as **ReactNode slots**, one `feed` object, `variant: card \| plain` (card chrome vs divider rows), `size: default \| lg` (dense-strip ramp vs overview hero counts — type scale only) | card-level color/status (a vital's alarm is its content — the overview passes a breach-inked value node; tinted cards would compete with the queue table); internal number formatting; navigation |
 | `MetricDelta` | raw signed `value`, `unit` → **colorless** signed number (the explicit +/− sign carries direction) | color (deltas are annotations, not verdicts — verdict color lives on the status surfaces; the palette's red is reserved for breach); direction arrows/glyphs (the sign already says it); an `invert` prop (there is no good/bad to flip when it's colorless); pre-formatted strings |
 | `Meter` | normalized `value`/`max`, `label`, optional `status` tint (from the one canonical `statusFillClass`) | magnitude labels (the meter shows *saturation*; the number that says how far over rides beside it in a `MetricDelta`); a fourth severity color |
 | `DeviationBar` | signed `value` (± % around a center baseline dot), `label`, `range` clamp per half | color entirely — one neutral muted fill (verdict color lives on the badges beside it); a direction/`invert` prop (the sign IS the direction — over extends right past the dot, under extends left); a rendered number (the exact figure rides beside it); threshold markers |
@@ -122,6 +139,8 @@ together as one value object rather than a param clump. The essentials:
 | `Duration` | `seconds` → semantic `<time>` | live ticking (compressed replay time would contradict the wall clock — `StaleIndicator` is the only wall-clock surface) |
 | `EmptyState` / `ErrorState` / `StaleIndicator` | title/description/action slot; optional `onRetry`; self-ticking `lastUpdatedAt` + `tone` | icons; auto-derived staleness (the hook is the single owner of that logic) |
 | `ThemeToggle` | — (no props) | light/dark/system menu (binary flip suffices). Catalog-only: the dashboard follows OS appearance and mounts no toggle |
+| `PageSection` | `id` (heading gets `${id}-heading`, `aria-labelledby` wired), `title`, `description`, children | heading-level prop (h2 is the page anatomy under the single h1); actions slot (unearned); baked-in margins (the call site's stack owns spacing); collapse |
+| `OrgIdentity` | `name` (null → layout-mirroring skeletons), `tagline`, `href` (default "/", `aria-label="Homepage"`) | logo upload (monogram derives from the name — identity is data in a whitelabel system); a size prop (single consumer scale); heading-level choice (the identity block anchors a page, so the name IS the h1) |
 
 **Colorless deltas + reserved red.** The palette spends its one loud color,
 `--sla-breach`, on exactly one meaning: a broken promise. Queue SLA breach and
