@@ -63,13 +63,22 @@ and `pnpm typecheck` before considering a change done.
   — semantic variables in `:root`/`.dark`, mapped via `@theme inline`. Light/dark falls out of
   the same token names. With Tailwind v4 the `tailwind` block in `components.json` stays empty.
 - **next-themes** for the light/dark toggle.
-- **Storybook 10** as the component catalog — its own workspace (`apps/storybook`,
-  react-vite builder) that consumes `@workspace/ui` as a package, so it's a *second real
-  consumer* of the library. Stories stay **colocated** inside their component's folder in
-  `packages/ui` (see the folder-per-component convention below); the workspace just owns the
-  `.storybook` config and points its stories glob at `../../packages/ui/src/**/*.stories.tsx`.
-  Add `!**/*.stories.*` to the shared `build` task `inputs` in `turbo.json` so editing a story
-  never busts the app build cache.
+- **Storybook 10** as the component catalog *and the system's documentation home* — its own
+  workspace (`apps/storybook`, react-vite builder) that consumes `@workspace/ui` as a package,
+  so it's a *second real consumer* of the library. Stories stay **colocated** inside their
+  component's folder in `packages/ui` (see the folder-per-component convention below); the
+  workspace just owns the `.storybook` config and points its glob at
+  `../../packages/ui/src/**/*.{mdx,stories.tsx}`. The docs layer (`@storybook/addon-docs` +
+  the global `autodocs` tag): every component gets a Docs page — prop JSDoc becomes the props
+  table, each meta's `parameters.docs.description.component` carries the when-to-use /
+  deliberately-omitted reasoning, and story-level scenario notes live in story descriptions
+  (not code comments). System-level rules are MDX pages in `packages/ui/src/docs/` under the
+  `system/` title group (introduction, tokens, color-law, feed-states,
+  choosing-a-data-primitive, brand). `@storybook/addon-docs` must be a devDependency of
+  **both** `apps/storybook` and `packages/ui` — MDX under `packages/ui` resolves imports from
+  the package side under pnpm isolation. `!**/*.stories.*` and `!**/*.mdx` stay in the shared
+  `build` task `inputs` in `turbo.json` so editing a story or docs page never busts the app
+  build cache.
 
 ## Repository layout & where code goes
 
