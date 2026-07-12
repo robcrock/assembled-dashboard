@@ -354,7 +354,8 @@ Design for triage, not completeness. Lead with what's wrong; let the healthy maj
 
 - Breaching/at-risk queues first, sorted by severity; healthy queues collapse or de-emphasize.
 - Volume vs. forecast as a first-class signal (over-forecast is the leading indicator of the
-  next breach). The queue table's Volume cell consolidates it with the same deviation anatomy
+  next breach). The queue table's volume column (headed "Actual / forecast" — the header names
+  what the cell shows) consolidates it with the same deviation anatomy
   as headroom — actual / forecast absolutes over a `DeviationBar` whose baseline dot is the
   forecast — fully **colorless** (every bar is neutral; here even the percent stays the stock
   muted `MetricDelta`): it's an indicator, not a verdict, so orange keeps meaning only "a promise

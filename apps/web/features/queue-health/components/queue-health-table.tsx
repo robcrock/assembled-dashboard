@@ -11,10 +11,11 @@
 //   right past the baseline dot, headroom extends left. The whole cell is
 //   colorless — bar and percent both neutral; the SLA verdict rides entirely
 //   in the Status badge, so nothing else on the row competes with it.
-// - Volume reuses the same deviation anatomy (actual / forecast over a bar
+// - Volume (headed "Actual / forecast" — the header names what the cell
+//   shows) reuses the same deviation anatomy (actual / forecast over a bar
 //   whose baseline dot is the forecast) fully colorless: over-forecast is
 //   the leading indicator of the next breach, not a verdict — direction reads
-//   from the bar crossing the dot, and red stays reserved for actual breach.
+//   from the bar crossing the dot, and orange stays reserved for actual breach.
 // - Healthy tail is DIMMED, not collapsed: six queues fit on one screen, and
 //   collapsing hides what a manager still scans; dimming keeps the fire loud
 //   and the calm visible-but-quiet.
@@ -72,9 +73,11 @@ function DeviationCell({
   return (
     <div className="ml-auto flex w-36 flex-col gap-1.5">
       <div className="flex items-baseline justify-between gap-2">
-        <span className="text-muted-foreground text-metric-sm">
-          {absolutes}
-        </span>
+        {/* the cell's PRIMARY line: row ink, deliberately NOT muted — and it
+            must INHERIT (no explicit text-foreground) so rowTone's
+            healthy-tail dimming reaches it; the delta beside it is the muted
+            sub-text */}
+        <span className="text-metric-sm">{absolutes}</span>
         {delta}
       </div>
       {bar}
@@ -179,10 +182,10 @@ export function QueueHealthTable({
         header: "Coverage",
         // Occupancy + levers. on_call = OCCUPIED on a contact (see
         // lib/agent-state.ts), so the primary line reads "on calls" — "on
-        // call" would misread as rostered. The levers (idle capacity,
-        // recoverable capacity) are GOOD news, so they read in calm muted
-        // ink and appear only when non-zero: an absent lever line IS the
-        // no-slack signal.
+        // call" would misread as rostered. The whole primary line rides in
+        // row ink (inherited, so rowTone reaches it); the levers (idle
+        // capacity, recoverable capacity) are the muted sub-text and appear
+        // only when non-zero: an absent lever line IS the no-slack signal.
         cell: (q) => {
           const recoverable =
             coverageByQueue.get(q.queue_id)?.recoverable.length ?? 0
@@ -194,9 +197,7 @@ export function QueueHealthTable({
             <div className="flex flex-col items-end">
               <span>
                 {q.agents_on_call}
-                <span className="text-muted-foreground">
-                  {q.agents_on_call === 1 ? " on a call" : " on calls"}
-                </span>
+                {q.agents_on_call === 1 ? " on a call" : " on calls"}
               </span>
               {levers.length > 0 && (
                 <span className="text-muted-foreground text-metric-sm">
@@ -211,7 +212,7 @@ export function QueueHealthTable({
       },
       {
         key: "forecast",
-        header: "Volume",
+        header: "Actual / forecast",
         // Same deviation anatomy as headroom, deliberately COLORLESS: the bar's
         // baseline dot is the forecast, but over-forecast is a leading
         // indicator, not a verdict — no status tint, stock muted delta.
@@ -253,7 +254,7 @@ export function QueueHealthTable({
       columns={columns}
       rows={rows}
       rowKey={(q) => q.queue_id}
-      caption="Queues ordered by SLA severity: breaching first, then at risk, then healthy. Shows SLA headroom against each queue's own target, backlog, coverage, volume versus forecast, and the wait trend. Expand a row to see which agents can help that queue."
+      caption="Queues ordered by SLA severity: breaching first, then at risk, then healthy. Shows SLA headroom against each queue's own target, backlog, coverage, actual volume versus forecast, and the wait trend. Expand a row to see which agents can help that queue."
       feed={feed}
       emptyTitle="No queues reporting"
       emptyDescription="Queues appear as soon as the feed reports them."

@@ -168,9 +168,12 @@ function DataTable<Row>({
                         : "descending"
                       : undefined
                   }
+                  // Headers are ALWAYS left-aligned; column.align is data
+                  // alignment only. One left edge per column keeps the header
+                  // row scannable as a single line — numeric cells still
+                  // right-align under it.
                   className={cn(
                     "text-muted-foreground text-label",
-                    column.align === "right" && "text-right",
                     column.className,
                   )}
                 >

@@ -184,7 +184,8 @@ not a primitive).
   queues fit on screen; hiding rows a manager still scans costs more than it
   saves). Re-sorting is allowed; severity is a default, not a cage.
 - **Volume vs. forecast is a first-class column**: it's the leading indicator
-  of the next breach. The Volume cell consolidates the whole story — actual /
+  of the next breach. The volume column (headed "Actual / forecast") consolidates
+  the whole story — actual /
   forecast absolutes with a diverging `DeviationBar` against the forecast
   baseline — but deliberately **without color** (neutral fill, colorless
   delta): over-forecast is an indicator, not a verdict, so orange stays
