@@ -241,9 +241,10 @@ structurally cannot consume them.
   - A small type ramp with **tabular figures** (`font-variant-numeric: tabular-nums`) for dense,
     ticking metrics, plus the mono `text-label` tier for labels and table headers.
 
-Light/dark stays demonstrably real in the Storybook catalog and via OS appearance
-(`prefers-color-scheme`) — the dashboard itself deliberately mounts no theme toggle; the
-`ThemeToggle` primitive is catalog-only.
+Light/dark stays demonstrably real in the Storybook catalog; the dashboard itself defaults
+to LIGHT (the Braun ramp is authored light-first, so every visitor lands on the same
+canonical surface regardless of OS appearance) and deliberately mounts no theme toggle —
+dark stays reachable via the "d" hotkey; the `ThemeToggle` primitive is catalog-only.
 
 ## Component inventory — the sharp set
 
@@ -309,7 +310,10 @@ tuple). Components below the template never fetch.
   Owns loading/empty/error/stale (`staleNote` silences its own stale note where page chrome
   carries the one canonical indicator; the body dim always stays). Optional expandable rows
   (`getExpandedContent` + `expandLabel`,
-  `aria-controls`-linked). A single component, not compound — the only shared state is one sort tuple.
+  `aria-controls`-linked). `layout: auto | fixed` — fixed sizes columns from the header row's
+  width classes (via `column.className`) so live cell content that widens on a tick can never
+  reflow the grid; both dashboard tables use it. A single component, not compound — the only
+  shared state is one sort tuple.
 - `Duration` — formats `state_duration_sec` / `out_of_adherence_sec` as a semantic `<time>`.
   (`RelativeTime` deliberately not built; `StaleIndicator` is the only wall-clock surface.)
 - `Callout` — a quiet contextual aside (hairline left rule + muted small text) for caveats
@@ -317,7 +321,7 @@ tuple). Components below the template never fetch.
   belong to the status surfaces). Consumer: the coverage panel's shared-capacity note.
 - State primitives: `Skeleton`, `EmptyState`, `ErrorState`, `StaleIndicator` (last-updated +
   degraded styling).
-- `ThemeToggle` (catalog-only — the dashboard follows OS appearance and mounts no toggle).
+- `ThemeToggle` (catalog-only — the dashboard defaults to light and mounts no toggle).
 - `PageSection` — the labelled section shell: `id` (wires `aria-labelledby` to
   `${id}-heading`), `title`, optional `description`, children. Heading level fixed at h2
   (sections sit under the page's one h1); no margins baked in; no actions slot until earned.

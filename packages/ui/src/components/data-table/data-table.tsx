@@ -55,8 +55,10 @@ const ROW_RHYTHM = { default: "h-10", tall: "h-14" } as const
 // The expander lead column's one width. Header, skeleton, and data rows must
 // agree on it or the columns shear — a shared constant makes that agreement
 // structural (a shared cell COMPONENT would need a th/td switch plus content
-// slots to save this one string).
-const EXPANDER_COL = "w-8"
+// slots to save this one string). 40px = the size-6 toggle + the cell's p-2,
+// so the column holds under layout="fixed" (auto layout resolved it to the
+// same 40px anyway).
+const EXPANDER_COL = "w-10"
 
 const ARIA_SORT = { asc: "ascending", desc: "descending" } as const
 
@@ -109,6 +111,16 @@ interface DataTableProps<Row> {
    */
   rowSize?: "default" | "tall"
   /**
+   * Column sizing. "auto" (default) lets content size the columns — right
+   * for static rows. "fixed" (table-layout: fixed) sizes columns from the
+   * header row alone, so live cell content that widens on a tick (a badge
+   * gaining a suffix, a lever line appearing) can never reflow the grid —
+   * the horizontal half of the no-shift contract. Pair it with a width
+   * class per column (via column.className) that CLEARS that column's
+   * widest realistic content; unsized columns split the remainder.
+   */
+  layout?: "auto" | "fixed"
+  /**
    * Render the "Stale · updated Xs ago" note above the table when the feed
    * degrades (default true — the table stays self-contained). Pass false on
    * pages whose chrome already mounts the ONE canonical `StaleIndicator`: the
@@ -131,6 +143,7 @@ function DataTable<Row>({
   defaultSort,
   skeletonRows = 5,
   rowSize = "default",
+  layout = "auto",
   staleNote = true,
   className,
 }: DataTableProps<Row>) {
@@ -154,7 +167,7 @@ function DataTable<Row>({
           <StaleIndicator lastUpdatedAt={lastUpdatedAt} tone="stale" />
         </div>
       )}
-      <Table>
+      <Table className={cn(layout === "fixed" && "table-fixed")}>
         <caption className="sr-only">{caption}</caption>
         <TableHeader>
           <HeaderRow

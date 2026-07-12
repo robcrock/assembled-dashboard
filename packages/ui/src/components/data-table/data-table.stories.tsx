@@ -303,6 +303,8 @@ The dense, sortable, keyboard-operable table both dashboard tables are built fro
 
 **The no-shift contract has a consumer half:** skeleton and data rows share one row rhythm, but row height is a MINIMUM — content taller than the rhythm grows past the skeletons and loading→live shifts. Pick the \`rowSize\` step that clears your tallest cell: \`"default"\` (40px) for single-line cells, \`"tall"\` (56px) for multi-line anatomies like the deviation cells here. A rhythm that clears the content also makes ragged rows uniform.
 
+**…and a horizontal half:** live cells widen tick to tick — a badge gains a \`· 55s over\` suffix, a lever line appears — and the default auto layout re-solves every column each time, jittering the whole grid sideways. \`layout="fixed"\` sizes columns from the header row alone (give each column a width class via \`column.className\` that clears its widest realistic content; unsized columns split the remainder), so ticking content can never reflow the grid. Both dashboard tables ship with it; \`"auto"\` stays the default for static rows.
+
 **Use it for:** dense read-only rows. \`getExpandedContent\` adds expandable rows — an inline, \`aria-controls\`-linked detail panel per row; return \`null\` for rows with nothing to expand and their toggle is omitted; \`expandLabel\` gives each toggle a row-specific accessible name. The disclosure is deliberately NOT built on shadcn's Collapsible (evaluated, never vendored): a Collapsible's Root/Panel wrappers can't sit between \`<tbody>\` and \`<tr>\` without breaking table semantics, so the expansion keeps native table markup while speaking the same interaction grammar — \`aria-expanded\`/\`aria-controls\`, \`data-state="open|closed"\`, Enter/Space on a real button.
 
 **Not for:** large paginated/virtualized datasets, row selection, or row navigation — rows expand to an inline detail panel, they don't link out.
@@ -398,6 +400,36 @@ export const ExpandableRows: Story = {
       description: {
         story:
           "Expandable rows, mirroring the app's who-can-help panel: rows with recoverable capacity carry an inline detail; rows returning null get no toggle. Tab to a chevron, Enter/Space toggles.",
+      },
+    },
+  },
+}
+
+// The shipped queue table's width map, mirrored: each width clears its
+// column's widest realistic content (the breached badge with its over-target
+// suffix sets the w-60), and together they fit the page budget.
+const FIXED_WIDTHS: Record<string, string> = {
+  name: "w-32",
+  status: "w-60",
+  waiting: "w-24",
+  coverage: "w-44",
+  headroom: "w-40",
+  forecast: "w-40",
+  trend: "w-24",
+}
+
+export const FixedLayout: Story = {
+  args: {
+    ...baseArgs,
+    columns: COLUMNS.map((c) => ({ ...c, className: FIXED_WIDTHS[c.key] })),
+    layout: "fixed",
+    defaultSort: { key: "status", direction: "asc" },
+  },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '`layout="fixed"` with a width class per column — the horizontal no-shift contract. Sort by Status and watch the breached badges\' over-target suffixes come and go from the top rows: the columns hold. Under the default auto layout, every content change re-solves the grid.',
       },
     },
   },
