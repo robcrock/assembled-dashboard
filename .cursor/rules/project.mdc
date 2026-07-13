@@ -1,0 +1,14 @@
+---
+description: Pointer to canonical project docs — do not duplicate rules here
+alwaysApply: true
+---
+
+# Project context
+
+Read these before making changes:
+
+- **`CLAUDE.md`** — canonical agent instructions: brief, domain model, stack, conventions, definition of done
+- **`DESIGN.md`** — brand/visual spec; lands in code only via `packages/ui/src/styles/globals.css` tokens
+- **`README.md`** — human submission doc (how to run, tradeoffs, AI process notes)
+
+Claude Code config and repo-tailored skills live in `.claude/` (`launch.json`, `skills/`). There is no AI workspace package — tool configs point at the docs above; they do not fork them.

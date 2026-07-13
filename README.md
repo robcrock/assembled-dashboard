@@ -222,6 +222,10 @@ not a primitive).
 
 ## AI use
 
+Agent instructions live in `CLAUDE.md` (canonical); brand spec in `DESIGN.md`; Claude Code
+skills in `.claude/skills/`; Cursor rules in `.cursor/rules/` point at those docs without
+duplicating them.
+
 Built with Claude (Anthropic), working ticket-by-ticket through a Linear
 project where every ticket's resolution records the API decided and the props
 deliberately omitted. AI drafted scaffolding, component implementations,
