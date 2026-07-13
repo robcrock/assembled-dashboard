@@ -418,6 +418,19 @@ Project agent skills live in `.claude/skills/` — repo-tailored variants of `de
 token law, the package seam, and the component API discipline into each workflow. Prefer them
 over generic equivalents when working in this repo.
 
+### Repository documentation assets
+
+| Asset | Role |
+|-------|------|
+| `CLAUDE.md` | Canonical agent instructions — this file |
+| `DESIGN.md` | Brand/visual spec (applied exclusively through `globals.css` tokens) |
+| `README.md` | Human reviewer / submission doc (run instructions, tradeoffs, AI process) |
+| `.claude/` | Claude Code config (`launch.json`) and repo-tailored `skills/` |
+| `.cursor/rules/` | Cursor pointers to the canonical docs — no duplicated content |
+
+Do not add a workspace `packages/` entry for AI assets. Do not restore `AGENTS.md` or fork
+rules into tool-specific copies — each tool's config points here.
+
 ## Definition of done / submission
 
 - Dashboard runs locally with one command (`pnpm dev`); live replay + stale + error demonstrable.
