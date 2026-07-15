@@ -81,6 +81,8 @@ export interface StoreToast {
   tone: "undo" | "error"
   message: string
   actionLabel?: string
+  /** ms until onExpire — undo windows run longer than error notices (the expiry COMMITS a delete). */
+  duration: number
   onAction?: () => void
   onExpire: () => void
 }
@@ -217,6 +219,7 @@ export function useDashboardData(
       key,
       tone: "error",
       message,
+      duration: 6000,
       // Expiry of an error notice is just dismissal — but only its own;
       // a newer toast may have superseded this one by then.
       onExpire: () =>
@@ -284,6 +287,9 @@ export function useDashboardData(
         tone: "undo",
         message: `${ids.length} ${ids.length === 1 ? "row" : "rows"} removed`,
         actionLabel: "Undo",
+        // The expiry COMMITS the delete — give a human time to change their
+        // mind (5s reads as "gone before I finished parsing the message").
+        duration: 8000,
         onAction: () => {
           // Undo = the request never happens; the overlay stops hiding them.
           pendingDeleteRef.current = null
