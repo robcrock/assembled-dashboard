@@ -38,6 +38,7 @@ import { OrgIdentity } from "@workspace/ui/components/org-identity"
 import { PageSection } from "@workspace/ui/components/page-section"
 import { StaleIndicator } from "@workspace/ui/components/stale-indicator"
 import { StatCard } from "@workspace/ui/components/stat-card"
+import { Toast } from "@workspace/ui/components/toast"
 import type { Feed } from "@workspace/ui/lib/feed"
 
 import { cn } from "@workspace/ui/lib/utils"
@@ -171,7 +172,10 @@ function DemoControls({
 export function Dashboard() {
   const [paused, setPaused] = useState(false)
   const [injectError, setInjectError] = useState(false)
-  const { data, org, feed } = useDashboardData({ paused, fail: injectError })
+  const { data, org, feed, toast } = useDashboardData({
+    paused,
+    fail: injectError,
+  })
 
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
@@ -301,6 +305,21 @@ export function Dashboard() {
           </PageSection>
         </div>
       </main>
+      {/* The store's one transient notice (undo countdown / rollback alert).
+          key restarts the lifetime when a newer notice supersedes. Placement
+          is the page's: the primitive is just the card. */}
+      {toast && (
+        <div className="fixed right-6 bottom-6 z-50">
+          <Toast
+            key={toast.key}
+            tone={toast.tone}
+            message={toast.message}
+            actionLabel={toast.actionLabel}
+            onAction={toast.onAction}
+            onExpire={toast.onExpire}
+          />
+        </div>
+      )}
     </div>
   )
 }
