@@ -18,6 +18,8 @@ import {
 import type { Feed } from "@workspace/ui/lib/feed"
 import { cn } from "@workspace/ui/lib/utils"
 
+import type { ColumnType } from "./column-types"
+
 // The dense, sortable table both dashboard tables are built from — configured
 // entirely by a typed column config, so it renders Queues and Agents without
 // knowing either. A single component taking columns + rows (NOT a compound
@@ -62,16 +64,85 @@ const EXPANDER_COL = "w-10"
 
 const ARIA_SORT = { asc: "ascending", desc: "descending" } as const
 
-export interface DataTableColumn<Row> {
+/**
+ * How an editable column binds a commit target. Declarative only for now:
+ * the interaction layer (edit mode, inline editors, the row form) consumes
+ * it when it lands — nothing in this file reads it yet.
+ *
+ * `true` means "edit the field the column shows" — valid only when the
+ * column's value IS a stored field. The object form is the derived-display
+ * case: a computed `get` is a read-only projection (nothing can invert it),
+ * so the edit face binds its own `field` — the WRITE inverse — plus its own
+ * reader and, when the edit value's shape differs from the shown one, its
+ * own editor-bearing type (a status badge shown, its target-seconds edited).
+ */
+export type ColumnEdit<Row> =
+  | boolean
+  | {
+      /** The row field a commit patches. */
+      field: string
+      /** Reads the edit value where it differs from the displayed one. Defaults to the column's `get`. */
+      get?: (row: Row) => unknown
+      /** Editor-bearing type for the edit value where its shape differs from the column's own. */
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- heterogeneous by nature; the helper binds precise types
+      type?: ColumnType<any, any>
+    }
+
+// V defaults to `any`, not `unknown`: a heterogeneous column array must
+// accept a ColumnType<Status> beside a ColumnType<number>, and strict
+// function-property contravariance rejects both against `unknown`. The
+// createColumns builders restore per-column precision at the call site.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export interface DataTableColumn<Row, V = any> {
   /** Stable id; also the sort key. */
   key: string
   header: React.ReactNode
-  cell: (row: Row) => React.ReactNode
-  /** Presence makes the column sortable. */
+  /**
+   * Bespoke render — the escape hatch for anatomies richer than one value
+   * (compound cells). Wins over `type.view` by precedence. Provide either
+   * this or `type` + `get`.
+   */
+  cell?: (row: Row) => React.ReactNode
+  /**
+   * The column's value shape, resolved to both cell faces (view + editor)
+   * and a default sort — see `columnTypes`. Pair with `get`.
+   */
+  type?: ColumnType<V>
+  /** Reads the column's value off a row; the type's faces render it. */
+  get?: (row: Row) => V
+  /** Editability binding — inert until the interaction layer lands. */
+  edit?: ColumnEdit<Row>
+  /**
+   * Presence makes the column sortable; falls back to the type's default
+   * projection (via `get`) when omitted.
+   */
   sortValue?: (row: Row) => number | string
   align?: "left" | "right"
   /** Applied to both the header cell and body cells (widths, emphasis). */
   className?: string
+}
+
+/** The one place a column resolves to sortability: its own `sortValue`, else the type's default projection over `get`. */
+function sortAccessor<Row>(
+  column: DataTableColumn<Row>
+): ((row: Row) => number | string) | undefined {
+  if (column.sortValue) return column.sortValue
+  const { type, get } = column
+  if (type?.sortValue && get) {
+    const project = type.sortValue
+    return (row: Row) => project(get(row))
+  }
+  return undefined
+}
+
+/** The one place a column resolves to cell content: `cell` (escape hatch) wins over the type's view face. */
+function cellContent<Row>(
+  column: DataTableColumn<Row>,
+  row: Row
+): React.ReactNode {
+  if (column.cell) return column.cell(row)
+  if (column.type && column.get) return column.type.view(column.get(row))
+  return null
 }
 
 interface SortState {
@@ -243,8 +314,8 @@ function useTableSort<Row>(
   const sortedRows = React.useMemo(() => {
     if (!sort) return rows
     const column = columns.find((c) => c.key === sort.key)
-    if (!column?.sortValue) return rows
-    const value = column.sortValue
+    const value = column && sortAccessor(column)
+    if (!value) return rows
     const factor = sort.direction === "asc" ? 1 : -1
     return [...rows].sort((a, b) => factor * compareValues(value(a), value(b)))
   }, [rows, columns, sort])
@@ -321,7 +392,7 @@ function HeaderRow<Row>({
             // edge, so a header always sits over its own data.
             className={cn("text-label text-muted-foreground", column.className)}
           >
-            {column.sortValue ? (
+            {sortAccessor(column) ? (
               <SortHeaderButton
                 direction={direction}
                 onToggle={() => onToggleSort(column.key)}
@@ -486,11 +557,11 @@ function DataRow<Row>({
             key={column.key}
             className={cn(
               "text-metric",
-              column.align === "right" && "text-right",
+              (column.align ?? column.type?.align) === "right" && "text-right",
               column.className
             )}
           >
-            {column.cell(row)}
+            {cellContent(column, row)}
           </TableCell>
         ))}
       </TableRow>

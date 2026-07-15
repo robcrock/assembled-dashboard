@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite"
 import type { ReactNode } from "react"
 
 import {
+  createColumns,
   DataTable,
   type DataTableColumn,
 } from "@workspace/ui/components/data-table"
@@ -311,6 +312,8 @@ The dense, sortable, keyboard-operable table both dashboard tables are built fro
 
 **Deliberately omitted:** a compound/context API — this is a single component taking columns + rows, because the only shared state is one internal sort tuple and context machinery would give consumers nothing but wiring. No pagination/virtualization (~19 rows total on the dashboard) and no selection. No \`rowTone\`/row-dimming prop — muted ink is reserved for genuine sub-text, never whole rows of data, so the table makes that violation impossible; triage emphasis rides on sort order + a status column (the same make-it-impossible discipline as StatusBadge's missing color props).
 
+**Column types — the declarative path:** a column may declare \`type\` + \`get\` instead of a hand-wired \`cell\` — the type resolves the value to its view, its editor face (consumed when the interaction layer lands), and a default sort projection, so the faces cannot drift apart. \`cell\` stays the escape hatch for compound anatomies and wins by precedence. See the **column types** docs page beside these stories and the *Typed columns* story below; \`createColumns\` gives per-column type safety a heterogeneous array erases.
+
 These stories' sample fixture mirrors the shipped queue table's composition cell for cell — column order, deviation-cell anatomy, threshold-judged \`SparkBars\` — using only \`@workspace/ui\` primitives and local sample rows, so the catalog teaches the production pattern without importing app code.
 `,
       },
@@ -506,6 +509,94 @@ export const Dense: Story = {
       description: {
         story:
           "18 rows: keyboard-sort the columns (Tab to a header, Enter/Space toggles).",
+      },
+    },
+  },
+}
+
+/* ---- column types ----------------------------------------------------- */
+
+// A second, agent-shaped sample: the typed-columns path is the declarative
+// alternative to hand-wired `cell` callbacks — see the "column types" docs
+// page beside this story.
+interface AgentRow {
+  id: string
+  name: string
+  state: "available" | "on_call" | "on_break" | "in_meeting" | "offline"
+  queues: string[]
+  outForSec: number
+}
+
+const AGENT_STATE_OPTIONS = [
+  { value: "available", label: "Available" },
+  { value: "on_call", label: "On a call" },
+  { value: "on_break", label: "On break" },
+  { value: "in_meeting", label: "In a meeting" },
+  { value: "offline", label: "Offline" },
+] as const
+
+const QUEUE_OPTIONS = [
+  { value: "billing", label: "Billing" },
+  { value: "chat", label: "Chat" },
+  { value: "vip", label: "VIP" },
+  { value: "tier_2", label: "Tier 2" },
+] as const
+
+const AGENT_ROWS: AgentRow[] = [
+  { id: "a1", name: "Alex Rivera", state: "in_meeting", queues: ["vip"], outForSec: 1500 },
+  { id: "a2", name: "Jordan Patel", state: "on_break", queues: ["billing", "tier_2"], outForSec: 900 },
+  { id: "a3", name: "Omar Haddad", state: "on_break", queues: ["chat"], outForSec: 600 },
+  { id: "a4", name: "Devin Kim", state: "on_call", queues: ["billing", "chat", "vip"], outForSec: 0 },
+  { id: "a5", name: "Sam Osei", state: "available", queues: ["tier_2"], outForSec: 0 },
+]
+
+const agentCol = createColumns<AgentRow>()
+
+const AGENT_COLUMNS = [
+  agentCol.text({
+    key: "agent",
+    header: "Agent",
+    get: (a) => a.name,
+    className: "w-44 font-medium",
+  }),
+  agentCol.enum({
+    key: "state",
+    header: "State",
+    get: (a) => a.state,
+    options: AGENT_STATE_OPTIONS,
+    className: "w-36",
+  }),
+  agentCol.multiselect({
+    key: "queues",
+    header: "Queues",
+    get: (a) => a.queues,
+    options: QUEUE_OPTIONS,
+  }),
+  agentCol.duration({
+    key: "out-for",
+    header: "Out for",
+    get: (a) => a.outForSec,
+    className: "w-28",
+  }),
+]
+
+export const TypedColumns: StoryObj = {
+  name: "Typed columns",
+  render: () => (
+    <DataTable
+      columns={AGENT_COLUMNS}
+      rows={AGENT_ROWS}
+      rowKey={(a) => a.id}
+      caption="Agents by state, queues covered, and time out of adherence"
+      defaultSort={{ key: "out-for", direction: "desc" }}
+      layout="fixed"
+    />
+  ),
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "The declarative path: every column here is a `createColumns` builder call — `type` + `get`, no hand-wired `cell`. The types supply the views (enum labels, interpunct-joined memberships, a semantic `<time>`) AND the default sort projections: State sorts by **declaration order** (the semantic order, not the alphabet), Out for numerically. The same declarations will feed inline editors and the row-edit form when the interaction layer lands — one source, no drift.",
       },
     },
   },
