@@ -41,7 +41,9 @@ const config: StorybookConfig = {
       // them keeps the first render clean.
       optimizeDeps: {
         include: [
+          "@base-ui/react/checkbox",
           "@base-ui/react/input",
+          "@base-ui/react/menu",
           "@base-ui/react/select",
           "@base-ui/react/tooltip",
         ],

@@ -64,6 +64,13 @@ export interface ColumnType<V, Draft = V> {
   /** Default sort projection — a convenience the column's own `sortValue` overrides. */
   sortValue?: (value: V) => number | string
   align?: "left" | "right"
+  /**
+   * The editor's commit grammar, so the cell wrapper never guesses:
+   * `"field"` (default) commits on Enter / focus leaving the cell;
+   * `"picker"` editors live in a portal (blur is noise) and commit on
+   * pick / popup close, cancel on Escape-close — already wired inside.
+   */
+  editorBehavior?: "field" | "picker"
 }
 
 /** Severity order for the SLA scale: worst first under an ascending sort, matching the triage convention. */
@@ -127,6 +134,7 @@ function enumOf<V extends string>(
     view: (value) =>
       options.find((option) => option.value === value)?.label ?? value,
     editor: (props) => <EnumSelect {...props} options={options} />,
+    editorBehavior: "picker",
     // Declaration order is the semantic order — sort follows it, not the
     // alphabet (strain #6: "at_risk < breached < healthy" is nonsense).
     sortValue: (value) => options.findIndex((o) => o.value === value),
@@ -152,6 +160,7 @@ function multiselect<V extends string>(
       )
     },
     editor: (props) => <MultiSelectFieldEditor {...props} options={options} />,
+    editorBehavior: "picker",
     // No default sort: neither count nor alphabet is the obvious meaning of
     // ordering memberships — a column that wants one says so itself.
   }
@@ -183,6 +192,7 @@ function status(): ColumnType<Status> {
         }))}
       />
     ),
+    editorBehavior: "picker",
     sortValue: (value) => STATUS_RANK[value],
   }
 }
