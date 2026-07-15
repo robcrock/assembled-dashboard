@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite"
-import type { ReactNode } from "react"
+import { useState, type ReactNode } from "react"
 
 import {
   createColumns,
@@ -308,9 +308,11 @@ The dense, sortable, keyboard-operable table both dashboard tables are built fro
 
 **Use it for:** dense read-only rows. \`getExpandedContent\` adds expandable rows — an inline, \`aria-controls\`-linked detail panel per row; return \`null\` for rows with nothing to expand and their toggle is omitted; \`expandLabel\` gives each toggle a row-specific accessible name. The disclosure is deliberately NOT built on shadcn's Collapsible (evaluated, never vendored): a Collapsible's Root/Panel wrappers can't sit between \`<tbody>\` and \`<tr>\` without breaking table semantics, so the expansion keeps native table markup while speaking the same interaction grammar — \`aria-expanded\`/\`aria-controls\`, \`data-state="open|closed"\`, Enter/Space on a real button.
 
-**Not for:** large paginated/virtualized datasets, row selection, or row navigation — rows expand to an inline detail panel, they don't link out.
+**The interactive face** (opt-in — \`interactive\` prop): an **Edit-mode gate** protects the glanceable reading surface — the toolbar's Edit toggle (or the controlled \`editing\`/\`onEditingChange\` pair, for pages whose mode couples to app state) reveals the interactive gutter: a selection checkbox + \`⋮\` row menu (Edit row · Duplicate · Delete) per row, select-all in the header, and a bulk bar replacing the toolbar while a selection exists. Cells whose column carries an \`edit\` binding become click-to-edit — the type's editor at cell-flush size; field editors commit on Enter / focus-out and cancel on Escape, picker editors commit on pick. "Edit row" opens a batched form in the expander's detail slot. Everything lands as intents: one \`onPatch(rowKey, patch, row)\` per commit, one \`onDelete(rowKeys, rows)\` per removal — **DataTable never mutates**; undo, confirmation, and optimistic overlays are the consumer's policy. Keyboard: \`x\` toggles selection from anywhere in a row, Shift+click / Shift+Arrow (on a checkbox) extend the range, and selection changes announce via a polite live region.
 
-**Deliberately omitted:** a compound/context API — this is a single component taking columns + rows, because the only shared state is one internal sort tuple and context machinery would give consumers nothing but wiring. No pagination/virtualization (~19 rows total on the dashboard) and no selection. No \`rowTone\`/row-dimming prop — muted ink is reserved for genuine sub-text, never whole rows of data, so the table makes that violation impossible; triage emphasis rides on sort order + a status column (the same make-it-impossible discipline as StatusBadge's missing color props).
+**Not for:** large paginated/virtualized datasets or row navigation — rows expand to an inline detail panel, they don't link out.
+
+**Deliberately omitted:** a compound/context API — still a single component taking columns + rows; the interaction state is one internal hook beside the sort tuple, and context machinery would give consumers nothing but wiring. No pagination/virtualization (~19 rows total on the dashboard). No \`rowTone\`/row-dimming prop — muted ink is reserved for genuine sub-text, never whole rows of data, so the table makes that violation impossible; triage emphasis rides on sort order + a status column (the same make-it-impossible discipline as StatusBadge's missing color props). No add-row affordance — creation needs default values and a create flow the consumer owns. No confirm dialogs or undo inside the table — intents out, policy above.
 
 **Column types — the declarative path:** a column may declare \`type\` + \`get\` instead of a hand-wired \`cell\` — the type resolves the value to its view, its editor face (consumed when the interaction layer lands), and a default sort projection, so the faces cannot drift apart. \`cell\` stays the escape hatch for compound anatomies and wins by precedence. See the **column types** docs page beside these stories and the *Typed columns* story below; \`createColumns\` gives per-column type safety a heterogeneous array erases.
 
@@ -579,6 +581,94 @@ const AGENT_COLUMNS = [
     className: "w-28",
   }),
 ]
+
+/* ---- interactive ------------------------------------------------------ */
+
+// Stateful wrapper: the story plays the CONSUMER's role — it applies the
+// intents DataTable emits (patch/delete/duplicate) to local rows, exactly
+// what the dashboard's store will do with a route handler behind it.
+function InteractiveAgentsStory() {
+  const [agentRows, setAgentRows] = useState(AGENT_ROWS)
+
+  const col = createColumns<AgentRow>()
+  // Keys = field names where `edit: true` (the column key IS the patched
+  // field); "out-for" stays read-only — an observation, not a setting.
+  const columns = [
+    col.text({
+      key: "name",
+      header: "Agent",
+      get: (a) => a.name,
+      edit: true,
+      className: "w-44 font-medium",
+    }),
+    col.enum({
+      key: "state",
+      header: "State",
+      get: (a) => a.state,
+      options: AGENT_STATE_OPTIONS,
+      edit: true,
+      className: "w-36",
+    }),
+    col.multiselect({
+      key: "queues",
+      header: "Queues",
+      get: (a) => a.queues,
+      options: QUEUE_OPTIONS,
+      edit: true,
+    }),
+    col.duration({
+      key: "out-for",
+      header: "Out for",
+      get: (a) => a.outForSec,
+      className: "w-28",
+    }),
+  ]
+
+  return (
+    <DataTable
+      columns={columns}
+      rows={agentRows}
+      rowKey={(a) => a.id}
+      caption="Agents — interactive editing demo"
+      defaultSort={{ key: "out-for", direction: "desc" }}
+      layout="fixed"
+      getExpandedContent={(a) =>
+        a.queues.length > 1 ? (
+          <div className="text-metric-sm text-muted-foreground">
+            {a.name} is cross-trained on {a.queues.length} queues.
+          </div>
+        ) : null
+      }
+      expandLabel={(a) => `${a.name} details`}
+      interactive={{
+        rowLabel: (a) => a.name,
+        onPatch: (rowKeyValue, patch) =>
+          setAgentRows((prev) =>
+            prev.map((a) => (a.id === rowKeyValue ? { ...a, ...patch } : a))
+          ),
+        onDelete: (rowKeys) =>
+          setAgentRows((prev) => prev.filter((a) => !rowKeys.includes(a.id))),
+        onDuplicate: (row) =>
+          setAgentRows((prev) => [
+            ...prev,
+            { ...row, id: `${row.id}-copy`, name: `${row.name} (copy)` },
+          ]),
+      }}
+    />
+  )
+}
+
+export const Interactive: StoryObj = {
+  render: () => <InteractiveAgentsStory />,
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "The full interactive face, uncontrolled. Click **Edit** to enter edit mode: the gutter appears (checkbox + `⋮` menu per row, select-all in the header). Click a cell to edit inline — Agent is a text field (Enter/blur commits, Escape cancels), State a picker (pick commits), Queues a multi-select (closing commits); *Out for* stays read-only, an observation. `⋮` → **Edit row** opens the batched form in the detail slot (one Save = one patch); Duplicate and Delete are intents the story's local state applies. Select rows (checkbox, `x` anywhere in the row, Shift+click / Shift+Arrow for ranges) and the toolbar becomes the bulk bar. Note the expander panel and the row form share the detail slot — the form wins while open.",
+      },
+    },
+  },
+}
 
 export const TypedColumns: StoryObj = {
   name: "Typed columns",
