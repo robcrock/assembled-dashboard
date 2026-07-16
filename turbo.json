@@ -4,7 +4,13 @@
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "inputs": ["$TURBO_DEFAULT$", ".env*", "!**/*.stories.*", "!**/*.mdx"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        ".env*",
+        "!**/*.stories.*",
+        "!**/*.mdx",
+        "!**/*.test.*"
+      ],
       "outputs": [".next/**", "!.next/cache/**"]
     },
     "storybook#build": {
@@ -17,6 +23,9 @@
     },
     "format": {
       "dependsOn": ["^format"]
+    },
+    "test": {
+      "dependsOn": ["^test"]
     },
     "typecheck": {
       "dependsOn": ["^typecheck"]
