@@ -419,6 +419,10 @@ export function QueueHealthTable({
           // action belongs beside the thing it acts on, not stacked above
           // the table. Mode stays controlled from the template either way.
           editToggle: false,
+          // Clear rows rides up there too, which leaves this table's toolbar
+          // empty until a selection exists — so entering edit mode adds no
+          // strip above the rows and moves nothing on the page.
+          clearRows: false,
         }
       }
     />
