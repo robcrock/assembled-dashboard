@@ -31,7 +31,7 @@
 //                        reload restarts the replay
 
 import { useEffect, useMemo, useState, type ReactNode } from "react"
-import { CircleAlert, Pause, Play } from "lucide-react"
+import { CircleAlert, Pause, Pencil, Play } from "lucide-react"
 
 import { Button } from "@workspace/ui/components/button"
 import { OrgIdentity } from "@workspace/ui/components/org-identity"
@@ -92,6 +92,46 @@ function ToggleLabel({
         {inactiveLabel}
       </span>
     </span>
+  )
+}
+
+/**
+ * A section's Edit toggle, mounted in the PageSection heading's actions slot
+ * — where the eye already looks for what a section can do, instead of a
+ * button stacked above the table it acts on. One control for both directions
+ * (Edit ⇄ Done, aria-pressed carrying the state) rather than an Edit here
+ * and a Done somewhere else; DataTable's own toggle is suppressed via
+ * `editToggle: false` so the page has exactly one way in.
+ *
+ * Disabled while the feed has nothing to act on — editing a skeleton or an
+ * error body is a promise the page can't keep — but never on the way out: an
+ * error arriving mid-edit must not lock the operator inside the mode.
+ */
+function SectionEditToggle({
+  editing,
+  onToggle,
+  editable,
+  label,
+}: {
+  editing: boolean
+  onToggle: () => void
+  /** The feed has rows to act on. Never disables the way OUT — an error mid-edit must not strand the operator in a mode. */
+  editable: boolean
+  /** Names the section for screen readers — "Edit queues" beats six "Edit"s. */
+  label: string
+}) {
+  return (
+    <Button
+      variant={editing ? "default" : "outline"}
+      size="sm"
+      onClick={onToggle}
+      disabled={!editable && !editing}
+      aria-pressed={editing}
+      aria-label={editing ? `Done editing ${label}` : `Edit ${label}`}
+    >
+      {!editing && <Pencil aria-hidden className="size-3.5" />}
+      <ToggleLabel active={editing} activeLabel="Done" inactiveLabel="Edit" />
+    </Button>
   )
 }
 
@@ -210,6 +250,11 @@ export function Dashboard() {
   )
 
   const summary = data?.summary ?? null
+  // Edit mode needs something to act on. Live and stale both qualify — a
+  // stale row is real data the operator may well be fixing; loading and
+  // error bodies are not, and a toggle over them would promise a form that
+  // isn't there.
+  const sectionsEditable = feed.status === "live" || feed.status === "stale"
 
   return (
     <div className="isolate min-h-svh">
@@ -299,6 +344,14 @@ export function Dashboard() {
             id="queues"
             title="Queues"
             description="Sorted by severity against each queue's own target — expand a row to see who can help."
+            actions={
+              <SectionEditToggle
+                editing={editingQueues}
+                onToggle={() => setEditingQueues((e) => !e)}
+                editable={sectionsEditable}
+                label="queues"
+              />
+            }
           >
             <QueueHealthTable
               queues={data?.queues ?? []}
@@ -317,6 +370,14 @@ export function Dashboard() {
             id="agents"
             title="Agents needing attention"
             description="Out of adherence, longest out first, with the queues they cover."
+            actions={
+              <SectionEditToggle
+                editing={editingAgents}
+                onToggle={() => setEditingAgents((e) => !e)}
+                editable={sectionsEditable}
+                label="agents"
+              />
+            }
           >
             <AgentAdherenceTable
               agents={data?.agents ?? []}

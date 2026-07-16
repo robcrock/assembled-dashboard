@@ -140,9 +140,9 @@ export async function GET(request: Request) {
 
 /**
  * PATCH { entity: "queue" | "agent", id, patch: { field: value, ... } } —
- * one request per commit (an inline edit is a one-entry patch; the row form
- * batches its changed fields). 400 on any disallowed field or bad value —
- * all-or-nothing, no partial application.
+ * one request per commit (an inline cell edit is a one-entry patch; the
+ * shape stays a map so a future batching caller needs no new route). 400 on
+ * any disallowed field or bad value — all-or-nothing, no partial application.
  */
 export async function PATCH(request: Request) {
   const { errorResponse } = await applyDemoLevers(request)

@@ -22,6 +22,7 @@
 import {
   columnTypes,
   DataTable,
+  EditFieldBox,
   type DataTableColumn,
 } from "@workspace/ui/components/data-table"
 import { Duration } from "@workspace/ui/components/duration"
@@ -108,6 +109,29 @@ export function AgentAdherenceTable({
         field: "state",
         get: (a) => a.state,
         type: columnTypes.enum(AGENT_STATE_OPTIONS),
+        // Compound cell, so it boxes only what it will actually let you
+        // change: the state. Framing the whole "In meeting · 5m" would
+        // promise the clock is editable too — and the clock is an
+        // observation. The box has to mean the same thing in every cell.
+        editCell: (a) => (
+          <span className="flex items-center gap-1.5">
+            <EditFieldBox>{AGENT_STATE_LABEL[a.state]}</EditFieldBox>
+            <span className="text-metric-sm whitespace-nowrap text-muted-foreground">
+              · <Duration seconds={a.state_duration_sec} />
+            </span>
+          </span>
+        ),
+        // The live picker keeps the clock beside it, so clicking the box
+        // swaps it for the real control in place rather than blanking the
+        // context the cell was reading a moment ago.
+        renderField: ({ row, editor }) => (
+          <span className="flex items-center gap-1.5">
+            <span className="min-w-0 flex-1">{editor}</span>
+            <span className="text-metric-sm whitespace-nowrap text-muted-foreground">
+              · <Duration seconds={row.state_duration_sec} />
+            </span>
+          </span>
+        ),
       },
       // clears the longest state + duration ("In a meeting · 25m 30s")
       className: "w-48",
@@ -156,6 +180,10 @@ export function AgentAdherenceTable({
             onDelete: (agentIds) => interactive.onDelete(agentIds),
             editing: interactive.editing,
             onEditingChange: interactive.onEditingChange,
+            // The section heading carries the Edit toggle — a section-scoped
+            // action belongs beside the thing it acts on, not stacked above
+            // the table. Mode stays controlled from the template either way.
+            editToggle: false,
           }
         }
       />

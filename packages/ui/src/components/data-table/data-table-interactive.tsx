@@ -1,21 +1,15 @@
 "use client"
 
 import * as React from "react"
-import { Copy, MoreVertical, Pencil, Trash2 } from "lucide-react"
+import { Pencil, Trash2 } from "lucide-react"
 
 import { Button } from "@workspace/ui/components/button"
 import { Checkbox } from "@workspace/ui/components/checkbox"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@workspace/ui/components/dropdown-menu"
-import { TableCell, TableRow } from "@workspace/ui/components/table"
 import { cn } from "@workspace/ui/lib/utils"
 
 import type { ColumnType } from "./column-types"
 import type { DataTableColumn, DataTableInteractive } from "./data-table"
+import { EDIT_CELL_GROUP, EDIT_FIELD_FRAME } from "./edit-field-box"
 
 // The interactive face of DataTable — the module the orchestrator composes
 // when a consumer passes `interactive`. A SIBLING, not a wrapper: the public
@@ -27,11 +21,23 @@ import type { DataTableColumn, DataTableInteractive } from "./data-table"
 // consumer's — it couples to page concerns (the dashboard pauses replay) —
 // via controlled `editing`/`onEditingChange`, with an uncontrolled internal
 // default so Storybook and simple consumers need no wiring. Everything
-// SESSION-scoped lives here in useTableInteraction: the selection set, the
-// one active inline edit, the one open row form. Two concepts that must not
-// merge: SELECTION is sticky and multi (it drives the bulk bar); the ACTIVE
-// EDIT is transient and single (innermost target wins). Exiting edit mode
-// drops all of it.
+// SESSION-scoped lives here in useTableInteraction: the selection set and
+// the one active inline edit. Two concepts that must not merge: SELECTION is
+// sticky and multi (it drives the bulk bar); the ACTIVE EDIT is transient
+// and single (innermost target wins). Exiting edit mode drops all of it.
+//
+// EDITING IS ONE GESTURE: click a cell. There is no row menu and no batched
+// row form — an editable cell rests as a FRAMED FIELD (the box IS the
+// affordance), so edit mode telegraphs what's editable before a click, and
+// clicking swaps the box for the live editor in place. A compound cell
+// (editCell) frames only its editable sub-value, since only that part is a
+// field. One meaning, everywhere: a box is a field.
+//
+// It follows that the BOX answers the hover, never the cell — in a compound
+// cell the hit area is bigger than the field, so tinting the whole cell would
+// point at the wrong thing (and a corner pencil, pinned away from the number
+// it means, pointed at nothing). Hover anywhere in the cell, the box lights:
+// the response names what a click would edit. See EDIT_CELL_GROUP.
 //
 // Commit policy is the container's (the editors are policy-agnostic —
 // lib/editor.ts): field editors commit on Enter or on focus leaving the
@@ -42,13 +48,17 @@ import type { DataTableColumn, DataTableInteractive } from "./data-table"
 // the cell falls back to truth rather than inventing a value.
 //
 // DataTable never mutates: every commit lands as one
-// `onPatch(rowKey, { field: value }, row)` — the row form batches its
-// changed fields into the same single call — and every removal as one
+// `onPatch(rowKey, { field: value }, row)` and every removal as one
 // `onDelete(rowKeys, rows)`. Undo, confirm, optimistic overlays are the
 // consumer's policy, deliberately: this layer produces INTENTS.
 
-/** Lead-cell width when the interactive gutter is present: checkbox + row menu. */
-export const INTERACTIVE_COL = "w-16"
+/**
+ * Lead-cell width when the interactive gutter is present: just the selection
+ * checkbox. Deliberately the same step as EXPANDER_COL — the gutter takes the
+ * caret's slot in edit mode, so matching widths keep the toggle from shifting
+ * the columns under the pointer.
+ */
+export const INTERACTIVE_COL = "w-10"
 
 /* ---- edit-face resolution ------------------------------------------------
  * The one place a column resolves to "how does this cell edit": the column's
@@ -63,7 +73,7 @@ export interface EditFace<Row> {
   read: (row: Row) => unknown
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- heterogeneous by nature
   type: ColumnType<any, any>
-  /** Frames the editor with read-only context in the row form (the object binding's `renderField`). */
+  /** Frames the live inline editor with read-only context (the object binding's `renderField`). */
   renderField?: (ctx: { row: Row; editor: React.ReactNode }) => React.ReactNode
   /** Resting inline-edit display for a compound cell; presence also selects BLOCK cell layout. */
   editCell?: (row: Row) => React.ReactNode
@@ -102,11 +112,6 @@ interface ActiveEdit {
   draft: unknown
 }
 
-interface RowForm {
-  rowKey: string
-  drafts: Record<string, unknown>
-}
-
 export function useTableInteraction<Row>(
   interactive: DataTableInteractive<Row> | undefined
 ) {
@@ -116,7 +121,6 @@ export function useTableInteraction<Row>(
   // extend from it, the familiar file-manager grammar.
   const anchorRef = React.useRef<string | null>(null)
   const [activeEdit, setActiveEdit] = React.useState<ActiveEdit | null>(null)
-  const [rowForm, setRowForm] = React.useState<RowForm | null>(null)
   const [announcement, setAnnouncement] = React.useState("")
 
   const enabled = Boolean(interactive)
@@ -126,11 +130,10 @@ export function useTableInteraction<Row>(
     interactive?.onEditingChange?.(next)
     if (interactive?.editing === undefined) setInternalEditing(next)
     if (!next) {
-      // Leaving edit mode drops the whole session — selection, active edit,
-      // open form. Mode gates capability; nothing interactive outlives it.
+      // Leaving edit mode drops the whole session — selection, active edit.
+      // Mode gates capability; nothing interactive outlives it.
       setSelected(new Set())
       setActiveEdit(null)
-      setRowForm(null)
       anchorRef.current = null
     }
   }
@@ -184,8 +187,6 @@ export function useTableInteraction<Row>(
     setAllSelected,
     activeEdit,
     setActiveEdit,
-    rowForm,
-    setRowForm,
     announcement,
     announce,
   }
@@ -200,6 +201,12 @@ export type TableInteraction<Row> = ReturnType<
 interface InteractionToolbarProps {
   editing: boolean
   onToggleEditing: (next: boolean) => void
+  /**
+   * Render the built-in Edit/Done toggle. False when the consumer mounts its
+   * own (the dashboard's section headers own it) — the toolbar then carries
+   * only the selection affordances, and entering/leaving is the consumer's.
+   */
+  showToggle: boolean
   selectionCount: number
   onClearSelection: () => void
   onDeleteSelected: (() => void) | null
@@ -209,13 +216,15 @@ interface InteractionToolbarProps {
 }
 
 /**
- * The container zone. Reading face: one quiet "Edit" affordance. Editing
- * face: Done + Clear rows — replaced by the bulk bar (count + Delete
- * selected) the moment a selection exists, the selection-bar convention.
+ * The container zone. Reading face: one quiet "Edit" affordance (or nothing,
+ * when the consumer owns the toggle). Editing face: Done + Clear rows —
+ * replaced by the bulk bar (count + Delete selected) the moment a selection
+ * exists, the selection-bar convention.
  */
 export function InteractionToolbar({
   editing,
   onToggleEditing,
+  showToggle,
   selectionCount,
   onClearSelection,
   onDeleteSelected,
@@ -223,6 +232,7 @@ export function InteractionToolbar({
   hasRows,
 }: InteractionToolbarProps) {
   if (!editing) {
+    if (!showToggle) return null
     return (
       <Button variant="outline" size="sm" onClick={() => onToggleEditing(true)}>
         <Pencil aria-hidden className="size-3.5" />
@@ -257,9 +267,15 @@ export function InteractionToolbar({
           </Button>
         )
       )}
-      <Button variant="default" size="sm" onClick={() => onToggleEditing(false)}>
-        Done
-      </Button>
+      {showToggle && (
+        <Button
+          variant="default"
+          size="sm"
+          onClick={() => onToggleEditing(false)}
+        >
+          Done
+        </Button>
+      )}
     </div>
   )
 }
@@ -289,91 +305,48 @@ export function SelectAllCheckbox({
 }
 
 interface RowGutterCellProps {
-  rowId: string
-  /** Human name for this row ("Billing"), labelling the checkbox and menu. */
+  /** Human name for this row ("Billing"), labelling the checkbox. */
   label: string
   isSelected: boolean
   onToggleSelect: (range: boolean) => void
   onExtendSelect: (direction: 1 | -1) => void
-  onEditRow: (() => void) | null
-  onDuplicate: (() => void) | null
-  onDelete: (() => void) | null
 }
 
 /**
- * The row zone: selection + the ⋮ row menu in one lead cell. The checkbox
- * carries the range grammar — Shift+click, and Shift+Arrow extending from
- * the anchor while focus is on it.
+ * The row zone: selection, and only selection. There is no row menu —
+ * editing is a click on the cell you mean, and removal routes through the
+ * selection the bulk bar already reads, so a per-row menu would be a second
+ * road to two places you can already get. The checkbox carries the range
+ * grammar — Shift+click, and Shift+Arrow extending from the anchor while
+ * focus is on it.
  */
 export function RowGutterCell({
-  rowId,
   label,
   isSelected,
   onToggleSelect,
   onExtendSelect,
-  onEditRow,
-  onDuplicate,
-  onDelete,
 }: RowGutterCellProps) {
-  const hasMenu = Boolean(onEditRow || onDuplicate || onDelete)
   return (
-    <span className="flex items-center gap-1">
-      <Checkbox
-        aria-label={`Select ${label}`}
-        checked={isSelected}
-        onCheckedChange={() => onToggleSelect(false)}
-        onClick={(event: React.MouseEvent) => {
-          if (event.shiftKey) {
-            event.preventDefault()
-            onToggleSelect(true)
-          }
-        }}
-        onKeyDown={(event: React.KeyboardEvent) => {
-          if (event.shiftKey && event.key === "ArrowDown") {
-            event.preventDefault()
-            onExtendSelect(1)
-          } else if (event.shiftKey && event.key === "ArrowUp") {
-            event.preventDefault()
-            onExtendSelect(-1)
-          }
-        }}
-      />
-      {hasMenu && (
-        <DropdownMenu>
-          <DropdownMenuTrigger
-            render={
-              <button
-                type="button"
-                aria-label={`Row actions for ${label}`}
-                className="inline-flex size-6 items-center justify-center rounded-sm text-muted-foreground focus-ring hover:text-foreground"
-              >
-                <MoreVertical aria-hidden className="size-4" />
-              </button>
-            }
-          />
-          <DropdownMenuContent align="start" id={`${rowId}-row-menu`}>
-            {onEditRow && (
-              <DropdownMenuItem onClick={onEditRow}>
-                <Pencil aria-hidden className="size-3.5" />
-                Edit row
-              </DropdownMenuItem>
-            )}
-            {onDuplicate && (
-              <DropdownMenuItem onClick={onDuplicate}>
-                <Copy aria-hidden className="size-3.5" />
-                Duplicate
-              </DropdownMenuItem>
-            )}
-            {onDelete && (
-              <DropdownMenuItem variant="destructive" onClick={onDelete}>
-                <Trash2 aria-hidden className="size-3.5" />
-                Delete
-              </DropdownMenuItem>
-            )}
-          </DropdownMenuContent>
-        </DropdownMenu>
-      )}
-    </span>
+    <Checkbox
+      aria-label={`Select ${label}`}
+      checked={isSelected}
+      onCheckedChange={() => onToggleSelect(false)}
+      onClick={(event: React.MouseEvent) => {
+        if (event.shiftKey) {
+          event.preventDefault()
+          onToggleSelect(true)
+        }
+      }}
+      onKeyDown={(event: React.KeyboardEvent) => {
+        if (event.shiftKey && event.key === "ArrowDown") {
+          event.preventDefault()
+          onExtendSelect(1)
+        } else if (event.shiftKey && event.key === "ArrowUp") {
+          event.preventDefault()
+          onExtendSelect(-1)
+        }
+      }}
+    />
   )
 }
 
@@ -446,8 +419,7 @@ export function EditableCell({
 
   // A compound cell (editCell present) owns a fixed-width, multi-part anatomy
   // whose annotation would clip under the single-line `truncate` affordance
-  // the text cells use — so it renders BLOCK (full width, no clip) and the
-  // edit hint overlays the corner instead of stealing a flex slot. `display`
+  // the text cells use — so it renders BLOCK (full width, no clip). `display`
   // already carries the resting face DataRow resolved (editCell or cell).
   const block = Boolean(face.editCell)
 
@@ -463,16 +435,35 @@ export function EditableCell({
             liveDraft.current = undefined
             onBegin()
           }}
-          className="focus-ring group relative -mx-1 block w-full rounded-sm px-1 py-0.5 text-left hover:bg-muted/60"
+          // Horizontally LAYOUT-NEUTRAL, deliberately: an `editCell` is written
+          // to mirror the read cell, which sits directly in the td's content
+          // box. Any padding here would silently shrink the box that anatomy
+          // was authored against — its fixed-width bar then overflows and pokes
+          // out past this button's own rounded edge. No margin, no px: the
+          // compound cell occupies the SAME box reading and editing, so nothing
+          // can escape it and the mode toggle moves nothing sideways.
+          //
+          // No hover tint and no pencil: the BOX is the affordance (it lights
+          // via EDIT_CELL_GROUP), and this button is only the hit area. A cell
+          // wash would say "editable" a second time, weakly, in the wrong place
+          // — and it collided with the bar's muted track besides.
+          className={cn(
+            EDIT_CELL_GROUP,
+            "focus-ring block w-full rounded-sm py-0.5 text-left"
+          )}
         >
           {display}
-          <Pencil
-            aria-hidden
-            className="pointer-events-none absolute top-1 right-1 size-3 text-muted-foreground/0 transition-colors group-hover:text-muted-foreground"
-          />
         </button>
       )
     }
+    // A simple cell's whole value IS the field, so the button IS the frame —
+    // the same recipe, and the same hover response, a compound cell boxes its
+    // editable sub-value with: one border means one thing everywhere.
+    //
+    // -mx-1 bleeds the frame into the cell's own padding: it buys back the
+    // width the border + px would otherwise steal from the value (long names
+    // truncated), and lands the text within a pixel or two of where read mode
+    // puts it, so toggling the mode barely moves it.
     return (
       <button
         ref={buttonRef}
@@ -483,13 +474,12 @@ export function EditableCell({
           liveDraft.current = undefined
           onBegin()
         }}
-        className="focus-ring -mx-1 flex w-full min-w-0 items-center rounded-sm px-1 py-0.5 text-left hover:bg-muted/60"
+        className={cn(
+          "focus-ring -mx-1 flex w-full min-w-0 items-center text-left",
+          EDIT_FIELD_FRAME
+        )}
       >
         <span className="min-w-0 flex-1 truncate">{display}</span>
-        <Pencil
-          aria-hidden
-          className="ml-1 size-3 shrink-0 text-muted-foreground/0 transition-colors [button:hover>&]:text-muted-foreground"
-        />
       </button>
     )
   }
@@ -535,145 +525,6 @@ export function EditableCell({
       {framed}
     </div>
   )
-}
-
-interface RowEditFormProps<Row> {
-  row: Row
-  /** Human name for the row, naming the form in the action strip. */
-  label: string
-  columns: DataTableColumn<Row>[]
-  colSpan: number
-  /** Width classes for the empty lead cells (gutter, expander) so the field row aligns to the data row above. */
-  leadingCells: string[]
-  drafts: Record<string, unknown>
-  onDraftChange: (field: string, draft: unknown) => void
-  onSave: (patch: Record<string, unknown>) => void
-  onCancel: () => void
-}
-
-/**
- * The row-level edit face — the batched form, but laid out as REAL table
- * cells in the same table, so each field sits under the column it edits
- * (under layout="fixed" the browser aligns them for free; no width mirroring
- * to drift). Two rows: an aligned field row (one cell per column, editor
- * where editable, empty otherwise) and an action strip. The column header
- * above is the field's label, so per-field labels are gone — with the
- * association restored, repeating "Actual / forecast" as a caption was the
- * old flow-layout's tax, not a real need. Per-field editors get no onCommit:
- * Enter must not half-save a batched form; the strip's Save commits.
- */
-export function RowEditForm<Row>({
-  row,
-  label,
-  columns,
-  colSpan,
-  leadingCells,
-  drafts,
-  onDraftChange,
-  onSave,
-  onCancel,
-}: RowEditFormProps<Row>) {
-  const facesByKey = new Map(
-    columns.map((column) => [column.key, resolveEditFace(column)])
-  )
-  const editable = columns
-    .map((column) => ({ column, face: facesByKey.get(column.key) }))
-    .filter((f): f is { column: DataTableColumn<Row>; face: EditFace<Row> } =>
-      Boolean(f.face)
-    )
-
-  const invalid = editable.some(({ face }) => {
-    const draft = drafts[face.field]
-    const from = face.type.fromDraft ?? ((d: unknown) => d)
-    return from(draft) === null
-  })
-
-  function save() {
-    const patch: Record<string, unknown> = {}
-    for (const { face } of editable) {
-      const draft = drafts[face.field]
-      const from = face.type.fromDraft ?? ((d: unknown) => d)
-      const next = from(draft)
-      if (next !== null && next !== face.read(row)) patch[face.field] = next
-    }
-    onSave(patch)
-  }
-
-  const bandClass = "bg-muted/40 hover:bg-muted/40"
-
-  return (
-    <>
-      <TableRow className={bandClass}>
-        {leadingCells.map((width, i) => (
-          <TableCell key={`lead-${i}`} className={cn(width, "py-2")} />
-        ))}
-        {columns.map((column) => {
-          const face = facesByKey.get(column.key)
-          return (
-            <TableCell
-              key={column.key}
-              className={cn("py-2 align-middle", column.className)}
-            >
-              {face
-                ? renderField(row, face, drafts, onDraftChange, onCancel, column)
-                : null}
-            </TableCell>
-          )
-        })}
-      </TableRow>
-      <TableRow className={bandClass}>
-        {/* Actions live at the LEFT of the strip, not pushed right: the table
-            can be wider than the viewport (it scrolls), so an ml-auto Save
-            would sit off-screen. Left-aligned, they stay where the row
-            starts and stay visible. */}
-        <TableCell colSpan={colSpan} className="px-4 pt-1 pb-3">
-          <div className="flex items-center gap-3">
-            <span className="text-label text-muted-foreground">
-              Editing {label}
-            </span>
-            <Button
-              variant="default"
-              size="sm"
-              onClick={save}
-              disabled={invalid}
-            >
-              Save
-            </Button>
-            <Button variant="ghost" size="sm" onClick={onCancel}>
-              Cancel
-            </Button>
-            {invalid && (
-              <span className="text-metric-sm text-destructive">
-                Fill in every field to save.
-              </span>
-            )}
-          </div>
-        </TableCell>
-      </TableRow>
-    </>
-  )
-}
-
-/** One aligned field: the type's editor, framed by the column's optional `renderField` context. */
-function renderField<Row>(
-  row: Row,
-  face: EditFace<Row>,
-  drafts: Record<string, unknown>,
-  onDraftChange: (field: string, draft: unknown) => void,
-  onCancel: () => void,
-  column: DataTableColumn<Row>
-): React.ReactNode {
-  const draft = drafts[face.field]
-  const from = face.type.fromDraft ?? ((d: unknown) => d)
-  const editor = React.createElement(face.type.editor!, {
-    value: draft,
-    onChange: (next: unknown) => onDraftChange(face.field, next),
-    onCancel,
-    invalid: from(draft) === null,
-    "aria-label": typeof column.header === "string" ? column.header : column.key,
-    className: "h-8 w-full",
-  })
-  return face.renderField ? face.renderField({ row, editor }) : editor
 }
 
 /** True when the event target is a control that owns its own keystrokes — the `x` shortcut must not fire while typing. */

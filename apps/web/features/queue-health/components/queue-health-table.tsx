@@ -46,6 +46,7 @@ import { Duration } from "@workspace/ui/components/duration"
 import {
   columnTypes,
   DataTable,
+  EditFieldBox,
   type DataTableColumn,
 } from "@workspace/ui/components/data-table"
 import { DeviationBar } from "@workspace/ui/components/deviation-bar"
@@ -92,20 +93,6 @@ function DeviationCell({
       </div>
       {bar}
     </div>
-  )
-}
-
-/**
- * A resting field affordance for the picker variants: a value shown inside an
- * input-shaped box so edit mode telegraphs which number is editable BEFORE the
- * cell is clicked into (clicking swaps this for the live NumberFieldEditor).
- * Sized to the cell-flush editor (h-6) so opening the real field doesn't shift.
- */
-function FieldBox({ children }: { children: ReactNode }) {
-  return (
-    <span className="text-metric inline-flex h-6 min-w-0 items-center rounded-sm border border-input bg-transparent px-2">
-      {children}
-    </span>
   )
 }
 
@@ -199,7 +186,11 @@ export function QueueHealthTable({
         header: "Queue",
         cell: (q) => <span className="font-medium">{q.name}</span>,
         sortValue: (q) => q.name,
-        className: "w-32",
+        // w-36, not w-32: under layout="fixed" a column must clear its widest
+        // realistic content, and in edit mode that content is the framed field
+        // — whose border and padding eat ~18px that "General Support" needs.
+        // Sizing for the wider face keeps the name readable in BOTH modes.
+        className: "w-36",
         edit: { field: "name", get: (q) => q.name, type: columnTypes.text() },
       },
       {
@@ -221,8 +212,11 @@ export function QueueHealthTable({
         // The model's single triage key — shared with the pre-sort comparator
         // so the two orderings can't drift.
         sortValue: (q) => queueSeverityRank(q),
-        // the widest cell on the page's widest tick: "Breached · 1m 20s over"
-        className: "w-60",
+        // Clears the widest tick, "Breached · 1m 20s over" — measured at 193px
+        // including cell padding (and 201px for a suffix as long as
+        // "12m 30s over"), so w-56's 208px holds with room. The step it gave
+        // back funds the Queue column's edit-mode frame; w-60 was slack.
+        className: "w-56",
         // Read-only verdict: the badge is DERIVED from target vs. wait. What an
         // operator controls is the PROMISE (the SLA target), and that editor now
         // lives on the Headroom column — the cell that actually shows the target,
@@ -313,9 +307,9 @@ export function QueueHealthTable({
                 <span className="text-metric-sm whitespace-nowrap text-muted-foreground">
                   <Duration seconds={q.longest_wait_sec} /> /
                 </span>
-                <FieldBox>
+                <EditFieldBox>
                   <Duration seconds={q.sla_target_sec} />
-                </FieldBox>
+                </EditFieldBox>
               </div>
               <DeviationBar
                 value={q.sla_headroom_pct}
@@ -360,7 +354,7 @@ export function QueueHealthTable({
                 <span className="text-metric-sm whitespace-nowrap text-muted-foreground">
                   {q.volume_last_15m} /
                 </span>
-                <FieldBox>{q.volume_forecast_next_15m}</FieldBox>
+                <EditFieldBox>{q.volume_forecast_next_15m}</EditFieldBox>
               </div>
               <DeviationBar
                 value={q.volume_vs_forecast_pct}
@@ -421,6 +415,10 @@ export function QueueHealthTable({
           onDelete: (queueIds) => interactive.onDelete(queueIds),
           editing: interactive.editing,
           onEditingChange: interactive.onEditingChange,
+          // The section heading carries the Edit toggle — a section-scoped
+          // action belongs beside the thing it acts on, not stacked above
+          // the table. Mode stays controlled from the template either way.
+          editToggle: false,
         }
       }
     />

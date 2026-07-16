@@ -44,10 +44,12 @@ its own component page.
 
 ## The rules the system holds
 
-- **Precedence:** a column's own `cell` beats `type.view`; `renderEditor`
-  (when the interaction layer lands) beats `type.editor`. The escape hatch
-  exists for anatomies richer than one value — the queue table's compound
-  headroom cell stays a `cell`.
+- **Precedence:** a column's own `cell` beats `type.view`, and an `edit`
+  binding's own `type` beats the column's. The escape hatches exist for
+  anatomies richer than one value — the queue table's compound headroom cell
+  stays a `cell`, and pairs `editCell` (how the cell rests in edit mode) with
+  `renderField` (the read-only context wrapped around the live editor) so
+  `48s / [3m]` survives the click.
 - **Sort follows meaning, not the alphabet.** A type's `sortValue` is a
   convenience the column's own `sortValue` overrides. `enum` sorts by
   **declaration order** (declare the semantic order); `status` sorts by

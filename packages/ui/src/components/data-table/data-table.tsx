@@ -26,7 +26,6 @@ import {
   INTERACTIVE_COL,
   isTypingTarget,
   resolveEditFace,
-  RowEditForm,
   RowGutterCell,
   SelectAllCheckbox,
   useTableInteraction,
@@ -79,9 +78,9 @@ const EXPANDER_COL = "w-10"
 const ARIA_SORT = { asc: "ascending", desc: "descending" } as const
 
 /**
- * How an editable column binds a commit target. Declarative only for now:
- * the interaction layer (edit mode, inline editors, the row form) consumes
- * it when it lands — nothing in this file reads it yet.
+ * How an editable column binds a commit target — read by `resolveEditFace`,
+ * which turns it into the cell's edit face (the framed resting field, and
+ * the editor a click swaps in).
  *
  * `true` means "edit the field the column shows" — valid only when the
  * column's value IS a stored field. The object form is the derived-display
@@ -101,12 +100,12 @@ export type ColumnEdit<Row> =
       // eslint-disable-next-line @typescript-eslint/no-explicit-any -- heterogeneous by nature; the helper binds precise types
       type?: ColumnType<any, any>
       /**
-       * Frames the editor with read-only context in the row-edit form, so a
-       * compound cell keeps what it shows around the part it edits (Actual /
-       * `60 / [input]`, or a target field beside its current status badge).
-       * Domain data on the same row, so it's the column's to supply, not the
-       * type's. Absent ⇒ the bare editor. The row form aligns each field
-       * under its column, so this is the label's replacement, not an addition.
+       * Frames the LIVE editor with read-only context, so a compound cell
+       * keeps what it shows around the part it edits (`60 / [input]`) instead
+       * of collapsing to a context-less box the moment it's clicked. Domain
+       * data on the same row, so it's the column's to supply, not the type's.
+       * Absent ⇒ the bare editor. Pair it with `editCell`, which is the same
+       * anatomy at rest.
        */
       renderField?: (ctx: {
         row: Row
@@ -118,9 +117,14 @@ export type ColumnEdit<Row> =
        * anatomy like the deviation cells) can't be squeezed through the
        * single-line `truncate` affordance the text cells use — its
        * right-aligned annotation clips. Providing `editCell` opts the cell
-       * into BLOCK layout (full width, no clip, an overlaid edit hint) and
-       * lets the column say how the editable field reads at rest. Absent ⇒
-       * the column's normal `cell`/view, in the inline text affordance.
+       * into BLOCK layout (full width, no clip) and lets the column say how
+       * the editable field reads at rest. Absent ⇒ the column's normal
+       * `cell`/view, in the inline text affordance.
+       *
+       * Box only what the cell will actually let you change (wrap it in
+       * `EditFieldBox`), and leave the observed half bare: the frame is a
+       * promise that a click edits that value. The cell's own box is the
+       * td's, same as the read face — so an anatomy that fits `cell` fits here.
        */
       editCell?: (row: Row) => React.ReactNode
     }
@@ -147,7 +151,7 @@ export interface DataTableColumn<Row, V = any> {
   type?: ColumnType<V>
   /** Reads the column's value off a row; the type's faces render it. */
   get?: (row: Row) => V
-  /** Editability binding — inert until the interaction layer lands. */
+  /** Editability binding — presence makes the cell a field in edit mode. */
   edit?: ColumnEdit<Row>
   /**
    * Presence makes the column sortable; falls back to the type's default
@@ -195,16 +199,13 @@ interface SortState {
  */
 export interface DataTableInteractive<Row> {
   /**
-   * One commit, one call: inline cell edits arrive as a single-entry patch,
-   * the row form batches its changed fields into the same shape. With
-   * `edit: true` the patched field is the column's `key`; the object
-   * binding names its own `field`.
+   * One commit, one call: an inline cell edit arrives as a single-entry
+   * patch. With `edit: true` the patched field is the column's `key`; the
+   * object binding names its own `field`.
    */
   onPatch: (rowKey: string, patch: Record<string, unknown>, row: Row) => void
-  /** Row removal intent — single (row menu), selected (bulk bar), or all (Clear rows). Omit to hide every delete affordance. */
+  /** Row removal intent — the selection (bulk bar) or all (Clear rows). Omit to hide every delete affordance. */
   onDelete?: (rowKeys: string[], rows: Row[]) => void
-  /** Row duplication intent — the consumer mints the new identity. Omit to hide the menu item. */
-  onDuplicate?: (row: Row) => void
   /**
    * Controlled edit mode, for consumers whose mode couples to page state
    * (the dashboard pauses replay while editing). Omit both and the table
@@ -212,7 +213,16 @@ export interface DataTableInteractive<Row> {
    */
   editing?: boolean
   onEditingChange?: (editing: boolean) => void
-  /** Human name for a row ("Billing"), labelling its checkbox, menu, and announcements. Falls back to the row key. */
+  /**
+   * Render the built-in Edit/Done toggle above the table (default true, so a
+   * consumer passing nothing gets a working mode for free). False when the
+   * page mounts its own — the dashboard's section headers carry it, where
+   * section-level actions belong — leaving this toolbar the selection
+   * affordances only. Pair it with controlled `editing`/`onEditingChange`,
+   * or nothing can turn the mode on.
+   */
+  editToggle?: boolean
+  /** Human name for a row ("Billing"), labelling its checkbox and announcements. Falls back to the row key. */
   rowLabel?: (row: Row) => string
 }
 
@@ -294,8 +304,8 @@ function DataTable<Row>({
     defaultSort
   )
   const expanded = useExpandedKeys()
-  // Same above-the-switch rule as sort and expansion: an active edit, an
-  // open row form, and a selection all survive a loading tick.
+  // Same above-the-switch rule as sort and expansion: an active edit and a
+  // selection both survive a loading tick.
   const interaction = useTableInteraction(interactive)
   const { editing } = interaction
 
@@ -344,6 +354,7 @@ function DataTable<Row>({
               <InteractionToolbar
                 editing={editing}
                 onToggleEditing={interaction.setEditing}
+                showToggle={interactive?.editToggle ?? true}
                 selectionCount={interaction.selected.size}
                 onClearSelection={() => interaction.setAllSelected(null)}
                 onDeleteSelected={
@@ -444,8 +455,6 @@ function DataTable<Row>({
                           interaction,
                           editFaces,
                           orderedKeys,
-                          onDeleteRow: (label) =>
-                            deleteRows([rowId], [row], `${label} removed`),
                         })
                       : null
                   }
@@ -472,9 +481,6 @@ interface RowInteraction<Row> {
   onToggleSelect: (range: boolean) => void
   onExtendSelect: (direction: 1 | -1) => void
   onKeySelect: () => void
-  onEditRow: (() => void) | null
-  onDuplicate: (() => void) | null
-  onDelete: (() => void) | null
   /** Non-null when a cell of THIS row is the active inline edit. */
   activeEdit: { columnKey: string; draft: unknown } | null
   beginEdit: (columnKey: string) => void
@@ -487,13 +493,6 @@ interface RowInteraction<Row> {
   commitEdit: (finalDraft: unknown) => void
   cancelEdit: () => void
   editFaces: Map<string, EditFace<Row>>
-  /** Non-null when THIS row's edit form is open — takes the expander's detail slot. */
-  form: {
-    drafts: Record<string, unknown>
-    onDraftChange: (field: string, draft: unknown) => void
-    onSave: (patch: Record<string, unknown>) => void
-    onCancel: () => void
-  } | null
 }
 
 function buildRowInteraction<Row>({
@@ -503,7 +502,6 @@ function buildRowInteraction<Row>({
   interaction,
   editFaces,
   orderedKeys,
-  onDeleteRow,
 }: {
   row: Row
   rowId: string
@@ -511,7 +509,6 @@ function buildRowInteraction<Row>({
   interaction: TableInteraction<Row>
   editFaces: Map<string, EditFace<Row>>
   orderedKeys: string[]
-  onDeleteRow: (label: string) => void
 }): RowInteraction<Row> {
   const label = interactive.rowLabel?.(row) ?? rowId
   const activeEdit =
@@ -541,21 +538,6 @@ function buildRowInteraction<Row>({
       if (next) interaction.toggleSelect(next, orderedKeys, true)
     },
     onKeySelect: () => interaction.toggleSelect(rowId, orderedKeys, false),
-    onEditRow:
-      editFaces.size > 0
-        ? () => {
-            const drafts: Record<string, unknown> = {}
-            for (const face of editFaces.values()) {
-              const toDraft = face.type.toDraft ?? ((v: unknown) => v)
-              drafts[face.field] = toDraft(face.read(row))
-            }
-            interaction.setRowForm({ rowKey: rowId, drafts })
-          }
-        : null,
-    onDuplicate: interactive.onDuplicate
-      ? () => interactive.onDuplicate!(row)
-      : null,
-    onDelete: interactive.onDelete ? () => onDeleteRow(label) : null,
     activeEdit,
     beginEdit: (columnKey) => {
       const face = editFaces.get(columnKey)
@@ -574,25 +556,6 @@ function buildRowInteraction<Row>({
     commitEdit,
     cancelEdit: () => interaction.setActiveEdit(null),
     editFaces,
-    form:
-      interaction.rowForm?.rowKey === rowId
-        ? {
-            drafts: interaction.rowForm.drafts,
-            onDraftChange: (field, draft) =>
-              interaction.setRowForm(
-                interaction.rowForm && {
-                  ...interaction.rowForm,
-                  drafts: { ...interaction.rowForm.drafts, [field]: draft },
-                }
-              ),
-            onSave: (patch) => {
-              if (Object.keys(patch).length > 0)
-                interactive.onPatch(rowId, patch, row)
-              interaction.setRowForm(null)
-            },
-            onCancel: () => interaction.setRowForm(null),
-          }
-        : null,
   }
 }
 
@@ -891,14 +854,10 @@ function DataRow<Row>({
         {interaction && (
           <TableCell className={cn(INTERACTIVE_COL, "py-1")}>
             <RowGutterCell
-              rowId={rowId}
               label={interaction.label}
               isSelected={interaction.isSelected}
               onToggleSelect={interaction.onToggleSelect}
               onExtendSelect={interaction.onExtendSelect}
-              onEditRow={interaction.onEditRow}
-              onDuplicate={interaction.onDuplicate}
-              onDelete={interaction.onDelete}
             />
           </TableCell>
         )}
@@ -964,32 +923,10 @@ function DataRow<Row>({
           )
         })}
       </TableRow>
-      {interaction?.form ? (
-        // The row-edit form renders its OWN aligned table rows (a field row
-        // whose cells line up under the columns, plus an action strip), so
-        // it is not wrapped in the full-width ExpandedDetailRow. Leading
-        // empty cells mirror this row's gutter + expander so the fields sit
-        // under their headers.
-        <RowEditForm
-          row={row}
-          label={interaction.label}
-          columns={columns}
-          colSpan={colSpan}
-          leadingCells={[
-            ...(interaction ? [INTERACTIVE_COL] : []),
-            ...(expander ? [EXPANDER_COL] : []),
-          ]}
-          drafts={interaction.form.drafts}
-          onDraftChange={interaction.form.onDraftChange}
-          onSave={interaction.form.onSave}
-          onCancel={interaction.form.onCancel}
-        />
-      ) : (
-        expander?.isExpanded && (
-          <ExpandedDetailRow rowId={rowId} colSpan={colSpan}>
-            {expander.content}
-          </ExpandedDetailRow>
-        )
+      {expander?.isExpanded && (
+        <ExpandedDetailRow rowId={rowId} colSpan={colSpan}>
+          {expander.content}
+        </ExpandedDetailRow>
       )}
     </>
   )

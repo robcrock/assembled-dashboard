@@ -13,7 +13,7 @@ const meta = {
         component: `
 The edit face of a membership list (\`string[]\`) — the editor a \`multiselect\` column type resolves to. The dashboard's consumer is an agent's queue skills. Composes the vendored \`Select\` in Base UI's \`multiple\` mode: the popup stays open across picks, each pick toggles membership.
 
-The commit grammar shifts accordingly: where \`EnumSelect\` treats a pick as the intent, here **closing the picker is the intent** — any close commits the draft, except an **Escape close, which cancels**. Containers running a batched row form omit both callbacks, per the shared contract.
+The commit grammar shifts accordingly: where \`EnumSelect\` treats a pick as the intent, here **closing the picker is the intent** — any close commits the draft, except an **Escape close, which cancels**. A container that wanted to batch would simply omit both callbacks, per the shared contract.
 
 The trigger summarizes: up to two labels verbatim, then a count ("3 selected") — a cell-width control, not a chip garden.
 
