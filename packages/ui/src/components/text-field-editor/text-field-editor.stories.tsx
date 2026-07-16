@@ -12,7 +12,7 @@ const meta = {
         component: `
 The edit face of a plain-text value — the editor a \`text\` column type resolves to. Composes the vendored \`Input\` and adds the shared editor contract: a controlled \`value\`/\`onChange\` draft plus the one keyboard grammar (**Enter → onCommit, Escape → onCancel**).
 
-**Use it for:** editing a string field in place — a queue's name, an agent's name — inline in a cell or as a field in a row-edit form.
+**Use it for:** editing a string value in place — a queue's name, an agent's name — inline in a table cell.
 
 **Not for:**
 - Numbers — \`NumberFieldEditor\` keeps tabular figures and unit context.

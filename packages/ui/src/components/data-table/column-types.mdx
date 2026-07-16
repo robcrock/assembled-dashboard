@@ -24,8 +24,9 @@ const columns = [
 
 The point of routing both faces through one declaration: the view and the
 editor **cannot drift apart** — they speak the same value by construction,
-and the coming interaction layer resolves inline editors and the row-edit
-form from the same source.
+and the interaction layer resolves a cell's inline editor from the same
+source. Editing is one gesture — click the cell you mean; there is
+deliberately no row menu and no batched row form.
 
 Two kinds of type, one grammar — every type is a factory call:
 

@@ -265,16 +265,19 @@ conventions below:
 | Atomic tier | Lives at | Contents |
 |---|---|---|
 | **Ions** (tokens) | `packages/ui/src/styles/globals.css` | the 4-tier token architecture (primitive → semantic → component → composite) |
-| **Atoms** | `packages/ui/src/components/*` | leaves that compose no other component: vendored `badge/button/card/table/tooltip/separator/skeleton` + `duration`, `metric-delta`, `sparkline`, `spark-bars`, `meter`, `deviation-bar`, `gauge`, `callout`, `theme-toggle` |
-| **Molecules** | `packages/ui/src/components/*` | compose atoms / own multi-part anatomy + feed states: `status-badge` (+`StatusDot`), `stat-card`, `data-table`, `empty-state`, `error-state`, `stale-indicator`, `page-section`, `org-identity` |
+| **Atoms** | `packages/ui/src/components/*` | leaves that compose no other component: vendored `badge/button/card/table/tooltip/separator/skeleton/checkbox/input/select` + `duration`, `metric-delta`, `sparkline`, `spark-bars`, `meter`, `deviation-bar`, `gauge`, `callout`, `theme-toggle` |
+| **Molecules** | `packages/ui/src/components/*` | compose atoms / own multi-part anatomy + feed states: `status-badge` (+`StatusDot`), `stat-card`, `data-table`, `empty-state`, `error-state`, `stale-indicator`, `page-section`, `org-identity`, `toast`, and the **editor primitives** — `text-field-editor`, `number-field-editor`, `enum-select`, `multi-select-field-editor` (each composes a vendored control and speaks the one `EditorProps` contract from `lib/editor.ts`) |
 | **Organisms** | `apps/web/features/*/components` | domain-bound compositions: `attainment-overview`, `queue-health-table` (+`queue-coverage`), `agent-adherence-table` |
 | **Template** | `apps/web/app/dashboard.tsx` | the one client boundary: owns `useDashboardData()` + page UI state, arranges organisms, passes `{data-slice, feed}` down |
 | **Page / Layout** | `apps/web/app/page.tsx` / `layout.tsx` | route → template; document shell (fonts, ThemeProvider) |
 
 **State ownership ladder:** store (fetch/replay/staleness) → template (page UI state:
-paused, injected error) → organism (per-slice derivation: sort, tick ring buffer) →
-molecule/atom (stateless, or self-contained interaction only — e.g. DataTable's one sort
-tuple). Components below the template never fetch.
+paused, injected error, and **edit mode per section** — it couples to page concerns, since
+editing holds the replay so a tick can't shuffle a draft) → organism (per-slice derivation:
+sort, tick ring buffer) → molecule/atom (stateless, or self-contained interaction only —
+DataTable owns sort, expansion, selection and the one open cell edit, all internal and all
+above the feed-status switch so a draft survives a loading tick). Components below the
+template never fetch, and nothing below the table decides who is editing.
 
 **Primitives — `packages/ui`:**
 - `StatusBadge` / `StatusDot` — `status: healthy | at_risk | breached` (+ the adherence pair).
@@ -319,19 +322,44 @@ tuple). Components below the template never fetch.
   (`getExpandedContent` + `expandLabel`,
   `aria-controls`-linked). `layout: auto | fixed` — fixed sizes columns from the header row's
   width classes (via `column.className`) so live cell content that widens on a tick can never
-  reflow the grid; both dashboard tables use it. A single component, not compound — the only
-  shared state is one sort tuple.
+  reflow the grid; both dashboard tables use it. Config-driven, not compound: the consumers
+  want to DECLARE columns, not assemble `<DataTable.Row>`s, so every piece of session state
+  (sort, expansion, selection, the one open cell edit, the announcement) stays internal —
+  context would be wiring with no consumer.
+  - **The interactive face** is one optional `interactive` object; absent ⇒ the read-only
+    table, paying nothing. It carries `onPatch`/`onDelete` (DataTable produces INTENTS and
+    never mutates — undo, confirmation and the optimistic overlay are the consumer's policy,
+    above), controlled `editing`/`onEditingChange` (edit mode couples to page state: the
+    dashboard pauses replay while editing), `editToggle`/`clearRows` (default true; the
+    dashboard passes false and mounts both in the section heading, so the page has exactly one
+    way in), and `rowLabel`. Editing is ONE GESTURE — click the cell you mean. There is
+    deliberately no row menu and no batched row form.
+  - The cell/content authoring grammar is being replaced (ROB-97); it gets documented here
+    when it settles, and the catalog's DataTable docs page is the live reference until then.
 - `Duration` — formats `state_duration_sec` / `out_of_adherence_sec` as a semantic `<time>`.
   (`RelativeTime` deliberately not built; `StaleIndicator` is the only wall-clock surface.)
 - `Callout` — a quiet contextual aside (hairline left rule + muted small text) for caveats
   beside data; deliberately no status tint, icon, or title (context, not an alarm — verdicts
   belong to the status surfaces). Consumer: the coverage panel's shared-capacity note.
+- **Editor primitives** — `TextFieldEditor`, `NumberFieldEditor` (unit-aware), `EnumSelect`,
+  `MultiSelectFieldEditor`: the edit faces that pair with a display primitive over the SAME
+  value union. They all speak one contract (`lib/editor.ts`: controlled `value`/`onChange`,
+  explicit `onCommit` (Enter) / `onCancel` (Escape), `invalid`, `aria-label`, `className`)
+  and are deliberately **commit-policy-agnostic** — they translate intents but never decide
+  WHEN a value is saved; the container supplies the policy. Blur in particular belongs to the
+  container: commit-on-blur baked into an editor would be a bug in the next surface. That one
+  decoupling is what lets the same editor serve an inline cell and any future batched surface.
+- `Toast` — the transient notice the optimistic overlay raises when a write is rejected.
 - State primitives: `Skeleton`, `EmptyState`, `ErrorState`, `StaleIndicator` (last-updated +
   degraded styling).
 - `ThemeToggle` (catalog-only — the dashboard defaults to light and mounts no toggle).
 - `PageSection` — the labelled section shell: `id` (wires `aria-labelledby` to
-  `${id}-heading`), `title`, optional `description`, children. Heading level fixed at h2
-  (sections sit under the page's one h1); no margins baked in; no actions slot until earned.
+  `${id}-heading`), `title`, optional `description`, optional `actions`, children. Heading
+  level fixed at h2 (sections sit under the page's one h1); no margins baked in. `actions` is
+  a SLOT, not an `onEdit` prop: a section-scoped control (the dashboard's Edit/Done toggle)
+  belongs beside its heading, where the eye already looks for what a section can do, rather
+  than floating above the content it acts on — and the shell has no opinion about what the
+  action IS, so it takes a node.
 - `OrgIdentity` — whitelabel identity block: monogram tile derived from `name`, name as the
   page `<h1>`, muted `tagline`, wrapped in an `aria-label="Homepage"` link. `name: null`
   renders layout-mirroring skeletons. No logo upload, no size prop until a second consumer.

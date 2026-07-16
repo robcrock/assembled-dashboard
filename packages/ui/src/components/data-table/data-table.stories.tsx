@@ -683,7 +683,7 @@ export const TypedColumns: StoryObj = {
     docs: {
       description: {
         story:
-          "The declarative path: every column here is a `createColumns` builder call — `type` + `get`, no hand-wired `cell`. The types supply the views (enum labels, interpunct-joined memberships, a semantic `<time>`) AND the default sort projections: State sorts by **declaration order** (the semantic order, not the alphabet), Out for numerically. The same declarations will feed inline editors and the row-edit form when the interaction layer lands — one source, no drift.",
+          "The declarative path: every column here is a `createColumns` builder call — `type` + `get`, no hand-wired `cell`. The types supply the views (enum labels, interpunct-joined memberships, a semantic `<time>`) AND the default sort projections: State sorts by **declaration order** (the semantic order, not the alphabet), Out for numerically. One declaration feeds the read face and the cell's inline editor alike — one source, no drift.",
       },
     },
   },
