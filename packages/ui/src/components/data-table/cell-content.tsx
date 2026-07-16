@@ -609,18 +609,25 @@ export function cellContentBuilder<
       // A membership list reads and types identically, so `show` and
       // `showDraft` are literally the same function here; writing it out twice
       // is how the incumbent's faces drifted in the first place.
+      //
+      // A COMMA, not the middot the incumbent type used. The middot separates
+      // things of DIFFERENT kinds ("Breached · 55s over", "In meeting · 25m",
+      // "1 available · 1 recoverable") — two facts sharing a line. A membership
+      // list is one kind of thing repeated, and the repo already punctuates
+      // exactly this list exactly this way (queue-coverage.tsx: `also covers
+      // ${names.join(", ")}`), so a middot here would make two views of the
+      // same queue names disagree. It reads better too: the middot is
+      // aria-hidden by convention, which leaves a screen reader saying
+      // "Billing Tier 2" — a comma it actually announces.
       const showMembers = (members: readonly string[]) => {
         const selected = cfg.options.filter((o) => members.includes(o.value))
         if (selected.length === 0) return null
         return (
-          <span className="inline-flex flex-wrap items-center gap-x-1.5">
+          <span className="inline-flex flex-wrap items-center gap-x-1">
             {selected.map((option, i) => (
-              <span
-                key={option.value}
-                className="inline-flex items-center gap-x-1.5"
-              >
-                {i > 0 && <span aria-hidden>·</span>}
+              <span key={option.value} className="inline-flex items-center">
                 {option.label}
+                {i < selected.length - 1 && ","}
               </span>
             ))}
           </span>

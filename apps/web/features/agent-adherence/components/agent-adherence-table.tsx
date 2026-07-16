@@ -18,15 +18,12 @@
 // they are observations, and `AgentSetting` leaves them out, so saying
 // otherwise is a compile error rather than a code review.
 //
-// MID-MIGRATION (ROB-97): the State column speaks the new grammar — one
-// `cell(row, content)` anatomy, with `content.enum({ edits: "state" })`
-// marking the only part an operator controls. Agent and Queues still ride the
-// legacy `edit: { field, get, type }` binding and migrate in ROB-104, which
-// is also when the old API is deleted. The two paths coexist per column on
-// purpose: each one moves under its own measurement against the oracle.
+// Every column speaks ONE grammar: `cell(row, content)` writes the anatomy
+// once, and the parts an operator controls are built with the `content`
+// builder in place. There is no second renderer and no edit binding to keep in
+// sync with it.
 
 import {
-  columnTypes,
   DataTable,
   type DataTableColumn,
 } from "@workspace/ui/components/data-table"
@@ -90,11 +87,12 @@ export function AgentAdherenceTable({
     {
       key: "agent",
       header: "Agent",
-      cell: (a) => (
-        <span className="font-medium text-foreground">{a.name}</span>
+      cell: (a, content) => (
+        <span className="font-medium text-foreground">
+          {content.text({ edits: "name" })}
+        </span>
       ),
       sortValue: (a) => a.name,
-      edit: { field: "name", get: (a) => a.name, type: columnTypes.text() },
     },
     {
       key: "adherence",
@@ -137,13 +135,13 @@ export function AgentAdherenceTable({
     {
       key: "queues",
       header: "Queues",
-      // the cause→symptom link (Jordan → Billing) — primary data, row ink
-      cell: (a) => a.queues.map((id) => queueNamesById[id] ?? id).join(", "),
-      edit: {
-        field: "queues",
-        get: (a) => a.queues,
-        type: columnTypes.multiselect(queueOptions),
-      },
+      // The cause→symptom link (Jordan → Billing) — primary data, row ink.
+      // The names an operator can ASSIGN come from the same map the read face
+      // renders, so an id the table can display is exactly an id the picker can
+      // assign; that was already true, and now it is true because there is one
+      // declaration rather than two that agreed.
+      cell: (a, content) =>
+        content.multiselect({ edits: "queues", options: queueOptions }),
     },
   ]
 

@@ -39,17 +39,14 @@
 // and trend stay read-only: `QueueSetting` leaves them out, so saying otherwise
 // is a compile error rather than a code review.
 //
-// MID-MIGRATION (ROB-97): Headroom and Forecast speak the new grammar — one
-// `cell(row, content)` anatomy each, with the settable figure marked in place.
-// The Queue name column still rides the legacy `edit: { field, get, type }`
-// binding and migrates in ROB-104, which is also when the old API and the
-// row-height bug that rides with it are deleted.
+// Every column speaks ONE grammar: `cell(row, content)` writes the anatomy
+// once, and the settable figure is marked in place. There is no second
+// renderer and no edit binding to keep in sync with it.
 
 import { useMemo, type ReactNode } from "react"
 
 import { Duration } from "@workspace/ui/components/duration"
 import {
-  columnTypes,
   DataTable,
   type DataTableColumn,
 } from "@workspace/ui/components/data-table"
@@ -150,14 +147,19 @@ export function QueueHealthTable({
       {
         key: "queue",
         header: "Queue",
-        cell: (q) => <span className="font-medium">{q.name}</span>,
+        // A whole-cell setting: the name IS the content, so the anatomy is the
+        // content and nothing else. The emphasis stays on the cell — `show`
+        // sets no type scale, so `font-medium` here reaches the value in every
+        // state rather than only the one an author remembered to style.
+        cell: (q, content) => (
+          <span className="font-medium">{content.text({ edits: "name" })}</span>
+        ),
         sortValue: (q) => q.name,
         // w-36, not w-32: under layout="fixed" a column must clear its widest
-        // realistic content, and in edit mode that content is the framed field
+        // realistic content, and in edit mode that content is the boxed value
         // — whose border and padding eat ~18px that "General Support" needs.
         // Sizing for the wider face keeps the name readable in BOTH modes.
         className: "w-36",
-        edit: { field: "name", get: (q) => q.name, type: columnTypes.text() },
       },
       {
         key: "status",

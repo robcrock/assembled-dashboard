@@ -25,18 +25,14 @@ import {
   type CellValueEvents,
 } from "./cell-content"
 import { projectEdit, type EditSlot } from "./cell-state"
-import type { ColumnType } from "./column-types"
 import {
-  EditableCell,
   InteractionAnnouncer,
   InteractionToolbar,
   INTERACTIVE_COL,
   isTypingTarget,
-  resolveEditFace,
   RowGutterCell,
   SelectAllCheckbox,
   useTableInteraction,
-  type EditFace,
   type TableInteraction,
 } from "./data-table-interactive"
 
@@ -84,67 +80,9 @@ const EXPANDER_COL = "w-10"
 
 const ARIA_SORT = { asc: "ascending", desc: "descending" } as const
 
-/**
- * How an editable column binds a commit target — read by `resolveEditFace`,
- * which turns it into the cell's edit face (the framed resting field, and
- * the editor a click swaps in).
- *
- * `true` means "edit the field the column shows" — valid only when the
- * column's value IS a stored field. The object form is the derived-display
- * case: a computed `get` is a read-only projection (nothing can invert it),
- * so the edit face binds its own `field` — the WRITE inverse — plus its own
- * reader and, when the edit value's shape differs from the shown one, its
- * own editor-bearing type (a status badge shown, its target-seconds edited).
- */
-export type ColumnEdit<Row> =
-  | boolean
-  | {
-      /** The row field a commit patches. */
-      field: string
-      /** Reads the edit value where it differs from the displayed one. Defaults to the column's `get`. */
-      get?: (row: Row) => unknown
-      /** Editor-bearing type for the edit value where its shape differs from the column's own. */
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- heterogeneous by nature; the helper binds precise types
-      type?: ColumnType<any, any>
-      /**
-       * Frames the LIVE editor with read-only context, so a compound cell
-       * keeps what it shows around the part it edits (`60 / [input]`) instead
-       * of collapsing to a context-less box the moment it's clicked. Domain
-       * data on the same row, so it's the column's to supply, not the type's.
-       * Absent ⇒ the bare editor. Pair it with `editCell`, which is the same
-       * anatomy at rest.
-       */
-      renderField?: (ctx: {
-        row: Row
-        editor: React.ReactNode
-      }) => React.ReactNode
-      /**
-       * The RESTING inline-edit display — what the cell shows in edit mode
-       * before it's clicked into. A compound cell (a fixed-width, multi-part
-       * anatomy like the deviation cells) can't be squeezed through the
-       * single-line `truncate` affordance the text cells use — its
-       * right-aligned annotation clips. Providing `editCell` opts the cell
-       * into BLOCK layout (full width, no clip) and lets the column say how
-       * the editable field reads at rest. Absent ⇒ the column's normal
-       * `cell`/view, in the inline text affordance.
-       *
-       * Box only what the cell will actually let you change (wrap it in
-       * `EditFieldBox`), and leave the observed half bare: the frame is a
-       * promise that a click edits that value. The cell's own box is the
-       * td's, same as the read face — so an anatomy that fits `cell` fits here.
-       */
-      editCell?: (row: Row) => React.ReactNode
-    }
-
-// V defaults to `any`, not `unknown`: a heterogeneous column array must
-// accept a ColumnType<Status> beside a ColumnType<number>, and strict
-// function-property contravariance rejects both against `unknown`. The
-// createColumns builders restore per-column precision at the call site.
 export interface DataTableColumn<
   Row,
   Setting extends Extract<keyof Row, string> = never,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  V = any,
 > {
   /** Stable id; also the sort key. */
   key: string
@@ -166,19 +104,7 @@ export interface DataTableColumn<
     row: Row,
     content: CellContentBuilder<Row, Setting>
   ) => React.ReactNode
-  /**
-   * The column's value shape, resolved to both cell faces (view + editor)
-   * and a default sort — see `columnTypes`. Pair with `get`.
-   */
-  type?: ColumnType<V>
-  /** Reads the column's value off a row; the type's faces render it. */
-  get?: (row: Row) => V
-  /** Editability binding — presence makes the cell a field in edit mode. */
-  edit?: ColumnEdit<Row>
-  /**
-   * Presence makes the column sortable; falls back to the type's default
-   * projection (via `get`) when omitted.
-   */
+  /** Presence makes the column sortable. */
   sortValue?: (row: Row) => number | string
   align?: "left" | "right"
   /** Applied to both the header cell and body cells (widths, emphasis). */
@@ -194,31 +120,23 @@ export interface DataTableColumn<
  * would buy a guarantee that was already made at the door.
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- erased on purpose; see above
-type AnyColumn<Row> = DataTableColumn<Row, any, any>
+type AnyColumn<Row> = DataTableColumn<Row, any>
 
-/** The one place a column resolves to sortability: its own `sortValue`, else the type's default projection over `get`. */
+/** A column is sortable iff it says how — there is no type to fall back to. */
 function sortAccessor<Row>(
   column: AnyColumn<Row>
 ): ((row: Row) => number | string) | undefined {
-  if (column.sortValue) return column.sortValue
-  const { type, get } = column
-  if (type?.sortValue && get) {
-    const project = type.sortValue
-    return (row: Row) => project(get(row))
-  }
-  return undefined
+  return column.sortValue
 }
 
-/** The one place a column resolves to cell content: `cell` (escape hatch) wins over the type's view face. */
+/** A column renders through its one `cell`. There is no second path to resolve against. */
 function cellContent<Row>(
   column: AnyColumn<Row>,
   row: Row,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- heterogeneous across the row's columns by nature
   content: CellContentBuilder<Row, any>
 ): React.ReactNode {
-  if (column.cell) return column.cell(row, content)
-  if (column.type && column.get) return column.type.view(column.get(row))
-  return null
+  return column.cell ? column.cell(row, content) : null
 }
 
 interface SortState {
@@ -399,15 +317,6 @@ function DataTable<Row, Setting extends Extract<keyof Row, string> = never>({
   const colSpan =
     columns.length + (showExpanderColumn ? 1 : 0) + (editing ? 1 : 0)
 
-  const editFaces = React.useMemo(() => {
-    const faces = new Map<string, EditFace<Row>>()
-    for (const column of columns) {
-      const face = resolveEditFace(column)
-      if (face) faces.set(column.key, face)
-    }
-    return faces
-  }, [columns])
-
   const orderedKeys = sortedRows.map(rowKey)
 
   /* ---- the open cell edit ------------------------------------------------
@@ -583,7 +492,6 @@ function DataTable<Row, Setting extends Extract<keyof Row, string> = never>({
                           rowId,
                           interactive: interactive!,
                           interaction,
-                          editFaces,
                           orderedKeys,
                         })
                       : null
@@ -615,61 +523,36 @@ function DataTable<Row, Setting extends Extract<keyof Row, string> = never>({
  * lives. DataRow itself stays a renderer.
  * ------------------------------------------------------------------------ */
 
-interface RowInteraction<Row> {
+interface RowInteraction {
   label: string
   isSelected: boolean
   onToggleSelect: (range: boolean) => void
   onExtendSelect: (direction: 1 | -1) => void
   onKeySelect: () => void
-  /** Non-null when a cell of THIS row is the active inline edit. */
-  activeEdit: { columnKey: string; draft: unknown } | null
-  beginEdit: (columnKey: string) => void
-  onDraftChange: (draft: unknown) => void
-  /**
-   * Takes the draft VALUE rather than reading state: a picker fires
-   * onChange + onCommit in one tick, so the state draft is one render
-   * behind at commit time — the cell hands over what it actually holds.
-   */
-  commitEdit: (finalDraft: unknown) => void
-  cancelEdit: () => void
-  editFaces: Map<string, EditFace<Row>>
 }
 
+/**
+ * SELECTION, and only selection. The edit half that used to live here — an
+ * active-edit tuple, a begin/draft/commit/cancel quartet, and a per-row map of
+ * resolved edit faces — is gone: a cell's content now owns its own state
+ * (cell-state.ts) and a commit leaves through the orchestrator's one patch
+ * intent. A row no longer knows that editing exists.
+ */
 function buildRowInteraction<Row>({
   row,
   rowId,
   interactive,
   interaction,
-  editFaces,
   orderedKeys,
 }: {
   row: Row
   rowId: string
   interactive: DataTableInteractive<Row>
-  interaction: TableInteraction<Row>
-  editFaces: Map<string, EditFace<Row>>
+  interaction: TableInteraction
   orderedKeys: string[]
-}): RowInteraction<Row> {
-  const label = interactive.rowLabel?.(row) ?? rowId
-  const activeEdit =
-    interaction.activeEdit?.rowKey === rowId ? interaction.activeEdit : null
-
-  function commitEdit(finalDraft: unknown) {
-    const edit = interaction.activeEdit
-    if (!edit || edit.rowKey !== rowId) return
-    const face = editFaces.get(edit.columnKey)
-    interaction.setActiveEdit(null)
-    if (!face) return
-    const fromDraft = face.type.fromDraft ?? ((d: unknown) => d)
-    const value = fromDraft(finalDraft)
-    // An uncommittable draft (null) reverts to truth; an unchanged value
-    // commits nothing — a patch is a real intent, not an echo.
-    if (value === null || value === face.read(row)) return
-    interactive.onPatch(rowId, { [face.field]: value }, row)
-  }
-
+}): RowInteraction {
   return {
-    label,
+    label: interactive.rowLabel?.(row) ?? rowId,
     isSelected: interaction.selected.has(rowId),
     onToggleSelect: (range) =>
       interaction.toggleSelect(rowId, orderedKeys, range),
@@ -678,24 +561,6 @@ function buildRowInteraction<Row>({
       if (next) interaction.toggleSelect(next, orderedKeys, true)
     },
     onKeySelect: () => interaction.toggleSelect(rowId, orderedKeys, false),
-    activeEdit,
-    beginEdit: (columnKey) => {
-      const face = editFaces.get(columnKey)
-      if (!face) return
-      const toDraft = face.type.toDraft ?? ((v: unknown) => v)
-      interaction.setActiveEdit({
-        rowKey: rowId,
-        columnKey,
-        draft: toDraft(face.read(row)),
-      })
-    },
-    onDraftChange: (draft) =>
-      interaction.setActiveEdit(
-        interaction.activeEdit && { ...interaction.activeEdit, draft }
-      ),
-    commitEdit,
-    cancelEdit: () => interaction.setActiveEdit(null),
-    editFaces,
   }
 }
 
@@ -952,7 +817,7 @@ interface DataRowProps<Row> {
     label: string
   } | null
   /** Present iff edit mode is on — the row's interactive face, assembled by the orchestrator. */
-  interaction: RowInteraction<Row> | null
+  interaction: RowInteraction | null
   /**
    * Everything a cell's content builder needs that isn't the (row, column) it
    * is minted for. Null when the table has no interactive face at all — the
@@ -1047,69 +912,31 @@ function DataRow<Row>({
             )}
           </TableCell>
         )}
-        {columns.map((column) => {
-          const face = interaction?.editFaces.get(column.key)
-          return (
-            <TableCell
-              key={column.key}
-              className={cn(
-                "text-metric",
-                // The cell is the HIT AREA for the hover; the box is the
-                // affordance that answers it. In a compound anatomy the box is
-                // smaller than the cell, so lighting the whole cell would point
-                // at the wrong thing — hover anywhere, and the box that a click
-                // would actually edit is what responds. Costs nothing when the
-                // cell holds no editable content: no box, nothing listening.
-                cellContext && EDITABLE_CONTENT_GROUP,
-                (column.align ?? column.type?.align) === "right" &&
-                  "text-right",
-                // A block edit anatomy (editCell) is the tallest thing a cell
-                // ever holds — at the stock p-2 it exactly MEETS the row
-                // rhythm, so sub-pixel rounding tips every row a hair taller
-                // and edit mode drifts the page below the table down. Tighter
-                // vertical padding buys it clearance; cells are align-middle,
-                // so the content stays put.
-                interaction && face?.editCell && "py-1",
-                column.className
-              )}
-            >
-              {interaction && face ? (
-                <EditableCell
-                  // A compound cell supplies its own resting edit display
-                  // (editCell); everything else shows its normal cell content.
-                  display={
-                    face.editCell
-                      ? face.editCell(row)
-                      : cellContent(column, row, contentFor(column))
-                  }
-                  label={`Edit ${
-                    typeof column.header === "string"
-                      ? column.header
-                      : column.key
-                  } — ${interaction.label}`}
-                  isActive={interaction.activeEdit?.columnKey === column.key}
-                  draft={
-                    interaction.activeEdit?.columnKey === column.key
-                      ? interaction.activeEdit.draft
-                      : undefined
-                  }
-                  face={face}
-                  frameEditor={(editor) =>
-                    face.renderField
-                      ? face.renderField({ row, editor })
-                      : editor
-                  }
-                  onBegin={() => interaction.beginEdit(column.key)}
-                  onDraftChange={interaction.onDraftChange}
-                  onCommit={interaction.commitEdit}
-                  onCancel={interaction.cancelEdit}
-                />
-              ) : (
-                cellContent(column, row, contentFor(column))
-              )}
-            </TableCell>
-          )
-        })}
+        {columns.map((column) => (
+          <TableCell
+            key={column.key}
+            className={cn(
+              "text-metric",
+              // The cell is the HIT AREA for the hover; the box is the
+              // affordance that answers it. In a compound anatomy the box is
+              // smaller than the cell, so lighting the whole cell would point
+              // at the wrong thing — hover anywhere, and the box that a click
+              // would actually edit is what responds. Costs nothing when the
+              // cell holds no editable content: no box, nothing listening.
+              cellContext && EDITABLE_CONTENT_GROUP,
+              column.align === "right" && "text-right",
+              column.className
+            )}
+          >
+            {/* ONE path. The cell renders its anatomy and the content inside
+                it resolves its own state — so there is no `interaction && face`
+                branch here, no second display to pick, and no clearance hack:
+                the `py-1` that used to key off `editCell` is gone because the
+                box no longer grows the row (cell-content.tsx sizes it to the
+                line it sits in, measured in both rhythms). */}
+            {cellContent(column, row, contentFor(column))}
+          </TableCell>
+        ))}
       </TableRow>
       {expander?.isExpanded && (
         <ExpandedDetailRow rowId={rowId} colSpan={colSpan}>

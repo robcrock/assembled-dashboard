@@ -5,7 +5,6 @@ import { Pencil, Trash2 } from "lucide-react"
 
 import { Button } from "@workspace/ui/components/button"
 import { Checkbox } from "@workspace/ui/components/checkbox"
-import { cn } from "@workspace/ui/lib/utils"
 
 import {
   reduceCell,
@@ -13,9 +12,7 @@ import {
   type CellTransition,
   type EditSlot,
 } from "./cell-state"
-import type { ColumnType } from "./column-types"
-import type { DataTableColumn, DataTableInteractive } from "./data-table"
-import { EDIT_CELL_GROUP, EDIT_FIELD_FRAME } from "./edit-field-box"
+import type { DataTableInteractive } from "./data-table"
 
 // The interactive face of DataTable — the module the orchestrator composes
 // when a consumer passes `interactive`. A SIBLING, not a wrapper: the public
@@ -27,31 +24,25 @@ import { EDIT_CELL_GROUP, EDIT_FIELD_FRAME } from "./edit-field-box"
 // consumer's — it couples to page concerns (the dashboard pauses replay) —
 // via controlled `editing`/`onEditingChange`, with an uncontrolled internal
 // default so Storybook and simple consumers need no wiring. Everything
-// SESSION-scoped lives here in useTableInteraction: the selection set and
-// the one active inline edit. Two concepts that must not merge: SELECTION is
-// sticky and multi (it drives the bulk bar); the ACTIVE EDIT is transient
-// and single (innermost target wins). Exiting edit mode drops all of it.
+// SESSION-scoped lives here in useTableInteraction: the selection set, and
+// the ONE open cell edit. Two concepts that must not merge: SELECTION is
+// sticky and multi (it drives the bulk bar); the open EDIT is transient and
+// single. Exiting edit mode drops all of it.
 //
-// EDITING IS ONE GESTURE: click a cell. There is no row menu and no batched
-// row form — an editable cell rests as a FRAMED FIELD (the box IS the
-// affordance), so edit mode telegraphs what's editable before a click, and
-// clicking swaps the box for the live editor in place. A compound cell
-// (editCell) frames only its editable sub-value, since only that part is a
-// field. One meaning, everywhere: a box is a field.
+// This file no longer knows what an edit LOOKS like. It holds the slot and
+// runs gestures through the machine (cell-state.ts); the box, the control and
+// the three states live in cell-content.tsx, and a column's `cell` writes the
+// anatomy once. What used to be here — a five-way `resolveEditFace`, an
+// `EditableCell` that branched on `Boolean(face.editCell)` to pick a layout,
+// and a per-tick `createElement` that remounted the live control on every poll
+// — is deleted, not moved.
 //
-// It follows that the BOX answers the hover, never the cell — in a compound
-// cell the hit area is bigger than the field, so tinting the whole cell would
-// point at the wrong thing (and a corner pencil, pinned away from the number
-// it means, pointed at nothing). Hover anywhere in the cell, the box lights:
-// the response names what a click would edit. See EDIT_CELL_GROUP.
-//
-// Commit policy is the container's (the editors are policy-agnostic —
-// lib/editor.ts): field editors commit on Enter or on focus leaving the
-// cell, cancel on Escape; picker editors (editorBehavior: "picker") commit
-// on pick / popup close — focus legitimately leaves the cell into a portal,
-// so blur means nothing there and the wrapper never watches it. A draft
-// that fails `fromDraft` (null) never commits: Enter no-ops, blur reverts —
-// the cell falls back to truth rather than inventing a value.
+// EDITING IS ONE GESTURE: click the value you mean. There is no row menu and
+// no batched row form. An editable value rests as a BOX (the box IS the
+// affordance), so edit mode telegraphs what can change before a click, and
+// clicking swaps the box's face for the live control in place, at the same
+// size. A compound cell boxes only its editable part, since only that part is
+// editable. One meaning, everywhere: a box is a value you can change.
 //
 // DataTable never mutates: every commit lands as one
 // `onPatch(rowKey, { field: value }, row)` and every removal as one
@@ -66,58 +57,11 @@ import { EDIT_CELL_GROUP, EDIT_FIELD_FRAME } from "./edit-field-box"
  */
 export const INTERACTIVE_COL = "w-10"
 
-/* ---- edit-face resolution ------------------------------------------------
- * The one place a column resolves to "how does this cell edit": the column's
- * `edit` binding + its type. `true` binds the shown value (the column key IS
- * the patched field — pick keys accordingly); the object form is the
- * derived-display case, bringing its own field/reader/type.
- * ------------------------------------------------------------------------ */
-
-export interface EditFace<Row> {
-  /** The row field a commit patches. */
-  field: string
-  read: (row: Row) => unknown
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- heterogeneous by nature
-  type: ColumnType<any, any>
-  /** Frames the live inline editor with read-only context (the object binding's `renderField`). */
-  renderField?: (ctx: { row: Row; editor: React.ReactNode }) => React.ReactNode
-  /** Resting inline-edit display for a compound cell; presence also selects BLOCK cell layout. */
-  editCell?: (row: Row) => React.ReactNode
-}
-
-export function resolveEditFace<Row>(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Setting erased; this reads the legacy `edit` binding only
-  column: DataTableColumn<Row, any, any>
-): EditFace<Row> | null {
-  const { edit } = column
-  if (!edit) return null
-  if (edit === true) {
-    if (!column.type?.editor || !column.get) return null
-    return { field: column.key, read: column.get, type: column.type }
-  }
-  const type = edit.type ?? column.type
-  const read = edit.get ?? column.get
-  if (!type?.editor || !read) return null
-  return {
-    field: edit.field,
-    read,
-    type,
-    renderField: edit.renderField,
-    editCell: edit.editCell,
-  }
-}
-
 /* ---- state ---------------------------------------------------------------
  * Session state only; rendering lives in the pieces below. Like the sort
  * and expansion hooks, this must sit above the feed-status switch — an
  * active edit surviving a loading tick is the same contract as an open row.
  * ------------------------------------------------------------------------ */
-
-interface ActiveEdit {
-  rowKey: string
-  columnKey: string
-  draft: unknown
-}
 
 export function useTableInteraction<Row>(
   interactive: DataTableInteractive<Row> | undefined
@@ -127,7 +71,6 @@ export function useTableInteraction<Row>(
   // Range anchor: the last key toggled alone — Shift+click / Shift+Arrow
   // extend from it, the familiar file-manager grammar.
   const anchorRef = React.useRef<string | null>(null)
-  const [activeEdit, setActiveEdit] = React.useState<ActiveEdit | null>(null)
   // The ONE open cell edit (cell-state.ts). One slot, so two open edits are
   // unrepresentable rather than merely discouraged. It lives here beside the
   // selection — above the feed-status switch — for the same reason the sort
@@ -145,7 +88,6 @@ export function useTableInteraction<Row>(
       // Leaving edit mode drops the whole session — selection, active edit.
       // Mode gates capability; nothing interactive outlives it.
       setSelected(new Set())
-      setActiveEdit(null)
       setSlot(null)
       anchorRef.current = null
     }
@@ -220,8 +162,6 @@ export function useTableInteraction<Row>(
     selected,
     toggleSelect,
     setAllSelected,
-    activeEdit,
-    setActiveEdit,
     slot,
     setSlot,
     dispatchCell,
@@ -230,7 +170,15 @@ export function useTableInteraction<Row>(
   }
 }
 
-export type TableInteraction<Row> = ReturnType<typeof useTableInteraction<Row>>
+/**
+ * No `Row` parameter, and that is a result rather than an omission: the
+ * session state is now selection keys and one address-keyed slot — strings,
+ * both. The row-shaped half (an active edit holding a typed draft, a map of
+ * resolved edit faces per column) is gone, so nothing here is generic in the
+ * row any more.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- the hook's own Row is unused by its return; see above
+export type TableInteraction = ReturnType<typeof useTableInteraction<any>>
 
 /* ---- pieces (in render order) -------------------------------------------- */
 
@@ -392,183 +340,6 @@ export function RowGutterCell({
         }
       }}
     />
-  )
-}
-
-/**
- * Flush editor face: fits inside the default 40px row rhythm (24px control +
- * cell padding) so opening an editor cannot grow the row. The `!` matters:
- * picker triggers size themselves through a `data-size` variant that would
- * otherwise beat a plain h-6 in the cascade.
- */
-const CELL_EDITOR_CLASS = "!h-6 rounded-sm text-sm"
-
-interface EditableCellProps {
-  /** The display face rendered when this cell is not the active edit. */
-  display: React.ReactNode
-  /** Accessible name: "Edit <column>, <row>". */
-  label: string
-  isActive: boolean
-  draft: unknown
-  face: EditFace<never>
-  /**
-   * Wraps the active editor in the column's read-only context (the compound
-   * cell's `renderField`, row already bound). Identity for a plain cell, so
-   * clicking a compound cell keeps `48s / [input]` instead of a bare field.
-   */
-  frameEditor: (editor: React.ReactNode) => React.ReactNode
-  onBegin: () => void
-  onDraftChange: (draft: unknown) => void
-  /** Receives the final draft value — see RowInteraction.commitEdit on why state can't be read at commit time. */
-  onCommit: (finalDraft: unknown) => void
-  onCancel: () => void
-}
-
-/**
- * The cell zone. Inactive: the display face on a full-bleed button — click
- * or Enter begins the edit (native button, so keyboard rides for free).
- * Active: the type's editor at cell-flush size; commit policy per
- * editorBehavior (see module comment).
- */
-export function EditableCell({
-  display,
-  label,
-  isActive,
-  draft,
-  face,
-  frameEditor,
-  onBegin,
-  onDraftChange,
-  onCommit,
-  onCancel,
-}: EditableCellProps) {
-  const wrapperRef = React.useRef<HTMLDivElement>(null)
-  const buttonRef = React.useRef<HTMLButtonElement>(null)
-  // The freshest draft, readable synchronously at commit time. A picker
-  // fires onChange + onCommit in ONE tick — the state draft is a render
-  // behind, so committing from state would silently no-op every pick.
-  const liveDraft = React.useRef<unknown>(undefined)
-  const hasLiveDraft = React.useRef(false)
-  const wasActive = React.useRef(false)
-
-  // Closing the editor hands focus back to the cell button — a keyboard
-  // user stays where they were instead of falling to <body>.
-  React.useEffect(() => {
-    if (wasActive.current && !isActive) buttonRef.current?.focus()
-    wasActive.current = isActive
-  }, [isActive])
-
-  function commit() {
-    onCommit(hasLiveDraft.current ? liveDraft.current : draft)
-  }
-
-  // A compound cell (editCell present) owns a fixed-width, multi-part anatomy
-  // whose annotation would clip under the single-line `truncate` affordance
-  // the text cells use — so it renders BLOCK (full width, no clip). `display`
-  // already carries the resting face DataRow resolved (editCell or cell).
-  const block = Boolean(face.editCell)
-
-  if (!isActive) {
-    if (block) {
-      return (
-        <button
-          ref={buttonRef}
-          type="button"
-          aria-label={label}
-          onClick={() => {
-            hasLiveDraft.current = false
-            liveDraft.current = undefined
-            onBegin()
-          }}
-          // Horizontally LAYOUT-NEUTRAL, deliberately: an `editCell` is written
-          // to mirror the read cell, which sits directly in the td's content
-          // box. Any padding here would silently shrink the box that anatomy
-          // was authored against — its fixed-width bar then overflows and pokes
-          // out past this button's own rounded edge. No margin, no px: the
-          // compound cell occupies the SAME box reading and editing, so nothing
-          // can escape it and the mode toggle moves nothing sideways.
-          //
-          // No hover tint and no pencil: the BOX is the affordance (it lights
-          // via EDIT_CELL_GROUP), and this button is only the hit area. A cell
-          // wash would say "editable" a second time, weakly, in the wrong place
-          // — and it collided with the bar's muted track besides.
-          className={cn(
-            EDIT_CELL_GROUP,
-            "block w-full rounded-sm py-0.5 text-left focus-ring"
-          )}
-        >
-          {display}
-        </button>
-      )
-    }
-    // A simple cell's whole value IS the field, so the button IS the frame —
-    // the same recipe, and the same hover response, a compound cell boxes its
-    // editable sub-value with: one border means one thing everywhere.
-    //
-    // -mx-1 bleeds the frame into the cell's own padding: it buys back the
-    // width the border + px would otherwise steal from the value (long names
-    // truncated), and lands the text within a pixel or two of where read mode
-    // puts it, so toggling the mode barely moves it.
-    return (
-      <button
-        ref={buttonRef}
-        type="button"
-        aria-label={label}
-        onClick={() => {
-          hasLiveDraft.current = false
-          liveDraft.current = undefined
-          onBegin()
-        }}
-        className={cn(
-          "-mx-1 flex w-full min-w-0 items-center text-left focus-ring",
-          EDIT_FIELD_FRAME
-        )}
-      >
-        <span className="min-w-0 flex-1 truncate">{display}</span>
-      </button>
-    )
-  }
-
-  // createElement, not a plain call: the editor face renders as a COMPONENT,
-  // so its invocation is deferred to React (closures below are props/event
-  // handlers, never render-phase calls — which is also what lets the ref
-  // reads in commit() stay legal).
-  const editor = React.createElement(face.type.editor!, {
-    value: draft,
-    onChange: (next: unknown) => {
-      hasLiveDraft.current = true
-      liveDraft.current = next
-      onDraftChange(next)
-    },
-    onCommit: commit,
-    onCancel,
-    autoFocus: true,
-    "aria-label": label,
-    className: CELL_EDITOR_CLASS,
-  })
-  // Keep the compound cell's read-only context around the live field, so a
-  // clicked Headroom cell reads `48s / [input]`, not a context-less number.
-  const framed = frameEditor(editor)
-
-  if (face.type.editorBehavior === "picker") {
-    // Picker commit grammar: pick/close commits, Escape-close cancels — all
-    // inside the editor already. Focus lives in a portal; blur is noise.
-    return <div ref={wrapperRef}>{framed}</div>
-  }
-
-  return (
-    <div
-      ref={wrapperRef}
-      onBlur={(event) => {
-        // Focus left the cell (not just moved within it) — the field-editor
-        // commit point. An uncommittable draft reverts to truth instead.
-        if (!wrapperRef.current?.contains(event.relatedTarget as Node)) {
-          commit()
-        }
-      }}
-    >
-      {framed}
-    </div>
   )
 }
 

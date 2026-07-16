@@ -2,7 +2,6 @@ import type { Meta, StoryObj } from "@storybook/react-vite"
 import { useState, type ReactNode } from "react"
 
 import {
-  createColumns,
   DataTable,
   type DataTableColumn,
 } from "@workspace/ui/components/data-table"
@@ -310,13 +309,13 @@ The dense, sortable, keyboard-operable table both dashboard tables are built fro
 
 **The interactive face** (opt-in — \`interactive\` prop): an **Edit-mode gate** protects the glanceable reading surface — the toolbar's Edit toggle (or the controlled \`editing\`/\`onEditingChange\` pair, for pages whose mode couples to app state; set \`editToggle: false\` when the page mounts its own, as the dashboard's section headers do) reveals a selection checkbox per row, select-all in the header, and a bulk bar while a selection exists.
 
-**Editing is one gesture: click the cell you mean.** Every cell whose column carries an \`edit\` binding rests in edit mode as a **framed field** — the box IS the affordance, so the mode telegraphs what's editable before a click, and clicking swaps box for editor in place at the same height. Field editors commit on Enter / focus-out and cancel on Escape; picker editors commit on pick. A compound cell frames only its editable sub-value (\`editCell\` at rest, \`renderField\` around the live editor) — only that part is a field, so \`48s / [input]\` survives the click. There is deliberately **no row menu and no batched row form**: a menu whose items are "edit this row" and "delete this row" is a second road to the cell you could have clicked and to the selection the bulk bar already reads. Everything lands as intents: one \`onPatch(rowKey, patch, row)\` per commit, one \`onDelete(rowKeys, rows)\` per removal — **DataTable never mutates**; undo, confirmation, and optimistic overlays are the consumer's policy. Keyboard: \`x\` toggles selection from anywhere in a row, Shift+click / Shift+Arrow (on a checkbox) extend the range, and selection changes announce via a polite live region.
+**Editing is one gesture: click the value you mean.** Every value an operator controls rests in edit mode as a **box** — the box IS the affordance, so the mode telegraphs what can change before a click. Clicking swaps the box's face for the live control **in place and at the same size**: the committed face stays behind it as an invisible width strut, so the figure does not move by a pixel. A compound cell boxes only its editable part, so \`2m 55s / [120s]\` keeps its context, its bar, and its delta through the click — the rest of the anatomy is written once and never knew a click happened. Field controls commit on Enter or focus-out and cancel on Escape; pickers commit on pick or popup close (their focus leaves into a portal, so blur means nothing there). A draft that isn't a value yet never commits: Enter HOLDS the cell open and \`aria-invalid\`, so the operator sees why; blur reverts to truth rather than inventing one. There is deliberately **no row menu and no batched row form**: a menu whose items are "edit this row" and "delete this row" is a second road to the value you could have clicked and to the selection the bulk bar already reads. Everything lands as intents: one \`onPatch(rowKey, patch, row)\` per commit, one \`onDelete(rowKeys, rows)\` per removal — **DataTable never mutates**; undo, confirmation, and optimistic overlays are the consumer's policy. Keyboard: \`x\` toggles selection from anywhere in a row, Shift+click / Shift+Arrow (on a checkbox) extend the range, and selection changes announce via a polite live region.
 
 **Not for:** large paginated/virtualized datasets or row navigation — rows expand to an inline detail panel, they don't link out.
 
 **Deliberately omitted:** a compound/context API — still a single component taking columns + rows; the interaction state is one internal hook beside the sort tuple, and context machinery would give consumers nothing but wiring. No pagination/virtualization (~19 rows total on the dashboard). No \`rowTone\`/row-dimming prop — muted ink is reserved for genuine sub-text, never whole rows of data, so the table makes that violation impossible; triage emphasis rides on sort order + a status column (the same make-it-impossible discipline as StatusBadge's missing color props). No add-row affordance — creation needs default values and a create flow the consumer owns. No confirm dialogs or undo inside the table — intents out, policy above.
 
-**Column types — the declarative path:** a column may declare \`type\` + \`get\` instead of a hand-wired \`cell\` — the type resolves the value to its view, its editor face (what a framed cell swaps in on click), and a default sort projection, so the faces cannot drift apart. \`cell\` stays the escape hatch for compound anatomies and wins by precedence. See the **column types** docs page beside these stories and the *Typed columns* story below; \`createColumns\` gives per-column type safety a heterogeneous array erases.
+**A cell holds content; content that \`edits\` is editable.** A column writes ONE anatomy in its \`cell(row, content)\` — every state, every mode — and marks the parts an operator controls with the \`content\` builder handed in second: \`content.duration({ edits: 'sla_target_sec' })\`. There is no second renderer, no \`editing\` flag reaching the anatomy, and no edit binding beside it, so the read face and the edit face cannot drift apart — the author has no branch to get wrong. A read-only cell simply never writes the second parameter and pays nothing. \`edits\` names a key from the table's \`Setting\` union, which is checked against BOTH the row's keys and the value's shape; an observation is not in the union, so offering to edit one is a compile error.
 
 These stories' sample fixture mirrors the shipped queue table's composition cell for cell — column order, deviation-cell anatomy, threshold-judged \`SparkBars\` — using only \`@workspace/ui\` primitives and local sample rows, so the catalog teaches the production pattern without importing app code.
 `,
@@ -531,6 +530,10 @@ interface AgentRow {
   outForSec: number
 }
 
+/** What an operator controls here. `outForSec` is measured — an editable
+ *  observation would be a lie about the floor, so it is simply absent. */
+type AgentRowSetting = "name" | "state" | "queues"
+
 const AGENT_STATE_OPTIONS = [
   { value: "available", label: "Available" },
   { value: "on_call", label: "On a call" },
@@ -547,41 +550,41 @@ const QUEUE_OPTIONS = [
 ] as const
 
 const AGENT_ROWS: AgentRow[] = [
-  { id: "a1", name: "Alex Rivera", state: "in_meeting", queues: ["vip"], outForSec: 1500 },
-  { id: "a2", name: "Jordan Patel", state: "on_break", queues: ["billing", "tier_2"], outForSec: 900 },
-  { id: "a3", name: "Omar Haddad", state: "on_break", queues: ["chat"], outForSec: 600 },
-  { id: "a4", name: "Devin Kim", state: "on_call", queues: ["billing", "chat", "vip"], outForSec: 0 },
-  { id: "a5", name: "Sam Osei", state: "available", queues: ["tier_2"], outForSec: 0 },
-]
-
-const agentCol = createColumns<AgentRow>()
-
-const AGENT_COLUMNS = [
-  agentCol.text({
-    key: "agent",
-    header: "Agent",
-    get: (a) => a.name,
-    className: "w-44 font-medium",
-  }),
-  agentCol.enum({
-    key: "state",
-    header: "State",
-    get: (a) => a.state,
-    options: AGENT_STATE_OPTIONS,
-    className: "w-36",
-  }),
-  agentCol.multiselect({
-    key: "queues",
-    header: "Queues",
-    get: (a) => a.queues,
-    options: QUEUE_OPTIONS,
-  }),
-  agentCol.duration({
-    key: "out-for",
-    header: "Out for",
-    get: (a) => a.outForSec,
-    className: "w-28",
-  }),
+  {
+    id: "a1",
+    name: "Alex Rivera",
+    state: "in_meeting",
+    queues: ["vip"],
+    outForSec: 1500,
+  },
+  {
+    id: "a2",
+    name: "Jordan Patel",
+    state: "on_break",
+    queues: ["billing", "tier_2"],
+    outForSec: 900,
+  },
+  {
+    id: "a3",
+    name: "Omar Haddad",
+    state: "on_break",
+    queues: ["chat"],
+    outForSec: 600,
+  },
+  {
+    id: "a4",
+    name: "Devin Kim",
+    state: "on_call",
+    queues: ["billing", "chat", "vip"],
+    outForSec: 0,
+  },
+  {
+    id: "a5",
+    name: "Sam Osei",
+    state: "available",
+    queues: ["tier_2"],
+    outForSec: 0,
+  },
 ]
 
 /* ---- interactive ------------------------------------------------------ */
@@ -592,38 +595,41 @@ const AGENT_COLUMNS = [
 function InteractiveAgentsStory() {
   const [agentRows, setAgentRows] = useState(AGENT_ROWS)
 
-  const col = createColumns<AgentRow>()
-  // Keys = field names where `edit: true` (the column key IS the patched
-  // field); "out-for" stays read-only — an observation, not a setting.
-  const columns = [
-    col.text({
+  // Every column writes ONE anatomy. The parts an operator controls are built
+  // with the `content` builder handed in second; `out-for` never writes it, so
+  // it is read-only — not by a flag, but by never asking.
+  const columns: DataTableColumn<AgentRow, AgentRowSetting>[] = [
+    {
       key: "name",
       header: "Agent",
-      get: (a) => a.name,
-      edit: true,
+      cell: (a, content) => content.text({ edits: "name" }),
+      sortValue: (a) => a.name,
       className: "w-44 font-medium",
-    }),
-    col.enum({
+    },
+    {
       key: "state",
       header: "State",
-      get: (a) => a.state,
-      options: AGENT_STATE_OPTIONS,
-      edit: true,
+      cell: (a, content) =>
+        content.enum({ edits: "state", options: AGENT_STATE_OPTIONS }),
+      // Declaration order is the semantic order — sort follows it, not the
+      // alphabet ("at_risk < breached < healthy" is nonsense).
+      sortValue: (a) =>
+        AGENT_STATE_OPTIONS.findIndex((o) => o.value === a.state),
       className: "w-36",
-    }),
-    col.multiselect({
+    },
+    {
       key: "queues",
       header: "Queues",
-      get: (a) => a.queues,
-      options: QUEUE_OPTIONS,
-      edit: true,
-    }),
-    col.duration({
+      cell: (a, content) =>
+        content.multiselect({ edits: "queues", options: QUEUE_OPTIONS }),
+    },
+    {
       key: "out-for",
       header: "Out for",
-      get: (a) => a.outForSec,
+      cell: (a) => <Duration seconds={a.outForSec} />,
+      sortValue: (a) => a.outForSec,
       className: "w-28",
-    }),
+    },
   ]
 
   return (
@@ -661,29 +667,7 @@ export const Interactive: StoryObj = {
     docs: {
       description: {
         story:
-          "The full interactive face, uncontrolled. Click **Edit** to enter edit mode and the editable cells resolve into **framed fields** — Agent, State and Queues each rest in a field box, so what's editable is legible before you touch anything, while *Out for* stays plain: an observation is not a setting. **Editing is one gesture — click the cell you mean.** Agent is a text field (Enter/blur commits, Escape cancels), State a picker (pick commits), Queues a multi-select (closing commits); the box becomes the editor in place, at the same height, so nothing moves. There is no row menu and no batched row form: removal routes through selection instead — check rows (`x` anywhere in the row, Shift+click / Shift+Arrow for ranges) and the toolbar becomes the bulk bar. Every commit leaves as an intent the story's local state applies.",
-      },
-    },
-  },
-}
-
-export const TypedColumns: StoryObj = {
-  name: "Typed columns",
-  render: () => (
-    <DataTable
-      columns={AGENT_COLUMNS}
-      rows={AGENT_ROWS}
-      rowKey={(a) => a.id}
-      caption="Agents by state, queues covered, and time out of adherence"
-      defaultSort={{ key: "out-for", direction: "desc" }}
-      layout="fixed"
-    />
-  ),
-  parameters: {
-    docs: {
-      description: {
-        story:
-          "The declarative path: every column here is a `createColumns` builder call — `type` + `get`, no hand-wired `cell`. The types supply the views (enum labels, interpunct-joined memberships, a semantic `<time>`) AND the default sort projections: State sorts by **declaration order** (the semantic order, not the alphabet), Out for numerically. One declaration feeds the read face and the cell's inline editor alike — one source, no drift.",
+          "The full interactive face, uncontrolled. Click **Edit** and every value an operator controls rests in a **box** — Agent, State and Queues — so what can change is legible before you touch anything, while *Out for* stays plain: it is measured, and `AgentRowSetting` leaves it out, so a column here *cannot* offer to edit it. **Editing is one gesture — click the value you mean.** Agent is a text field (Enter or focus-out commits, Escape cancels), State a picker (pick commits), Queues a multi-select (closing commits). The box swaps its face for the live control **in place and at the same size** — the committed face stays behind it as an invisible width strut, so the figure does not move by a pixel on click. There is no row menu and no batched row form: removal routes through selection instead — check rows (`x` anywhere in the row, Shift+click / Shift+Arrow for ranges) and the toolbar becomes the bulk bar. Every commit leaves as an intent the story's local state applies; the table never mutates a row.",
       },
     },
   },
