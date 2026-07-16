@@ -1,11 +1,12 @@
 import type { Meta, StoryObj } from "@storybook/react-vite"
-import { useState, type ReactNode } from "react"
+import { useState } from "react"
 
 import {
   DataTable,
   type DataTableColumn,
 } from "@workspace/ui/components/data-table"
 import { DeviationBar } from "@workspace/ui/components/deviation-bar"
+import { DeviationCell } from "@workspace/ui/components/deviation-cell"
 import { Duration } from "@workspace/ui/components/duration"
 import { MetricDelta } from "@workspace/ui/components/metric-delta"
 import { SparkBars } from "@workspace/ui/components/spark-bars"
@@ -146,30 +147,6 @@ const SEVERITY: Record<Status, number> = {
 const severityRank = (row: SampleRow) =>
   SEVERITY[row.status] * 10_000 - row.headroomPct
 
-// Story-local mirror of the queue table's deviation-cell anatomy (context
-// line over a diverging bar). Like the app's copy, it is table-layout
-// composition, not a primitive — it earns promotion to @workspace/ui only
-// with a second REAL consumer.
-function DeviationCell({
-  absolutes,
-  delta,
-  bar,
-}: {
-  absolutes: ReactNode
-  delta: ReactNode
-  bar: ReactNode
-}) {
-  return (
-    <div className="flex w-36 flex-col gap-1.5">
-      <div className="flex items-baseline justify-between gap-2">
-        <span className="text-metric-sm">{absolutes}</span>
-        {delta}
-      </div>
-      {bar}
-    </div>
-  )
-}
-
 // The shipped column order: demand and capacity (waiting, coverage) before
 // the derived pressure metrics (headroom, forecast deviation, trend).
 const COLUMNS: DataTableColumn<SampleRow>[] = [
@@ -229,7 +206,7 @@ const COLUMNS: DataTableColumn<SampleRow>[] = [
     header: "Headroom",
     cell: (row) => (
       <DeviationCell
-        absolutes={
+        measures={
           <>
             <Duration seconds={row.longestWaitSec} /> /{" "}
             <Duration seconds={row.targetSec} />
@@ -252,7 +229,7 @@ const COLUMNS: DataTableColumn<SampleRow>[] = [
     header: "Actual / forecast",
     cell: (row) => (
       <DeviationCell
-        absolutes={`${row.actual} / ${row.forecast}`}
+        measures={`${row.actual} / ${row.forecast}`}
         delta={<MetricDelta value={row.vsForecastPct} />}
         bar={
           <DeviationBar
