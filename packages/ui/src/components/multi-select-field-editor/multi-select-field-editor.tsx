@@ -50,6 +50,9 @@ function MultiSelectFieldEditor<V extends string>({
     <Select
       multiple
       value={value}
+      // A picker's reading of autoFocus is OPEN — see lib/editor.ts and the
+      // twin in EnumSelect.
+      defaultOpen={autoFocus}
       onValueChange={(next) => onChange(next as V[])}
       onOpenChange={(open, details) => {
         if (open) return
