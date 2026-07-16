@@ -1,0 +1,91 @@
+import { Meta } from "@storybook/addon-docs/blocks"
+
+<Meta title="rules/content-and-settings" />
+
+# Content and settings
+
+Three sentences, and everything else in this page is a consequence of them.
+
+1. **A cell holds content.** A column writes one anatomy in its `cell(row, content)`, and any part of it the operator controls is built with the `content` builder handed to the renderer.
+2. **Content that `edits` is editable.** The optional `edit` capability is the single question *"can this be edited?"* and its single answer; the cell reads that capability and its states follow — `reading`, `editable`, `editing`.
+3. **The table owns one edit slot**, addressed by strings, so two open edits are unrepresentable, a draft survives a poll tick, and a commit leaves as one typed intent — never a mutation.
+
+---
+
+## A BOX MEANS AN EDITABLE VALUE
+
+Nothing else in a table wears that border. The eye sweeps a row in edit mode
+and knows what it may change **without touching anything** — and a box is a
+promise, so it must be true wherever it appears.
+
+That only holds while there is exactly **one recipe**, and it stops being a
+rule anyone has to keep the moment nothing else *can* draw one. The frame is
+package-private: it is applied by the only thing that mounts a control, and
+`apps/web` cannot draw a box — correctly or incorrectly. This is the same move
+as [color law](?path=/docs/rules-color-law--docs)'s single accent and
+`StatusBadge`'s missing colour props: make the violation unrepresentable rather
+than forbidden.
+
+Three consequences worth stating, because each was once a bug:
+
+- **The box hugs its value, not its cell.** A full-width box in a wide column
+  implies the whole cell is the value. The affordance is the size of the thing
+  it means.
+- **The box answers a hover from anywhere in the cell.** The cell is the hit
+  area; the box is what responds. In a compound anatomy the box is smaller than
+  the cell, so lighting the cell would point at the wrong thing.
+- **Clicking a box moves nothing.** `editable` and `editing` wear the identical
+  box; the committed face stays behind the live control as an invisible width
+  strut. A figure that jumps on click is a box that was lying about its size.
+
+## A SETTING IS DECLARED; AN OBSERVATION IS ABSENT
+
+Each entity names what an operator controls, once, beside the entity:
+
+```ts
+export type QueueSetting = "name" | "sla_target_sec" | "volume_forecast_next_15m"
+export type AgentSetting = "name" | "state" | "queues"
+```
+
+A **setting** is a name, a **promise** (`sla_target_sec`), a **plan**
+(`volume_forecast_next_15m`), an assignment. Everything else on the entity is
+an **observation** — measured (`longest_wait_sec`), derived
+(`sla_headroom_pct`), or a verdict (`sla_status`).
+
+**The word "observation" appears nowhere in the code.** It is expressed by
+absence from the union, and the compile error is the word:
+
+```
+Type '"sla_headroom_pct"' is not assignable to type 'SettingOf<Queue, QueueSetting, number>'
+```
+
+An editable observation would be a lie about the floor: typing a new number
+into `sla_headroom_pct` changes what the floor **reports** without changing
+what the floor **is**. The derived fields are re-derived from the settings on
+every commit — which is why the SLA target is edited on the **Headroom** cell
+that shows it, and the Status badge it re-derives is read-only.
+
+### This is a promise, not a proof — and that is the point
+
+TypeScript cannot tell a promise from a measurement. `sla_target_sec` and
+`sla_headroom_pct` are both `number`; nothing stops someone adding the second
+to the union. What the union buys is that the decision is made **once, in three
+reviewed lines, next to the entity** — rather than re-made invisibly at each of
+a dozen call sites, which is how it was made before.
+
+## No flags
+
+There is no `readOnly`, no `editable: true`, no `editing` prop reaching an
+anatomy. Read-only is the *absence* of an `edits` call, and absence cannot be
+forgotten, contradicted, or set to the wrong value on one of three copies.
+
+The predecessor expressed the same intentions as **optional callbacks that had
+to agree** — a cell could be editable five ways, and its anatomy was authored
+three times with nothing binding the copies. Every invariant was a promise in a
+JSDoc, and the JSDoc was right while the code drifted. That is the failure mode
+this page exists to prevent: **a rule an author must keep is a bug with a delay
+on it.**
+
+See [cell content](?path=/docs/components-molecules-data-table-cell-content--docs)
+for the grammar, and the **Compound editable cells** story for the whole model
+in one table.

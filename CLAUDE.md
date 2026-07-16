@@ -97,7 +97,7 @@ apps/storybook/            # the component catalog — a second consumer of @wor
   .storybook/              # config; stories glob points back into packages/ui
 packages/ui/               # THE component library — the deliverable
   src/components/<name>/   # one folder per primitive: <name>.tsx, <name>.stories.tsx, index.ts
-  src/lib/                 # cross-cutting pure TS: utils (cn), duration, delta, feed
+  src/lib/                 # cross-cutting pure TS: utils (cn), duration, delta, feed, editor, typing-target
   src/styles/globals.css   # design tokens (:root / .dark, @theme inline)
 packages/eslint-config/    # shared config
 packages/typescript-config/# shared config
@@ -269,7 +269,7 @@ conventions below:
 |---|---|---|
 | **Ions** (tokens) | `packages/ui/src/styles/globals.css` | the 4-tier token architecture (primitive → semantic → component → composite) |
 | **Atoms** | `packages/ui/src/components/*` | leaves that compose no other component: vendored `badge/button/card/table/tooltip/separator/skeleton/checkbox/input/select` + `duration`, `metric-delta`, `sparkline`, `spark-bars`, `meter`, `deviation-bar`, `gauge`, `callout`, `theme-toggle` |
-| **Molecules** | `packages/ui/src/components/*` | compose atoms / own multi-part anatomy + feed states: `status-badge` (+`StatusDot`), `stat-card`, `data-table`, `empty-state`, `error-state`, `stale-indicator`, `page-section`, `org-identity`, `toast`, and the **editor primitives** — `text-field-editor`, `number-field-editor`, `enum-select`, `multi-select-field-editor` (each composes a vendored control and speaks the one `EditorProps` contract from `lib/editor.ts`) |
+| **Molecules** | `packages/ui/src/components/*` | compose atoms / own multi-part anatomy + feed states: `status-badge` (+`StatusDot`), `stat-card`, `data-table`, `deviation-cell`, `empty-state`, `error-state`, `stale-indicator`, `page-section`, `org-identity`, `toast`, and the **editor primitives** — `text-field-editor`, `number-field-editor`, `enum-select`, `multi-select-field-editor` (each composes a vendored control and speaks the one `EditorProps` contract from `lib/editor.ts`) |
 | **Organisms** | `apps/web/features/*/components` | domain-bound compositions: `attainment-overview`, `queue-health-table` (+`queue-coverage`), `agent-adherence-table` |
 | **Template** | `apps/web/app/dashboard.tsx` | the one client boundary: owns `useDashboardData()` + page UI state, arranges organisms, passes `{data-slice, feed}` down |
 | **Page / Layout** | `apps/web/app/page.tsx` / `layout.tsx` | route → template; document shell (fonts, ThemeProvider) |
@@ -319,6 +319,16 @@ template never fetch, and nothing below the table decides who is editing.
   it); `range` clamp per half; no rendered number (the exact figure rides beside it). This is
   the queue table's headroom and volume visualization; contrast with `Meter`, which answers
   saturation, not distance-from-target.
+- `DeviationCell` — a BULLET GRAPH in a table cell (Stephen Few's Bullet Graph Design Spec,
+  which is where the slot names come from): `measures` (the featured measure and its
+  comparative measure as one line — "2m 55s / 2m") over a `delta` and a `bar`. `measures` is
+  ONE slot because Few's comparative measure spans "a target — or the same measure at some
+  point in the past", and this dashboard uses both (Headroom compares a PROMISE, volume a
+  FORECAST) — two props would name one wrong, and would force this anatomy to render the
+  separator it explicitly disclaims. Names the set's rule: NAME THE SLOT FOR ITS CONTENT.
+  Colourless, no `invert` (Tremor's `DeltaBar.isIncreasePositive` is exactly the banned prop
+  — our ban is a documented divergence from the closest prior art). Contrast with `Meter`,
+  which answers saturation, not distance-from-target.
 - `DataTable` — dense, sortable, keyboard-navigable; queues and agents via generic column config.
   Owns loading/empty/error/stale (`staleNote` silences its own stale note where page chrome
   carries the one canonical indicator; the body dim always stays). Optional expandable rows
@@ -337,8 +347,37 @@ template never fetch, and nothing below the table decides who is editing.
     dashboard passes false and mounts both in the section heading, so the page has exactly one
     way in), and `rowLabel`. Editing is ONE GESTURE — click the cell you mean. There is
     deliberately no row menu and no batched row form.
-  - The cell/content authoring grammar is being replaced (ROB-97); it gets documented here
-    when it settles, and the catalog's DataTable docs page is the live reference until then.
+  - **The cell/content authoring grammar** (the settled ROB-97 model): a column writes ONE
+    anatomy in `cell(row, content)` — every state, every mode — and marks the parts an
+    operator controls with the `content` builder handed in second:
+    `content.duration({ edits: "sla_target_sec", min: 10, max: 86_400 })`. The anatomy is
+    NEVER given the state: no `editing` flag reaches it and there is no second renderer, so
+    an author has no branch to write and therefore no branch to get wrong — which is what
+    makes the read face and the edit face unable to drift. A read-only cell never writes the
+    second parameter and pays nothing (a one-arg function is assignable to a two-arg
+    signature). Builders: `text`/`number`/`duration`/`enum`/`multiselect`; `min`/`max` are
+    enforced at COMMIT, so an out-of-range draft holds the cell open and `aria-invalid`
+    rather than committing a lie. There is deliberately NO `reads` counterpart — a value
+    nobody edits is better written as the primitive it already is, which is what both tables
+    do. `field` is banned as a word: in Airtable/Notion/SQL/AG Grid's `colDef.field`, a FIELD
+    IS A COLUMN, so `<Field>` inside a cell is a category error.
+  - **`edits` names a key from the table's `Setting` union**, checked against BOTH the row's
+    keys and the value's shape (`DataTableColumn<Queue, QueueSetting>[]` is the whole
+    annotation; `Setting` defaults to `never`, so a table that declared no settings cannot
+    reach the edit builders at all). Each entity declares its settings once, beside itself
+    (`QueueSetting`, `AgentSetting`); an OBSERVATION is expressed by ABSENCE from that union
+    and the compile error is the word. It is a promise, not a proof — TypeScript cannot tell
+    `sla_target_sec` from `sla_headroom_pct`, both `number` — but the decision is made once
+    in three reviewed lines rather than re-made at a dozen call sites. See
+    `rules/content-and-settings` and the `data-table/cell content` docs page.
+  - **A BOX MEANS AN EDITABLE VALUE.** The frame is package-private — applied by the only
+    thing that mounts a control, so `apps/web` cannot draw one, correctly or incorrectly. The
+    box hugs its value (not its cell), answers a hover from anywhere in the cell (the cell is
+    the hit area; the box is the affordance), and `editable`/`editing` wear the IDENTICAL box
+    — the committed face stays behind the live control as an invisible width strut, so
+    clicking moves nothing. The box shows the value in the form you TYPE it in, which for a
+    duration is `120s` where the read face says `2m`; `show` is how a value reads,
+    `showDraft` is how a draft types, and the author writes neither.
 - `Duration` — formats `state_duration_sec` / `out_of_adherence_sec` as a semantic `<time>`.
   (`RelativeTime` deliberately not built; `StaleIndicator` is the only wall-clock surface.)
 - `Callout` — a quiet contextual aside (hairline left rule + muted small text) for caveats
