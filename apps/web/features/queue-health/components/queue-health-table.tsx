@@ -31,13 +31,14 @@
 //   from the SAME agent pool the adherence table reads.
 //
 // INTERACTIVE (opt-in, threaded from the template). The load-bearing edit
-// binding is the STATUS column: the badge is DERIVED (target vs. wait), so
-// "editing the status" means editing the PROMISE behind it — the edit face
-// binds sla_target_sec as a seconds field, and on commit the overlay
-// re-derives badge, headroom, and the summary alarm counts. Name is a text
-// edit, forecast a planning number; waiting/coverage/headroom/trend stay
-// read-only — they are observations, and an editable observation would be a
-// lie about the floor.
+// binding is the SLA TARGET (sla_target_sec, the promise). It lives on the
+// HEADROOM column — the cell that shows "wait / target" — framed as
+// observed / [input], the same shape Forecast uses to edit its plan; on
+// commit the overlay re-derives the Status badge, the headroom, and the
+// summary alarm counts (it keys on the field, not the column). Name is a text
+// edit, forecast a planning number; the Status badge, waiting, coverage, and
+// trend stay read-only — they are verdicts or observations, and an editable
+// observation would be a lie about the floor.
 
 import { useMemo, type ReactNode } from "react"
 
@@ -167,24 +168,11 @@ export function QueueHealthTable({
         sortValue: (q) => queueSeverityRank(q),
         // the widest cell on the page's widest tick: "Breached · 1m 20s over"
         className: "w-60",
-        // The derived-display binding: the badge is a VERDICT computed from
-        // target vs. wait — what an operator actually controls is the
-        // PROMISE, so editing this cell opens the target in seconds and the
-        // overlay re-derives the badge (memo's view-value ≠ edit-value case).
-        edit: {
-          field: "sla_target_sec",
-          get: (q) => q.sla_target_sec,
-          type: columnTypes.number({ unit: "s", min: 10, max: 86_400 }),
-          // Keep the verdict in view while you change the promise behind it:
-          // the target editor sits beside the current badge, so it's clear
-          // you're editing the target, not picking a status.
-          renderField: ({ row, editor }) => (
-            <div className="flex items-center gap-2">
-              <div className="w-24">{editor}</div>
-              <StatusBadge status={row.sla_status} />
-            </div>
-          ),
-        },
+        // Read-only verdict: the badge is DERIVED from target vs. wait. What an
+        // operator controls is the PROMISE (the SLA target), and that editor now
+        // lives on the Headroom column — the cell that actually shows the target,
+        // beside the wait it's measured against. Editing the target there
+        // re-derives this badge (the overlay keys on the field, not the column).
       },
       // Demand and capacity (waiting, coverage) read before the derived
       // pressure metrics: how deep is the line and who's on it, then how
@@ -259,6 +247,24 @@ export function QueueHealthTable({
         sortValue: (q) => q.sla_headroom_pct,
         // the DeviationCell's fixed w-36 plus cell padding, exactly
         className: "w-40",
+        // The editable half of this observed/target pair is the TARGET (the
+        // promise) — the same way Forecast's editable half is its forecast. The
+        // badge is derived, so the target is edited HERE, on the cell that shows
+        // "wait / target". renderField mirrors the Forecast cell's
+        // observed / [input] shape so the two twin columns edit identically.
+        edit: {
+          field: "sla_target_sec",
+          get: (q) => q.sla_target_sec,
+          type: columnTypes.number({ unit: "s", min: 10, max: 86_400 }),
+          renderField: ({ row, editor }) => (
+            <div className="flex items-center gap-1.5">
+              <span className="text-metric-sm whitespace-nowrap text-muted-foreground">
+                <Duration seconds={row.longest_wait_sec} /> /
+              </span>
+              <div className="min-w-0 flex-1">{editor}</div>
+            </div>
+          ),
+        },
       },
       {
         key: "forecast",
