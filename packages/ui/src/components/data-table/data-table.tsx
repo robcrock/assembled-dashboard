@@ -112,6 +112,17 @@ export type ColumnEdit<Row> =
         row: Row
         editor: React.ReactNode
       }) => React.ReactNode
+      /**
+       * The RESTING inline-edit display — what the cell shows in edit mode
+       * before it's clicked into. A compound cell (a fixed-width, multi-part
+       * anatomy like the deviation cells) can't be squeezed through the
+       * single-line `truncate` affordance the text cells use — its
+       * right-aligned annotation clips. Providing `editCell` opts the cell
+       * into BLOCK layout (full width, no clip, an overlaid edit hint) and
+       * lets the column say how the editable field reads at rest. Absent ⇒
+       * the column's normal `cell`/view, in the inline text affordance.
+       */
+      editCell?: (row: Row) => React.ReactNode
     }
 
 // V defaults to `any`, not `unknown`: a heterogeneous column array must
@@ -917,7 +928,13 @@ function DataRow<Row>({
             >
               {interaction && face ? (
                 <EditableCell
-                  display={cellContent(column, row)}
+                  // A compound cell supplies its own resting edit display
+                  // (editCell); everything else shows its normal cell content.
+                  display={
+                    face.editCell
+                      ? face.editCell(row)
+                      : cellContent(column, row)
+                  }
                   label={`Edit ${
                     typeof column.header === "string"
                       ? column.header
@@ -930,6 +947,11 @@ function DataRow<Row>({
                       : undefined
                   }
                   face={face}
+                  frameEditor={(editor) =>
+                    face.renderField
+                      ? face.renderField({ row, editor })
+                      : editor
+                  }
                   onBegin={() => interaction.beginEdit(column.key)}
                   onDraftChange={interaction.onDraftChange}
                   onCommit={interaction.commitEdit}
