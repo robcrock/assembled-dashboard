@@ -35,7 +35,7 @@ function TextFieldEditor({
       type="text"
       value={value}
       onChange={(event) => onChange(event.target.value)}
-      onKeyDown={editorKeyDown(onCommit, onCancel)}
+      onKeyDown={editorKeyDown(value, onCommit, onCancel)}
       autoFocus={autoFocus}
       disabled={disabled}
       aria-invalid={invalid || undefined}

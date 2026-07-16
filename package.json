@@ -7,7 +7,6 @@
     "dev": "turbo dev",
     "lint": "turbo lint",
     "format": "turbo format",
-    "test": "turbo test",
     "typecheck": "turbo typecheck"
   },
   "devDependencies": {

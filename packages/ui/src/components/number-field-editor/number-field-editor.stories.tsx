@@ -51,7 +51,9 @@ function Controlled(props: {
           setValue(next)
           setNote(null)
         }}
-        onCommit={() => setNote(error ? "blocked by validation" : "committed")}
+        onCommit={(draft) =>
+          setNote(error ? "blocked by validation" : `committed ${draft}`)
+        }
         onCancel={() => {
           setValue(props.initial)
           setNote("cancelled — draft reverted")

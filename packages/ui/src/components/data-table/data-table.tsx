@@ -147,11 +147,11 @@ interface SortState {
 /**
  * The events a NON-interactive table hands its content builder. A read-only
  * table still mints the builder (a column's `cell` always receives its second
- * argument), but with `mode: false` every content it builds resolves to
+ * argument), but with nothing permitted every content it builds resolves to
  * `reading` — the gestures are unreachable, so these can never fire. Frozen
  * and module-level so a read-only table allocates nothing per cell.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- erased; unreachable while mode is false
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- erased; unreachable while nothing is permitted
 const INERT_CELL_EVENTS: CellValueEvents<any, any> = Object.freeze({
   onOpen: () => {},
   onChange: () => {},
@@ -499,7 +499,10 @@ function DataTable<Row, Setting extends Extract<keyof Row, string> = never>({
                   cellContext={
                     interaction.enabled
                       ? {
-                          mode: editing,
+                          // The one site where every gate resolves. A row-level
+                          // or per-key rule would be `&&`-ed in here and nowhere
+                          // else.
+                          permitted: editing,
                           slot: activeSlot,
                           rowLabel: interactive?.rowLabel?.(row) ?? rowId,
                           events: cellEvents,
@@ -822,10 +825,10 @@ interface DataRowProps<Row> {
    * Everything a cell's content builder needs that isn't the (row, column) it
    * is minted for. Null when the table has no interactive face at all — the
    * builder still mints (a column's `cell` always gets its second argument),
-   * but with no mode and no slot every content it builds simply reads.
+   * but with nothing permitted and no slot every content it builds simply reads.
    */
   cellContext: {
-    mode: boolean
+    permitted: boolean
     slot: EditSlot | null
     rowLabel: string
     // eslint-disable-next-line @typescript-eslint/no-explicit-any -- heterogeneous across columns by nature
@@ -854,7 +857,7 @@ function DataRow<Row>({
       row,
       rowKey: rowId,
       columnKey: column.key,
-      mode: cellContext?.mode ?? false,
+      permitted: cellContext?.permitted ?? false,
       slot: cellContext?.slot ?? null,
       columnLabel:
         typeof column.header === "string" ? column.header : column.key,

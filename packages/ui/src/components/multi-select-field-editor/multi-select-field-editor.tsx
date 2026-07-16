@@ -54,7 +54,9 @@ function MultiSelectFieldEditor<V extends string>({
       onOpenChange={(open, details) => {
         if (open) return
         if (details.reason === "escape-key") onCancel?.()
-        else onCommit?.()
+        // The popup stays open across picks, so every pick has rendered by the
+        // time it closes and `value` IS the draft being committed.
+        else onCommit?.(value)
       }}
       disabled={disabled}
       items={options.map((o) => ({ value: o.value, label: o.label }))}
