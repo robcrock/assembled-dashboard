@@ -175,6 +175,15 @@ export function QueueHealthTable({
           field: "sla_target_sec",
           get: (q) => q.sla_target_sec,
           type: columnTypes.number({ unit: "s", min: 10, max: 86_400 }),
+          // Keep the verdict in view while you change the promise behind it:
+          // the target editor sits beside the current badge, so it's clear
+          // you're editing the target, not picking a status.
+          renderField: ({ row, editor }) => (
+            <div className="flex items-center gap-2">
+              <div className="w-24">{editor}</div>
+              <StatusBadge status={row.sla_status} />
+            </div>
+          ),
         },
       },
       // Demand and capacity (waiting, coverage) read before the derived
@@ -279,6 +288,17 @@ export function QueueHealthTable({
           field: "volume_forecast_next_15m",
           get: (q) => q.volume_forecast_next_15m,
           type: columnTypes.number({ min: 0 }),
+          // Keep the cell's own "actual / forecast" shape while editing —
+          // `60 / [input]` makes it unmistakable the input is the forecast,
+          // not the actual, and the field sits under its own column header.
+          renderField: ({ row, editor }) => (
+            <div className="flex items-center gap-1.5">
+              <span className="text-metric-sm whitespace-nowrap text-muted-foreground">
+                {row.volume_last_15m} /
+              </span>
+              <div className="min-w-0 flex-1">{editor}</div>
+            </div>
+          ),
         },
       },
       {
