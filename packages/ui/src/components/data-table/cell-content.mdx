@@ -1,0 +1,121 @@
+import { Meta } from "@storybook/addon-docs/blocks"
+
+<Meta title="components/molecules/data-table/cell content" />
+
+# A cell holds content; content that `edits` is editable
+
+A column writes **one** anatomy in its `cell` — every state, every mode — and
+marks the parts an operator controls with the `content` builder handed in
+second:
+
+```tsx
+cell: (q, content) => (
+  <DeviationCell
+    measures={
+      <>
+        <Duration seconds={q.longest_wait_sec} /> /{" "}
+        {content.duration({ edits: "sla_target_sec", min: 10, max: 86_400 })}
+      </>
+    }
+    delta={<MetricDelta value={q.sla_headroom_pct} />}
+    bar={<DeviationBar value={q.sla_headroom_pct} label={…} className="w-full" />}
+  />
+)
+```
+
+**The anatomy is never given the state.** There is no `editing` flag reaching
+your tree and no second renderer to keep in sync, so you have no branch to
+write and therefore no branch to get wrong. That is the whole design: what the
+predecessor called an invariant, this calls a shape.
+
+A read-only cell simply never writes the second parameter:
+
+```tsx
+cell: (q) => <StatusBadge status={q.sla_status} />   // pays nothing
+```
+
+A function of one argument is assignable to a signature of two, so read-only
+columns are untouched by all of this — including yours.
+
+## `edits` names a key, and the key is checked twice
+
+```tsx
+const columns: DataTableColumn<Queue, QueueSetting>[] = [ … ]
+```
+
+`Setting` is inferred from that annotation, and every `edits` key below it is
+checked against **both** halves:
+
+| You write | You get |
+|---|---|
+| `edits: "sla_headroom_pct"` | ✗ not in `QueueSetting` — it's derived |
+| `edits: "longest_wait_sec"` | ✗ not in `QueueSetting` — it's measured |
+| `content.text({ edits: "state" })` | ✗ a closed union is not open text |
+| `content.enum({ edits: "state", options: QUEUE_OPTIONS })` | ✗ those options aren't `AgentState`s |
+| `content.number({ edits: "name" })` | ✗ a string is not a number |
+
+Left to default, `Setting` is `never`: a table that declared no settings has no
+key it can pass, so the builder's edit methods are **unreachable by
+construction** rather than by discipline — and cost nothing.
+
+## The builders
+
+| Builder | Value | Control | Commits |
+|---|---|---|---|
+| `content.text({ edits })` | `string` | `TextFieldEditor` | Enter, or focus-out |
+| `content.number({ edits, unit?, min?, max?, format? })` | `number` | `NumberFieldEditor` | Enter, or focus-out |
+| `content.duration({ edits, min?, max? })` | `number` (seconds) | `NumberFieldEditor` | Enter, or focus-out |
+| `content.enum({ edits, options })` | a closed string union | `EnumSelect` | pick |
+| `content.multiselect({ edits, options })` | a list of one | `MultiSelectFieldEditor` | popup close |
+
+`min`/`max` are enforced at **commit**, not just handed to the control: an
+out-of-range draft is *uncommittable*, so Enter holds the cell open and
+`aria-invalid` rather than committing a lie. An emptied number field is
+`null` — a real draft state, never zero.
+
+## What a box shows
+
+The box shows the value **in the form you will type it in**, which is not
+always the form it reads in:
+
+| | reads | box shows |
+|---|---|---|
+| `content.text` | `Billing` | `Billing` |
+| `content.number` | `56` | `56` |
+| `content.enum` | `In meeting` | `In meeting` |
+| `content.duration` | `2m` | `120s` |
+
+Only `duration` differs, and it has to: a target **displays** as `2m` and is
+**typed** as `120`. Sizing the box from the display form clipped the live
+control down to its unit suffix — a box promising an edit of a figure it could
+not fit. `show` is how a value reads; `showDraft` is how a draft types; the box
+is sized from the latter. You write neither.
+
+## There is deliberately no `reads`
+
+A value nobody edits is better written as the primitive it already is:
+
+```tsx
+<Duration seconds={q.longest_wait_sec} />        // ✓
+content.reads(q => q.longest_wait_sec)           // ✗ doesn't exist
+```
+
+Both dashboard tables already did it that way, so a `reads` counterpart would
+have shipped with zero consumers. This system mints on first use.
+
+## Deliberately omitted
+
+- **`field`.** In Airtable, Notion, SQL and AG Grid's `colDef.field`, **a field
+  IS a column** — it points one tier up from where it renders, so `<Field>`
+  inside a cell reads as a category error to anyone who has used those tools.
+  What's inside a cell is its **content**.
+- **A `readOnly` flag.** Read-only is the *absence* of an `edits` call. A flag
+  is something to forget; absence isn't.
+- **An `editing` prop on your anatomy.** See the first paragraph.
+- **A row menu, a batched row form.** Editing is one gesture: click the value
+  you mean.
+- **`date`/`boolean` builders.** No consumer yet.
+
+See the live **Compound editable cells** story beside this page for the whole
+model in one table — and [content and settings](?path=/docs/rules-content-and-settings--docs)
+for the law it enforces.

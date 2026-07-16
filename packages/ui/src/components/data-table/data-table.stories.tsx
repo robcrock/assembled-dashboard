@@ -638,6 +638,135 @@ function InteractiveAgentsStory() {
   )
 }
 
+/* ---- the compound editable cell --------------------------------------- */
+
+/**
+ * The regression suite for the bugs this grammar was built to kill — and the
+ * coverage cliff that let them ship. Until now NO story exercised a compound
+ * EDITABLE cell: the flagship columns are compound but read-only, and the only
+ * interactive story edited whole-cell values. Bugs 1, 2 and 3 lived precisely
+ * in the gap between those two.
+ *
+ * The columns below are the flagship `COLUMNS`, unchanged, except that the two
+ * compound cells mark their settable figure. That difference IS the thesis, so
+ * it is worth reading the diff rather than the whole file.
+ */
+function CompoundEditableStory() {
+  const [rows, setRows] = useState(ROWS)
+
+  // The whole edit contract. `headroomPct` and `vsForecastPct` are DERIVED,
+  // `longestWaitSec` and `actual` are MEASURED — none of them is here, so a
+  // column below cannot offer to edit one. The compile error is the argument.
+  type SampleSetting = "name" | "targetSec" | "forecast"
+
+  const columns: DataTableColumn<SampleRow, SampleSetting>[] = [
+    {
+      key: "name",
+      header: "Queue",
+      cell: (row, content) => (
+        <span className="font-medium">{content.text({ edits: "name" })}</span>
+      ),
+      sortValue: (row) => row.name,
+      className: "w-36",
+    },
+    {
+      key: "status",
+      header: "Status",
+      // Read-only, and it never writes `content`. A DERIVED verdict: editing
+      // the target below re-derives it, which is why the target is edited on
+      // the cell that shows it rather than on this one.
+      cell: (row) => <StatusBadge status={row.status} />,
+      sortValue: (row) => severityRank(row),
+      className: "w-44",
+    },
+    {
+      key: "headroom",
+      header: "Headroom",
+      // ONE anatomy. The target is a PROMISE, so it is content; the wait
+      // beside it is measured and the bar and percent are derived from both,
+      // so they are written as the primitives they are. There is no second
+      // renderer to forget the bar in — which is exactly what bug 1 was.
+      cell: (row, content) => (
+        <DeviationCell
+          measures={
+            <>
+              <Duration seconds={row.longestWaitSec} /> /{" "}
+              {content.duration({ edits: "targetSec", min: 10, max: 86_400 })}
+            </>
+          }
+          delta={<MetricDelta value={row.headroomPct} />}
+          bar={
+            <DeviationBar
+              value={row.headroomPct}
+              label={`${row.name}: longest wait ${formatDurationSec(row.longestWaitSec)} against a ${formatDurationSec(row.targetSec)} target`}
+              className="w-full"
+            />
+          }
+        />
+      ),
+      sortValue: (row) => row.headroomPct,
+      className: "w-40",
+    },
+    {
+      key: "forecast",
+      header: "Actual / forecast",
+      // The twin, and visibly the twin: the same shape, one line different.
+      cell: (row, content) => (
+        <DeviationCell
+          measures={
+            <>
+              {row.actual} / {content.number({ edits: "forecast", min: 0 })}
+            </>
+          }
+          delta={<MetricDelta value={row.vsForecastPct} />}
+          bar={
+            <DeviationBar
+              value={row.vsForecastPct}
+              range={50}
+              label={`${row.name}: ${row.actual} tickets last 15m against a forecast of ${row.forecast}`}
+              className="w-full"
+            />
+          }
+        />
+      ),
+      sortValue: (row) => row.vsForecastPct,
+      className: "w-40",
+    },
+  ]
+
+  return (
+    <DataTable
+      columns={columns}
+      rows={rows}
+      rowKey={(row) => row.id}
+      caption="Queues — compound editable cells"
+      defaultSort={{ key: "status", direction: "asc" }}
+      rowSize="tall"
+      layout="fixed"
+      interactive={{
+        rowLabel: (row) => row.name,
+        onPatch: (rowKeyValue, patch) =>
+          setRows((prev) =>
+            prev.map((r) => (r.id === rowKeyValue ? { ...r, ...patch } : r))
+          ),
+      }}
+    />
+  )
+}
+
+export const CompoundEditable: StoryObj = {
+  name: "Compound editable cells",
+  render: () => <CompoundEditableStory />,
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '**The regression suite, and the thesis in one diff.** These are the flagship columns with one difference: a `SampleSetting` union, and two compound cells marking their settable figure with `content`. Nothing else changed — no second renderer, no edit binding, no `editCell`.\n\nClick **Edit**, then check by hand what used to be broken:\n\n- **The bar stays.** Click a Headroom cell — the DeviationBar is still there. The old API wrote this anatomy three times and one copy omitted it, so a click deleted it.\n- **Nothing moves.** The box does not resize, the figure does not shift, the row does not grow. The committed face stays behind the live control as an invisible width strut, so both states measure the same.\n- **The delta stays too.** It used to disappear on click, because a second renderer forgot it.\n- **The percent and the bar are not editable, and cannot be made so.** They are derived; they are not in `SampleSetting`. Try adding `edits: "headroomPct"` — it will not compile.\n\nThe target reads in **seconds** here (`120s`, not `2m`) because that is the form you type it in: the box shows the value it is promising to edit. Read mode still says `2m` — see *Live*.',
+      },
+    },
+  },
+}
+
 export const Interactive: StoryObj = {
   render: () => <InteractiveAgentsStory />,
   parameters: {

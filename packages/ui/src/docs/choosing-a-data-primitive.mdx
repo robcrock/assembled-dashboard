@@ -20,12 +20,18 @@ array of numbers and answer different questions with it.
 | A **duration** in human terms? | `Duration` (semantic `<time>`) | wall-clock "updated Xs ago" — that's StaleIndicator, the only wall-clock surface |
 | A **signed change** vs. a target? | `MetricDelta` (colorless, +/− sign, optional unit) | anything needing a verdict color or an arrow — deliberately impossible here |
 | A **verdict**? | `StatusBadge` / `StatusDot` (discriminated `status`, glyph first) | free-form colored chips — no per-call color props exist |
+| **How far is this from its target?** | `DeviationCell` (a bullet graph: measures over a signed bar whose baseline dot IS the target) | `Meter` — that answers "how full", which is unsigned and cannot point either way |
+| **May an operator change it?** | declare the key in the entity's `Setting` union, then `content.text/number/duration/enum/multiselect({ edits })` — see [content and settings](?path=/docs/rules-content-and-settings--docs) | a `readOnly` flag; read-only is the ABSENCE of an `edits` call, and absence cannot be forgotten |
 
 ## The pattern behind the table
 
-Every one of these is **stateless and domain-agnostic**: it takes value objects, no
-entity ever crosses the package boundary, and feed states belong to the owners
-(StatCard, DataTable — see [feed-states](?path=/docs/rules-feed-states--docs)).
+Every one of these is **domain-agnostic**: it takes value objects, and no entity
+ever crosses the package boundary. Most are also stateless — the exception is
+`DataTable`, which owns its sort, its expansion, its selection and the one open
+cell edit, deliberately: those are invariants ACROSS rows, so no row can hold
+them, and a consumer that had to would be wiring with no benefit. Feed states
+belong to the owners (StatCard, DataTable — see
+[feed-states](?path=/docs/rules-feed-states--docs)).
 When two of them seem to fit, prefer the one whose *omissions* match your case: if
 you're fighting a primitive's missing prop (a color, a number, an arrow), the
 omission is usually the system telling you the meaning belongs on another surface.
