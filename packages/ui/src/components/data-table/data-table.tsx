@@ -16,6 +16,7 @@ import {
   TableRow,
 } from "@workspace/ui/components/table"
 import type { Feed } from "@workspace/ui/lib/feed"
+import { isTypingTarget } from "@workspace/ui/lib/typing-target"
 import { cn } from "@workspace/ui/lib/utils"
 
 import {
@@ -29,7 +30,6 @@ import {
   InteractionAnnouncer,
   InteractionToolbar,
   INTERACTIVE_COL,
-  isTypingTarget,
   RowGutterCell,
   SelectAllCheckbox,
   useTableInteraction,

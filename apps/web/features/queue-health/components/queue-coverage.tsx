@@ -85,7 +85,8 @@ export function QueueCoveragePanel({
                 status="out_of_adherence"
                 candidate={candidate}
               >
-                {AGENT_STATE_LABEL[candidate.agent.state]} ·{" "}
+                {AGENT_STATE_LABEL[candidate.agent.state]}
+                <span aria-hidden> · </span>
                 <Duration seconds={candidate.agent.out_of_adherence_sec} /> out
               </CandidateRow>
             ))}
@@ -103,7 +104,8 @@ export function QueueCoveragePanel({
                 status="adherent"
                 candidate={candidate}
               >
-                {AGENT_STATE_LABEL[candidate.agent.state]} ·{" "}
+                {AGENT_STATE_LABEL[candidate.agent.state]}
+                <span aria-hidden> · </span>
                 <Duration seconds={candidate.agent.state_duration_sec} />
               </CandidateRow>
             ))}

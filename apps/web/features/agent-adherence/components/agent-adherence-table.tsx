@@ -117,7 +117,8 @@ export function AgentAdherenceTable({
       // rows nobody was editing. There is no branch here to get that wrong.
       cell: (a, content) => (
         <span>
-          {content.enum({ edits: "state", options: AGENT_STATE_OPTIONS })} ·{" "}
+          {content.enum({ edits: "state", options: AGENT_STATE_OPTIONS })}
+          <span aria-hidden> · </span>
           <Duration seconds={a.state_duration_sec} />
         </span>
       ),

@@ -66,8 +66,13 @@ Enforcement is layered:
   concern, not a compiler one. The audit is one grep, and it must stay empty:
 
 ```
-grep -rn "primitive-" packages/ui/src/components packages/ui/src/lib apps/web
+grep -rn "primitive-" packages/ui/src/components packages/ui/src/lib apps/web \
+  --exclude-dir=node_modules --exclude-dir=.next --exclude-dir=.turbo
 # → no matches
 ```
+
+The exclusions are load-bearing. Without them the grep walks `apps/web/node_modules`
+and `.next` and returns ~385 build-artifact hits — so the audit "fails" every time it
+is run, and an audit that always fails stops being read.
 
 Live swatches of every ramp and role live in [colors](?path=/docs/colors--docs).
