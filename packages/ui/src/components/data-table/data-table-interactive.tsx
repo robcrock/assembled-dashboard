@@ -207,6 +207,8 @@ interface InteractionToolbarProps {
    * only the selection affordances, and entering/leaving is the consumer's.
    */
   showToggle: boolean
+  /** Render the built-in "Clear rows". False when the consumer mounts its own. */
+  showClearRows: boolean
   selectionCount: number
   onClearSelection: () => void
   onDeleteSelected: (() => void) | null
@@ -225,6 +227,7 @@ export function InteractionToolbar({
   editing,
   onToggleEditing,
   showToggle,
+  showClearRows,
   selectionCount,
   onClearSelection,
   onDeleteSelected,
@@ -240,6 +243,13 @@ export function InteractionToolbar({
       </Button>
     )
   }
+
+  // Nothing to say: the consumer owns both the toggle and Clear rows, and no
+  // selection exists yet. Render NOTHING rather than an empty row — a strip
+  // that appears on mode entry moves the whole page under the operator.
+  const bulkBar = selectionCount > 0
+  const ownClearRows = showClearRows && onClearRows && hasRows
+  if (!bulkBar && !ownClearRows && !showToggle) return null
 
   return (
     <div className="flex flex-wrap items-center gap-2">
@@ -259,8 +269,7 @@ export function InteractionToolbar({
           </Button>
         </>
       ) : (
-        onClearRows &&
-        hasRows && (
+        ownClearRows && (
           <Button variant="outline" size="sm" onClick={onClearRows}>
             <Trash2 aria-hidden className="size-3.5" />
             Clear rows

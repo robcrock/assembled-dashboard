@@ -31,7 +31,7 @@
 //                        reload restarts the replay
 
 import { useEffect, useMemo, useState, type ReactNode } from "react"
-import { CircleAlert, Pause, Pencil, Play } from "lucide-react"
+import { CircleAlert, Pause, Pencil, Play, Trash2 } from "lucide-react"
 
 import { Button } from "@workspace/ui/components/button"
 import { OrgIdentity } from "@workspace/ui/components/org-identity"
@@ -106,12 +106,19 @@ function ToggleLabel({
  * Disabled while the feed has nothing to act on — editing a skeleton or an
  * error body is a promise the page can't keep — but never on the way out: an
  * error arriving mid-edit must not lock the operator inside the mode.
+ *
+ * The replay-hold note rides HERE, beside the toggle that caused it, rather
+ * than in the page header: this mode belongs to one section, so only that
+ * section should visibly react to it. Height-neutral by construction — the
+ * row is sized by the button, which stands in both faces.
  */
 function SectionEditToggle({
   editing,
   onToggle,
   editable,
   label,
+  onClearRows,
+  hasRows,
 }: {
   editing: boolean
   onToggle: () => void
@@ -119,19 +126,38 @@ function SectionEditToggle({
   editable: boolean
   /** Names the section for screen readers — "Edit queues" beats six "Edit"s. */
   label: string
+  /** Removes every row. Mounted here (DataTable's own is off via `clearRows: false`) so edit mode adds no strip above the table. */
+  onClearRows: () => void
+  hasRows: boolean
 }) {
   return (
-    <Button
-      variant={editing ? "default" : "outline"}
-      size="sm"
-      onClick={onToggle}
-      disabled={!editable && !editing}
-      aria-pressed={editing}
-      aria-label={editing ? `Done editing ${label}` : `Edit ${label}`}
-    >
-      {!editing && <Pencil aria-hidden className="size-3.5" />}
-      <ToggleLabel active={editing} activeLabel="Done" inactiveLabel="Edit" />
-    </Button>
+    <div className="flex items-center gap-3">
+      {editing && (
+        // max-lg:hidden, like the pause note: the actions slot is shrink-0, so
+        // at narrow widths a note held here would steal the width the section
+        // description needs and wrap IT instead — trading one shift for another.
+        <span className="text-metric-sm text-muted-foreground max-lg:hidden">
+          replay held so a tick can&apos;t shuffle your draft
+        </span>
+      )}
+      {editing && hasRows && (
+        <Button variant="outline" size="sm" onClick={onClearRows}>
+          <Trash2 aria-hidden className="size-3.5" />
+          Clear rows
+        </Button>
+      )}
+      <Button
+        variant={editing ? "default" : "outline"}
+        size="sm"
+        onClick={onToggle}
+        disabled={!editable && !editing}
+        aria-pressed={editing}
+        aria-label={editing ? `Done editing ${label}` : `Edit ${label}`}
+      >
+        {!editing && <Pencil aria-hidden className="size-3.5" />}
+        <ToggleLabel active={editing} activeLabel="Done" inactiveLabel="Edit" />
+      </Button>
+    </div>
   )
 }
 
@@ -144,18 +170,21 @@ function SectionEditToggle({
  * second and changes width at digit boundaries (and gains a "Stale ·"
  * prefix), so it sits AFTER the fixed-width levers — its growth lands in the
  * row's open space instead of pushing the buttons around.
+ *
+ * Pause is the only mode that speaks here, because pause is the only mode
+ * that is actually global. Edit mode also holds the replay, but it says so
+ * beside the section's own Edit/Done toggle — page chrome that grows to
+ * explain ONE table's mode made the mode read as page-wide, and shoved the
+ * floor's numbers down to say it.
  */
 function DemoControls({
   paused,
-  editHold,
   injectError,
   onTogglePause,
   onToggleError,
   feed,
 }: {
   paused: boolean
-  /** Edit mode is holding the replay (independent of the user's Pause lever). */
-  editHold: boolean
   injectError: boolean
   onTogglePause: () => void
   onToggleError: () => void
@@ -199,11 +228,9 @@ function DemoControls({
           />
         </Button>
       </div>
-      {(paused || editHold) && (
+      {paused && (
         <div className="text-metric-sm text-muted-foreground max-lg:hidden">
-          {paused
-            ? "replay paused · goes stale when the next tick is late"
-            : "editing — replay held so a tick can't shuffle your draft"}
+          replay paused · goes stale when the next tick is late
         </div>
       )}
       <StaleIndicator
@@ -263,9 +290,16 @@ export function Dashboard() {
           {/* Overview band — identity anchors the left (chrome row beneath),
               the three floor numbers sit right as divider-separated siblings.
               Container queries drive the collapse; dividers reconfigure per
-              column change. */}
+              column change.
+
+              items-start, not items-center: the floor's numbers are pinned to
+              the top of the band and stay there. Centering re-solves the KPI
+              column's vertical position against the LEFT column's height, so
+              anything that grows the chrome row drags the numbers down with
+              it. The tiles' own alignment can't undo that — it's the row's
+              cross-axis rule that moves them. */}
           <section aria-label="Floor overview" className="@container">
-            <div className="flex flex-col gap-8 @4xl:flex-row @4xl:items-center @4xl:gap-10">
+            <div className="flex flex-col gap-8 @4xl:flex-row @4xl:items-start @4xl:gap-10">
               <div className="flex min-w-0 flex-1 flex-col gap-4">
                 <OrgIdentity
                   name={org}
@@ -273,7 +307,6 @@ export function Dashboard() {
                 />
                 <DemoControls
                   paused={paused}
-                  editHold={editingQueues || editingAgents}
                   injectError={injectError}
                   onTogglePause={() => setPaused((p) => !p)}
                   onToggleError={() => setInjectError((e) => !e)}
@@ -350,6 +383,10 @@ export function Dashboard() {
                 onToggle={() => setEditingQueues((e) => !e)}
                 editable={sectionsEditable}
                 label="queues"
+                hasRows={(data?.queues.length ?? 0) > 0}
+                onClearRows={() =>
+                  mutate.deleteQueues((data?.queues ?? []).map((q) => q.queue_id))
+                }
               />
             }
           >
@@ -376,6 +413,10 @@ export function Dashboard() {
                 onToggle={() => setEditingAgents((e) => !e)}
                 editable={sectionsEditable}
                 label="agents"
+                hasRows={(data?.agents.length ?? 0) > 0}
+                onClearRows={() =>
+                  mutate.deleteAgents((data?.agents ?? []).map((a) => a.agent_id))
+                }
               />
             }
           >

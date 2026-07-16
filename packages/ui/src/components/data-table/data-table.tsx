@@ -222,6 +222,15 @@ export interface DataTableInteractive<Row> {
    * or nothing can turn the mode on.
    */
   editToggle?: boolean
+  /**
+   * Render the built-in "Clear rows" button (default true). False when the
+   * page mounts its own beside the toggle — the same reasoning as
+   * `editToggle`, plus a layout one: with both suppressed, this toolbar holds
+   * nothing until a selection exists, so ENTERING edit mode adds no strip
+   * above the table and costs zero layout. A mode that shoves the page down
+   * to announce itself reads as bigger than it is.
+   */
+  clearRows?: boolean
   /** Human name for a row ("Billing"), labelling its checkbox and announcements. Falls back to the row key. */
   rowLabel?: (row: Row) => string
 }
@@ -355,6 +364,7 @@ function DataTable<Row>({
                 editing={editing}
                 onToggleEditing={interaction.setEditing}
                 showToggle={interactive?.editToggle ?? true}
+                showClearRows={interactive?.clearRows ?? true}
                 selectionCount={interaction.selected.size}
                 onClearSelection={() => interaction.setAllSelected(null)}
                 onDeleteSelected={
@@ -882,6 +892,13 @@ function DataRow<Row>({
                 "text-metric",
                 (column.align ?? column.type?.align) === "right" &&
                   "text-right",
+                // A block edit anatomy (editCell) is the tallest thing a cell
+                // ever holds — at the stock p-2 it exactly MEETS the row
+                // rhythm, so sub-pixel rounding tips every row a hair taller
+                // and edit mode drifts the page below the table down. Tighter
+                // vertical padding buys it clearance; cells are align-middle,
+                // so the content stays put.
+                interaction && face?.editCell && "py-1",
                 column.className
               )}
             >
