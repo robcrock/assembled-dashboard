@@ -146,13 +146,17 @@ consumers forward one `feed` object (`{ status, lastUpdatedAt?, onRetry? }`,
 returned by `useDashboardData()`) and never fetch. The three fields travel
 together as one value object rather than a param clump. State ownership runs
 down a ladder: the store owns fetch/replay/staleness → the template owns page
-UI state (pause, injected error) → organisms own per-slice derivation (sort,
-tick history) → molecules/atoms are stateless or self-contained.
+UI state (pause, injected error, and edit mode per section — editing holds the
+replay, so it couples to page concerns) → organisms own per-slice derivation
+(sort, tick history) → molecules/atoms are stateless or own self-contained
+interaction only (DataTable's sort, expansion, selection and one open cell
+edit). Nothing below the template fetches; nothing below the table decides who
+is editing.
 
-The seven vendored shadcn atoms (badge, button, card, table, tooltip,
-separator, skeleton) keep their stock APIs — as-shipped fidelity keeps upstream
-upgrades cheap — and their notes live on their Storybook autodocs pages. The
-table below covers the system's own primitives:
+The vendored shadcn atoms (badge, button, card, table, tooltip, separator,
+skeleton, checkbox, input, select) keep their stock APIs — as-shipped fidelity
+keeps upstream upgrades cheap. The table below covers the system's own
+primitives:
 
 | Primitive | Exposed | Deliberately omitted (why) |
 |---|---|---|
@@ -164,12 +168,12 @@ table below covers the system's own primitives:
 | `Sparkline` | `points`, optional `status` tint, computed a11y label with override | chart deps, axes, tooltips, animation (snaps on tick). Catalog-only: the shipped queue table renders `SparkBars`; kept awaiting a line-trend consumer |
 | `Gauge` | normalized `value` (0–100), `label`, center content via **children** (the gauge owns only the arc — it never formats numbers) | gradient / threshold zones / needle (tokens only: muted track, `currentColor` arc); animation; internal number formatting. Catalog-only: the overview replaced the arc with the attainment tile's `Meter` line; kept awaiting a hero-reading consumer |
 | `SparkBars` | `points`, `threshold` (bars past it take the reserved breach accent, others muted), computed a11y label | a configurable tint (the breach accent is not overridable — an orange bar always means "over threshold") |
-| `DataTable<Row>` | generic column config (`key/header/cell/sortValue/align`), required sr-only `caption`, optional expandable rows (`getExpandedContent` + `expandLabel`, `aria-controls`-linked), `defaultSort`, `rowSize: default \| tall` (skeleton AND data rows share the chosen rhythm — pick the step that clears your tallest cell, and loading resolves with zero shift), `layout: auto \| fixed` (fixed sizes columns from the header row's width classes so ticking cell content never reflows the grid — both dashboard tables use it), one `feed` object | compound/context API (only shared state is one sort tuple); pagination/virtualization (~19 rows total); selection; **row navigation** (rows expand to an inline detail panel, they don't link out); a `rowTone`/row-dimming prop (muted ink is sub-text only — the table makes whole-row muting impossible; triage emphasis rides on sort + a status column) |
+| `DataTable<Row>` | generic column config (`key/header/cell/sortValue/align`), required sr-only `caption`, optional expandable rows (`getExpandedContent` + `expandLabel`, `aria-controls`-linked), `defaultSort`, `rowSize: default \| tall` (skeleton AND data rows share the chosen rhythm — pick the step that clears your tallest cell, and loading resolves with zero shift), `layout: auto \| fixed` (fixed sizes columns from the header row's width classes so ticking cell content never reflows the grid — both dashboard tables use it), one `feed` object, one optional `interactive` object (`onPatch`/`onDelete` — the table produces **intents**, never mutations; controlled `editing`/`onEditingChange`, since edit mode holds the replay; `editToggle`/`clearRows`, which the dashboard turns off to mount both in the section heading; `rowLabel`) | compound/context API (the consumers want to *declare* columns, not assemble `<DataTable.Row>`s — so sort, expansion, selection and the one open cell edit stay internal, and context would be wiring with no consumer); pagination/virtualization (~19 rows total); a row menu or batched row form (**editing is one gesture: click the cell you mean**); **row navigation** (rows expand to an inline detail panel, they don't link out); a `rowTone`/row-dimming prop (muted ink is sub-text only — the table makes whole-row muting impossible; triage emphasis rides on sort + a status column) |
 | `Duration` | `seconds` → semantic `<time>` | live ticking (compressed replay time would contradict the wall clock — `StaleIndicator` is the only wall-clock surface) |
 | `Callout` | children + `className` — a quiet aside (hairline rule, muted small text) for context beside data | status/variant tints (a tinted callout is a verdict, and verdicts belong to status surfaces); icon slot; title prop; dismissal |
 | `EmptyState` / `ErrorState` / `StaleIndicator` | title/description/action slot; optional `onRetry`; self-ticking `lastUpdatedAt` + `tone` | icons; auto-derived staleness (the hook is the single owner of that logic) |
 | `ThemeToggle` | — (no props) | light/dark/system menu (binary flip suffices). Catalog-only: the dashboard defaults to light and mounts no toggle |
-| `PageSection` | `id` (heading gets `${id}-heading`, `aria-labelledby` wired), `title`, `description`, children | heading-level prop (h2 is the page anatomy under the single h1); actions slot (unearned); baked-in margins (the call site's stack owns spacing); collapse |
+| `PageSection` | `id` (heading gets `${id}-heading`, `aria-labelledby` wired), `title`, `description`, `actions` (a **slot**, not an `onEdit` prop — a section-scoped control belongs beside its heading, where the eye already looks for what a section can do, and the shell has no opinion about what the action IS), children | heading-level prop (h2 is the page anatomy under the single h1); baked-in margins (the call site's stack owns spacing); collapse |
 | `OrgIdentity` | `name` (null → layout-mirroring skeletons), `tagline`, `href` (default "/", `aria-label="Homepage"`) | logo upload (monogram derives from the name — identity is data in a whitelabel system); a size prop (single consumer scale); heading-level choice (the identity block anchors a page, so the name IS the h1) |
 
 **Colorless deltas + reserved orange.** The palette spends its one loud color,
