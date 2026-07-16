@@ -65,6 +65,8 @@ export interface EditFace<Row> {
   type: ColumnType<any, any>
   /** Frames the editor with read-only context in the row form (the object binding's `renderField`). */
   renderField?: (ctx: { row: Row; editor: React.ReactNode }) => React.ReactNode
+  /** Resting inline-edit display for a compound cell; presence also selects BLOCK cell layout. */
+  editCell?: (row: Row) => React.ReactNode
 }
 
 export function resolveEditFace<Row>(
@@ -79,7 +81,13 @@ export function resolveEditFace<Row>(
   const type = edit.type ?? column.type
   const read = edit.get ?? column.get
   if (!type?.editor || !read) return null
-  return { field: edit.field, read, type, renderField: edit.renderField }
+  return {
+    field: edit.field,
+    read,
+    type,
+    renderField: edit.renderField,
+    editCell: edit.editCell,
+  }
 }
 
 /* ---- state ---------------------------------------------------------------
@@ -385,6 +393,12 @@ interface EditableCellProps {
   isActive: boolean
   draft: unknown
   face: EditFace<never>
+  /**
+   * Wraps the active editor in the column's read-only context (the compound
+   * cell's `renderField`, row already bound). Identity for a plain cell, so
+   * clicking a compound cell keeps `48s / [input]` instead of a bare field.
+   */
+  frameEditor: (editor: React.ReactNode) => React.ReactNode
   onBegin: () => void
   onDraftChange: (draft: unknown) => void
   /** Receives the final draft value — see RowInteraction.commitEdit on why state can't be read at commit time. */
@@ -404,6 +418,7 @@ export function EditableCell({
   isActive,
   draft,
   face,
+  frameEditor,
   onBegin,
   onDraftChange,
   onCommit,
@@ -429,7 +444,35 @@ export function EditableCell({
     onCommit(hasLiveDraft.current ? liveDraft.current : draft)
   }
 
+  // A compound cell (editCell present) owns a fixed-width, multi-part anatomy
+  // whose annotation would clip under the single-line `truncate` affordance
+  // the text cells use — so it renders BLOCK (full width, no clip) and the
+  // edit hint overlays the corner instead of stealing a flex slot. `display`
+  // already carries the resting face DataRow resolved (editCell or cell).
+  const block = Boolean(face.editCell)
+
   if (!isActive) {
+    if (block) {
+      return (
+        <button
+          ref={buttonRef}
+          type="button"
+          aria-label={label}
+          onClick={() => {
+            hasLiveDraft.current = false
+            liveDraft.current = undefined
+            onBegin()
+          }}
+          className="focus-ring group relative -mx-1 block w-full rounded-sm px-1 py-0.5 text-left hover:bg-muted/60"
+        >
+          {display}
+          <Pencil
+            aria-hidden
+            className="pointer-events-none absolute top-1 right-1 size-3 text-muted-foreground/0 transition-colors group-hover:text-muted-foreground"
+          />
+        </button>
+      )
+    }
     return (
       <button
         ref={buttonRef}
@@ -468,11 +511,14 @@ export function EditableCell({
     "aria-label": label,
     className: CELL_EDITOR_CLASS,
   })
+  // Keep the compound cell's read-only context around the live field, so a
+  // clicked Headroom cell reads `48s / [input]`, not a context-less number.
+  const framed = frameEditor(editor)
 
   if (face.type.editorBehavior === "picker") {
     // Picker commit grammar: pick/close commits, Escape-close cancels — all
     // inside the editor already. Focus lives in a portal; blur is noise.
-    return <div ref={wrapperRef}>{editor}</div>
+    return <div ref={wrapperRef}>{framed}</div>
   }
 
   return (
@@ -486,7 +532,7 @@ export function EditableCell({
         }
       }}
     >
-      {editor}
+      {framed}
     </div>
   )
 }

@@ -95,6 +95,61 @@ function DeviationCell({
   )
 }
 
+/**
+ * A resting field affordance for the picker variants: a value shown inside an
+ * input-shaped box so edit mode telegraphs which number is editable BEFORE the
+ * cell is clicked into (clicking swaps this for the live NumberFieldEditor).
+ * Sized to the cell-flush editor (h-6) so opening the real field doesn't shift.
+ */
+function FieldBox({ children }: { children: ReactNode }) {
+  return (
+    <span className="text-metric inline-flex h-6 min-w-0 items-center rounded-sm border border-input bg-transparent px-2">
+      {children}
+    </span>
+  )
+}
+
+/** The read (and "full mirror" edit) face of the Headroom cell — shared so the
+ *  two can't drift. */
+function headroomDisplay(q: Queue): ReactNode {
+  return (
+    <DeviationCell
+      absolutes={
+        <>
+          <Duration seconds={q.longest_wait_sec} /> /{" "}
+          <Duration seconds={q.sla_target_sec} />
+        </>
+      }
+      delta={<MetricDelta value={q.sla_headroom_pct} />}
+      bar={
+        <DeviationBar
+          value={q.sla_headroom_pct}
+          label={`${q.name}: longest wait ${formatDurationSec(q.longest_wait_sec)} against a ${formatDurationSec(q.sla_target_sec)} target`}
+          className="w-full"
+        />
+      }
+    />
+  )
+}
+
+/** The read (and "full mirror" edit) face of the Actual / forecast cell. */
+function forecastDisplay(q: Queue): ReactNode {
+  return (
+    <DeviationCell
+      absolutes={`${q.volume_last_15m} / ${q.volume_forecast_next_15m}`}
+      delta={<MetricDelta value={q.volume_vs_forecast_pct} />}
+      bar={
+        <DeviationBar
+          value={q.volume_vs_forecast_pct}
+          range={50}
+          label={`${q.name}: ${q.volume_last_15m} tickets last 15m against a forecast of ${q.volume_forecast_next_15m}`}
+          className="w-full"
+        />
+      }
+    />
+  )
+}
+
 /** The write half the template threads in; absent ⇒ the read-only table, unchanged. */
 export interface QueueTableInteractive {
   onPatch: (queueId: string, patch: Record<string, unknown>) => void
@@ -225,24 +280,7 @@ export function QueueHealthTable({
         // diverging bar whose baseline dot is the target itself. The whole
         // cell is neutral — the status verdict rides in the Status badge, so
         // the percent stays a plain colorless annotation like every delta.
-        cell: (q) => (
-          <DeviationCell
-            absolutes={
-              <>
-                <Duration seconds={q.longest_wait_sec} /> /{" "}
-                <Duration seconds={q.sla_target_sec} />
-              </>
-            }
-            delta={<MetricDelta value={q.sla_headroom_pct} />}
-            bar={
-              <DeviationBar
-                value={q.sla_headroom_pct}
-                label={`${q.name}: longest wait ${formatDurationSec(q.longest_wait_sec)} against a ${formatDurationSec(q.sla_target_sec)} target`}
-                className="w-full"
-              />
-            }
-          />
-        ),
+        cell: (q) => headroomDisplay(q),
         // Pressure vs. the queue's own target — never raw seconds.
         sortValue: (q) => q.sla_headroom_pct,
         // the DeviationCell's fixed w-36 plus cell padding, exactly
@@ -264,6 +302,28 @@ export function QueueHealthTable({
               <div className="min-w-0 flex-1">{editor}</div>
             </div>
           ),
+          // Resting edit-mode display: the observed context with the editable
+          // TARGET boxed as a field, so edit mode telegraphs which number is
+          // editable before the cell is clicked into (clicking swaps the box
+          // for the live NumberFieldEditor via renderField). The deviation bar
+          // stays; the delta drops — it's about to move as the target changes.
+          editCell: (q) => (
+            <div className="flex w-36 flex-col gap-1.5">
+              <div className="flex items-center gap-1.5">
+                <span className="text-metric-sm whitespace-nowrap text-muted-foreground">
+                  <Duration seconds={q.longest_wait_sec} /> /
+                </span>
+                <FieldBox>
+                  <Duration seconds={q.sla_target_sec} />
+                </FieldBox>
+              </div>
+              <DeviationBar
+                value={q.sla_headroom_pct}
+                label={`${q.name}: longest wait ${formatDurationSec(q.longest_wait_sec)} against a ${formatDurationSec(q.sla_target_sec)} target`}
+                className="w-full"
+              />
+            </div>
+          ),
         },
       },
       {
@@ -272,20 +332,7 @@ export function QueueHealthTable({
         // Same deviation anatomy as headroom, deliberately COLORLESS: the bar's
         // baseline dot is the forecast, but over-forecast is a leading
         // indicator, not a verdict — no status tint, stock muted delta.
-        cell: (q) => (
-          <DeviationCell
-            absolutes={`${q.volume_last_15m} / ${q.volume_forecast_next_15m}`}
-            delta={<MetricDelta value={q.volume_vs_forecast_pct} />}
-            bar={
-              <DeviationBar
-                value={q.volume_vs_forecast_pct}
-                range={50}
-                label={`${q.name}: ${q.volume_last_15m} tickets last 15m against a forecast of ${q.volume_forecast_next_15m}`}
-                className="w-full"
-              />
-            }
-          />
-        ),
+        cell: (q) => forecastDisplay(q),
         sortValue: (q) => q.volume_vs_forecast_pct,
         className: "w-40",
         // The forecast is a PLAN — the one editable number in this cell; the
@@ -303,6 +350,24 @@ export function QueueHealthTable({
                 {row.volume_last_15m} /
               </span>
               <div className="min-w-0 flex-1">{editor}</div>
+            </div>
+          ),
+          // Same framed-field treatment as Headroom: the actual stays observed
+          // context, the editable FORECAST is boxed as the field, bar retained.
+          editCell: (q) => (
+            <div className="flex w-36 flex-col gap-1.5">
+              <div className="flex items-center gap-1.5">
+                <span className="text-metric-sm whitespace-nowrap text-muted-foreground">
+                  {q.volume_last_15m} /
+                </span>
+                <FieldBox>{q.volume_forecast_next_15m}</FieldBox>
+              </div>
+              <DeviationBar
+                value={q.volume_vs_forecast_pct}
+                range={50}
+                label={`${q.name}: ${q.volume_last_15m} tickets last 15m against a forecast of ${q.volume_forecast_next_15m}`}
+                className="w-full"
+              />
             </div>
           ),
         },
