@@ -20,6 +20,7 @@ import { cn } from "@workspace/ui/lib/utils"
 
 import {
   cellContentBuilder,
+  EDITABLE_CONTENT_GROUP,
   type CellContentBuilder,
   type CellValueEvents,
 } from "./cell-content"
@@ -1053,6 +1054,13 @@ function DataRow<Row>({
               key={column.key}
               className={cn(
                 "text-metric",
+                // The cell is the HIT AREA for the hover; the box is the
+                // affordance that answers it. In a compound anatomy the box is
+                // smaller than the cell, so lighting the whole cell would point
+                // at the wrong thing — hover anywhere, and the box that a click
+                // would actually edit is what responds. Costs nothing when the
+                // cell holds no editable content: no box, nothing listening.
+                cellContext && EDITABLE_CONTENT_GROUP,
                 (column.align ?? column.type?.align) === "right" &&
                   "text-right",
                 // A block edit anatomy (editCell) is the tallest thing a cell

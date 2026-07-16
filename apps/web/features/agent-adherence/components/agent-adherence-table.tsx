@@ -15,14 +15,19 @@
 // queueNamesById the read face renders from — the write face and the read
 // face share one options source, so an id the table can display is exactly
 // an id the editor can assign. Adherence and the clocks stay read-only:
-// they are observations. Edit bindings ride the columns' OBJECT form
-// (edit: { field, get, type }) because these columns keep their hand-wired
-// display cells — the type supplies only the edit face.
+// they are observations, and `AgentSetting` leaves them out, so saying
+// otherwise is a compile error rather than a code review.
+//
+// MID-MIGRATION (ROB-97): the State column speaks the new grammar — one
+// `cell(row, content)` anatomy, with `content.enum({ edits: "state" })`
+// marking the only part an operator controls. Agent and Queues still ride the
+// legacy `edit: { field, get, type }` binding and migrate in ROB-104, which
+// is also when the old API is deleted. The two paths coexist per column on
+// purpose: each one moves under its own measurement against the oracle.
 
 import {
   columnTypes,
   DataTable,
-  EditFieldBox,
   type DataTableColumn,
 } from "@workspace/ui/components/data-table"
 import { Duration } from "@workspace/ui/components/duration"
@@ -30,7 +35,10 @@ import { StatusBadge } from "@workspace/ui/components/status-badge"
 import type { Feed } from "@workspace/ui/lib/feed"
 
 import { AGENT_STATE_LABEL, type AgentStateKey } from "@/lib/agent-state"
-import type { Agent } from "@/features/agent-adherence/model/agent"
+import type {
+  Agent,
+  AgentSetting,
+} from "@/features/agent-adherence/model/agent"
 
 /** The write half the template threads in; absent ⇒ the read-only table, unchanged. */
 export interface AgentTableInteractive {
@@ -76,7 +84,9 @@ export function AgentAdherenceTable({
     label,
   }))
 
-  const columns: DataTableColumn<Agent>[] = [
+  // `AgentSetting` is the whole edit contract: every `edits` key below is
+  // checked against it, so a column cannot offer to edit an observation.
+  const columns: DataTableColumn<Agent, AgentSetting>[] = [
     {
       key: "agent",
       header: "Agent",
@@ -96,43 +106,24 @@ export function AgentAdherenceTable({
     {
       key: "state",
       header: "State",
-      cell: (a) => (
+      // ONE anatomy, every state. The state is a setting, so it is built with
+      // the content builder; the clock beside it is an observation, so it is
+      // written as the primitive it is — once, in row ink, at the row's own
+      // scale. It has no second copy to disagree with.
+      //
+      // What this replaced: `cell` + `editCell` + `renderField` wrote this
+      // same line three times, and the copies had drifted. `editCell`
+      // re-declared the clock as `text-metric-sm text-muted-foreground`, so
+      // merely ENTERING edit mode restyled every clock on the floor (14px →
+      // 12px, row ink → muted) and moved it 39px right — without a click, on
+      // rows nobody was editing. There is no branch here to get that wrong.
+      cell: (a, content) => (
         <span>
-          {AGENT_STATE_LABEL[a.state]} ·{" "}
+          {content.enum({ edits: "state", options: AGENT_STATE_OPTIONS })} ·{" "}
           <Duration seconds={a.state_duration_sec} />
         </span>
       ),
       sortValue: (a) => AGENT_STATE_LABEL[a.state],
-      // The display cell pairs state with its clock; the EDIT face is just
-      // the state enum — the clock is an observation, not a setting.
-      edit: {
-        field: "state",
-        get: (a) => a.state,
-        type: columnTypes.enum(AGENT_STATE_OPTIONS),
-        // Compound cell, so it boxes only what it will actually let you
-        // change: the state. Framing the whole "In meeting · 5m" would
-        // promise the clock is editable too — and the clock is an
-        // observation. The box has to mean the same thing in every cell.
-        editCell: (a) => (
-          <span className="flex items-center gap-1.5">
-            <EditFieldBox>{AGENT_STATE_LABEL[a.state]}</EditFieldBox>
-            <span className="text-metric-sm whitespace-nowrap text-muted-foreground">
-              · <Duration seconds={a.state_duration_sec} />
-            </span>
-          </span>
-        ),
-        // The live picker keeps the clock beside it, so clicking the box
-        // swaps it for the real control in place rather than blanking the
-        // context the cell was reading a moment ago.
-        renderField: ({ row, editor }) => (
-          <span className="flex items-center gap-1.5">
-            <span className="min-w-0 flex-1">{editor}</span>
-            <span className="text-metric-sm whitespace-nowrap text-muted-foreground">
-              · <Duration seconds={row.state_duration_sec} />
-            </span>
-          </span>
-        ),
-      },
       // clears the longest state + duration ("In a meeting · 25m 30s")
       className: "w-48",
     },
