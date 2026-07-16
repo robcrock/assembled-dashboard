@@ -73,6 +73,7 @@ describe("commit", () => {
       behavior: seconds,
       value: 120,
       via: "enter",
+      draft: 180,
     })
     expect(patch).toEqual({ value: 180 })
     expect(slot).toBeNull()
@@ -85,21 +86,22 @@ describe("commit", () => {
       behavior: seconds,
       value: 120,
       via: "enter",
+      draft: 120,
     })
     expect(patch).toBeNull()
     expect(slot).toBeNull()
   })
 
   it("HOLDS an uncommittable draft on Enter, staying open so the operator sees why", () => {
-    const slotBefore = open(HEADROOM, null)
-    const { slot, patch } = reduceCell(slotBefore, {
+    const { slot, patch } = reduceCell(open(HEADROOM, null), {
       type: "commit",
       address: HEADROOM,
       behavior: seconds,
       value: 120,
       via: "enter",
+      draft: null,
     })
-    expect(slot).toBe(slotBefore)
+    expect(slot).toEqual({ address: HEADROOM, draft: null })
     expect(patch).toBeNull()
   })
 
@@ -110,6 +112,7 @@ describe("commit", () => {
       behavior: seconds,
       value: 120,
       via: "blur",
+      draft: null,
     })
     expect(slot).toBeNull()
     expect(patch).toBeNull()
@@ -122,6 +125,7 @@ describe("commit", () => {
       behavior: queues,
       value: ["billing"],
       via: "pick",
+      draft: ["billing", "vip"],
     })
     expect(patch).toEqual({ value: ["billing", "vip"] })
     expect(slot).toBeNull()
@@ -135,9 +139,26 @@ describe("commit", () => {
       behavior: queues,
       value: ["billing"],
       via: "blur",
+      draft: ["billing", "vip"],
     })
     expect(slot).toBe(slotBefore)
     expect(patch).toBeNull()
+  })
+
+  it("commits the GESTURE's draft, not the slot's render-old copy", () => {
+    // EnumSelect fires onChange(next) then onCommit() in ONE tick, so the slot
+    // is still holding the pre-pick draft when the commit arrives. Committing
+    // from the slot would land the PREVIOUS value on every single pick.
+    const staleSlot = open(HEADROOM, 120)
+    const { patch } = reduceCell(staleSlot, {
+      type: "commit",
+      address: HEADROOM,
+      behavior: seconds,
+      value: 120,
+      via: "pick",
+      draft: 300,
+    })
+    expect(patch).toEqual({ value: 300 })
   })
 
   it("emits NO phantom patch when a freshly-minted array holds the same members", () => {
@@ -149,6 +170,7 @@ describe("commit", () => {
       behavior: queues,
       value: ["billing", "vip"],
       via: "pick",
+      draft: ["billing", "vip"],
     })
     expect(patch).toBeNull()
   })
@@ -185,6 +207,7 @@ describe("events for a cell that isn't open", () => {
       behavior: seconds,
       value: 40,
       via: "blur",
+      draft: 40,
     })
     expect(slot).toBe(slotBefore)
     expect(patch).toBeNull()
