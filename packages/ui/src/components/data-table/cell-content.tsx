@@ -177,7 +177,9 @@ export interface CellValueEvents<V, Draft> {
     address: ContentAddress,
     behavior: EditBehavior<V, Draft>,
     value: V,
-    via: "enter" | "blur" | "pick"
+    via: "enter" | "blur" | "pick",
+    /** The freshest draft this gesture saw — never the slot's render-old copy. */
+    draft: Draft
   ) => void
   onCancel: (address: ContentAddress) => void
 }
@@ -214,6 +216,15 @@ export function CellValue<V, Draft>({
   label,
   events,
 }: CellValueProps<V, Draft>) {
+  // The freshest draft this cell has seen, readable synchronously. A picker
+  // fires onChange(next) + onCommit() in ONE tick (EnumSelect does), so the
+  // rendered `state.draft` is a render behind when onCommit lands — and
+  // onCommit carries no value of its own. A sentinel object rather than a bare
+  // `Draft | undefined`: `null` and `undefined` are legitimate drafts (an
+  // emptied number field is exactly `null`), so "has a live draft" cannot be
+  // inferred from the value.
+  const live = React.useRef<{ draft: Draft } | null>(null)
+
   const state = cellState({ edit: content.edit, mode, value, address, slot })
 
   if (state.state === "reading") return <>{content.show(value)}</>
@@ -223,7 +234,10 @@ export function CellValue<V, Draft>({
       <button
         type="button"
         aria-label={label}
-        onClick={() => events.onOpen(address, content.edit, value)}
+        onClick={() => {
+          live.current = null
+          events.onOpen(address, content.edit, value)
+        }}
         className={cn("text-left focus-ring", EDITABLE_CONTENT_FRAME)}
       >
         <span className="min-w-0 truncate">{content.show(value)}</span>
@@ -238,15 +252,22 @@ export function CellValue<V, Draft>({
   const drafted = content.edit.commit(state.draft)
   const strut = drafted ?? value
 
+  /** The draft to commit: whatever this tick's onChange saw, else the rendered one. */
+  const freshest = () => (live.current ? live.current.draft : state.draft)
+
   const editorProps: EditorProps<Draft> = {
     value: state.draft,
-    onChange: (next) => events.onChange(address, next),
+    onChange: (next) => {
+      live.current = { draft: next }
+      events.onChange(address, next)
+    },
     onCommit: () =>
       events.onCommit(
         address,
         content.edit,
         value,
-        content.edit.popup ? "pick" : "enter"
+        content.edit.popup ? "pick" : "enter",
+        freshest()
       ),
     onCancel: () => events.onCancel(address),
     autoFocus: true,
@@ -272,7 +293,13 @@ export function CellValue<V, Draft>({
           ? undefined
           : (event: React.FocusEvent<HTMLSpanElement>) => {
               if (!event.currentTarget.contains(event.relatedTarget)) {
-                events.onCommit(address, content.edit, value, "blur")
+                events.onCommit(
+                  address,
+                  content.edit,
+                  value,
+                  "blur",
+                  freshest()
+                )
               }
             }
       }

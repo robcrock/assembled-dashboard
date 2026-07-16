@@ -7,6 +7,12 @@ import { Button } from "@workspace/ui/components/button"
 import { Checkbox } from "@workspace/ui/components/checkbox"
 import { cn } from "@workspace/ui/lib/utils"
 
+import {
+  reduceCell,
+  type CellEvent,
+  type CellTransition,
+  type EditSlot,
+} from "./cell-state"
 import type { ColumnType } from "./column-types"
 import type { DataTableColumn, DataTableInteractive } from "./data-table"
 import { EDIT_CELL_GROUP, EDIT_FIELD_FRAME } from "./edit-field-box"
@@ -80,7 +86,8 @@ export interface EditFace<Row> {
 }
 
 export function resolveEditFace<Row>(
-  column: DataTableColumn<Row>
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Setting erased; this reads the legacy `edit` binding only
+  column: DataTableColumn<Row, any, any>
 ): EditFace<Row> | null {
   const { edit } = column
   if (!edit) return null
@@ -121,6 +128,11 @@ export function useTableInteraction<Row>(
   // extend from it, the familiar file-manager grammar.
   const anchorRef = React.useRef<string | null>(null)
   const [activeEdit, setActiveEdit] = React.useState<ActiveEdit | null>(null)
+  // The ONE open cell edit (cell-state.ts). One slot, so two open edits are
+  // unrepresentable rather than merely discouraged. It lives here beside the
+  // selection — above the feed-status switch — for the same reason the sort
+  // and expansion hooks do: a draft must survive a loading tick.
+  const [slot, setSlot] = React.useState<EditSlot | null>(null)
   const [announcement, setAnnouncement] = React.useState("")
 
   const enabled = Boolean(interactive)
@@ -134,8 +146,29 @@ export function useTableInteraction<Row>(
       // Mode gates capability; nothing interactive outlives it.
       setSelected(new Set())
       setActiveEdit(null)
+      setSlot(null)
       anchorRef.current = null
     }
+  }
+
+  /**
+   * Run one gesture through the machine. Returns the transition so the caller
+   * can emit the patch — the reducer is pure and stays that way; the effect is
+   * the orchestrator's, where the rows and `onPatch` actually live.
+   *
+   * Reducing against the RENDERED slot is safe precisely because a `commit`
+   * event carries its own draft: a picker fires onChange + onCommit in one
+   * tick, so this `slot` is a render behind at that moment, and only the
+   * address is read from it. See cell-state.ts.
+   */
+  function dispatchCell(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- heterogeneous across columns by nature
+    event: CellEvent<any, any>
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  ): CellTransition<any> {
+    const transition = reduceCell(slot, event)
+    if (transition.slot !== slot) setSlot(transition.slot)
+    return transition
   }
 
   function announce(message: string) {
@@ -163,7 +196,9 @@ export function useTableInteraction<Row>(
       if (next.has(key)) next.delete(key)
       else next.add(key)
       anchorRef.current = key
-      setAnnouncement(next.size === 0 ? "Selection cleared" : `${next.size} selected`)
+      setAnnouncement(
+        next.size === 0 ? "Selection cleared" : `${next.size} selected`
+      )
       return next
     })
   }
@@ -187,14 +222,15 @@ export function useTableInteraction<Row>(
     setAllSelected,
     activeEdit,
     setActiveEdit,
+    slot,
+    setSlot,
+    dispatchCell,
     announcement,
     announce,
   }
 }
 
-export type TableInteraction<Row> = ReturnType<
-  typeof useTableInteraction<Row>
->
+export type TableInteraction<Row> = ReturnType<typeof useTableInteraction<Row>>
 
 /* ---- pieces (in render order) -------------------------------------------- */
 
@@ -255,7 +291,7 @@ export function InteractionToolbar({
     <div className="flex flex-wrap items-center gap-2">
       {selectionCount > 0 ? (
         <>
-          <span className="text-metric-sm text-muted-foreground px-1">
+          <span className="px-1 text-metric-sm text-muted-foreground">
             {selectionCount} selected
           </span>
           {onDeleteSelected && (
@@ -458,7 +494,7 @@ export function EditableCell({
           // — and it collided with the bar's muted track besides.
           className={cn(
             EDIT_CELL_GROUP,
-            "focus-ring block w-full rounded-sm py-0.5 text-left"
+            "block w-full rounded-sm py-0.5 text-left focus-ring"
           )}
         >
           {display}
@@ -484,7 +520,7 @@ export function EditableCell({
           onBegin()
         }}
         className={cn(
-          "focus-ring -mx-1 flex w-full min-w-0 items-center text-left",
+          "-mx-1 flex w-full min-w-0 items-center text-left focus-ring",
           EDIT_FIELD_FRAME
         )}
       >

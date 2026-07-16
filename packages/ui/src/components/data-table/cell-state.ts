@@ -156,6 +156,14 @@ export function cellState<E extends AnyEdit>(args: {
  *
  * `value` is the current truth, read at the gesture — there is no `value`
  * prop that could disagree with the row.
+ *
+ * `commit` CARRIES THE DRAFT IT MEANS rather than letting the machine read the
+ * slot. A picker fires `onChange` then `onCommit` in ONE tick (EnumSelect
+ * does exactly this), so the slot's draft is a render behind at commit time
+ * and committing from it would silently land the PREVIOUS value on every
+ * pick. The gesture knows what it is committing; the slot is a render behind
+ * by construction, and no amount of care in the store fixes that. The
+ * incumbent papered over it with a pair of refs beside the state.
  */
 export type CellEvent<V, Draft> =
   | {
@@ -171,6 +179,8 @@ export type CellEvent<V, Draft> =
       behavior: EditBehavior<V, Draft>
       value: V
       via: "enter" | "blur" | "pick"
+      /** The draft to land — the freshest the gesture saw, not the slot's. */
+      draft: Draft
     }
   | { type: "cancel"; address: ContentAddress }
 
@@ -220,13 +230,19 @@ export function reduceCell<V, Draft>(
     return { slot, patch: null }
   }
 
-  const value = event.behavior.commit(slot.draft as Draft)
+  const value = event.behavior.commit(event.draft)
 
   if (value === null) {
     // Enter on a draft that isn't a value yet: HOLD. Staying open with
     // aria-invalid is the only way the operator learns why — closing would
-    // silently discard what they typed.
-    if (event.via === "enter") return { slot, patch: null }
+    // silently discard what they typed. Hold the EVENT's draft, so the held
+    // cell shows what was actually typed rather than a render-old copy.
+    if (event.via === "enter") {
+      return {
+        slot: { address: slot.address, draft: event.draft },
+        patch: null,
+      }
+    }
     // Blur or pick: revert to truth. The cell repaints from the row rather
     // than inventing a 0 out of an emptied field.
     return { slot: null, patch: null }

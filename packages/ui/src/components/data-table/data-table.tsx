@@ -18,6 +18,12 @@ import {
 import type { Feed } from "@workspace/ui/lib/feed"
 import { cn } from "@workspace/ui/lib/utils"
 
+import {
+  cellContentBuilder,
+  type CellContentBuilder,
+  type CellValueEvents,
+} from "./cell-content"
+import { projectEdit, type EditSlot } from "./cell-state"
 import type { ColumnType } from "./column-types"
 import {
   EditableCell,
@@ -133,17 +139,32 @@ export type ColumnEdit<Row> =
 // accept a ColumnType<Status> beside a ColumnType<number>, and strict
 // function-property contravariance rejects both against `unknown`. The
 // createColumns builders restore per-column precision at the call site.
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export interface DataTableColumn<Row, V = any> {
+export interface DataTableColumn<
+  Row,
+  Setting extends Extract<keyof Row, string> = never,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  V = any,
+> {
   /** Stable id; also the sort key. */
   key: string
   header: React.ReactNode
   /**
-   * Bespoke render — the escape hatch for anatomies richer than one value
-   * (compound cells). Wins over `type.view` by precedence. Provide either
-   * this or `type` + `get`.
+   * The column's one renderer — every state, one anatomy.
+   *
+   * `content` builds the parts an operator controls
+   * (`content.duration({ edits: "sla_target_sec" })`); it reaches any depth
+   * inside the anatomy because it is minted per (row, column) and closed over
+   * the row, so no provider is involved and `packages/ui` keeps its
+   * zero-`createContext` record.
+   *
+   * A read-only cell simply never writes the second parameter — which is why
+   * every existing `cell: (row) => …` keeps working untouched: a function of
+   * one argument is assignable to a signature of two.
    */
-  cell?: (row: Row) => React.ReactNode
+  cell?: (
+    row: Row,
+    content: CellContentBuilder<Row, Setting>
+  ) => React.ReactNode
   /**
    * The column's value shape, resolved to both cell faces (view + editor)
    * and a default sort — see `columnTypes`. Pair with `get`.
@@ -163,9 +184,20 @@ export interface DataTableColumn<Row, V = any> {
   className?: string
 }
 
+/**
+ * A column with its `Setting` erased — the type every PRIVATE helper below
+ * speaks. The boundary is precise (`DataTableProps` takes
+ * `DataTableColumn<Row, Setting>[]`, and that is where a call site's `edits`
+ * keys are checked); inside, a heterogeneous column array is genuinely
+ * heterogeneous, and threading each column's own Setting through the renderer
+ * would buy a guarantee that was already made at the door.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- erased on purpose; see above
+type AnyColumn<Row> = DataTableColumn<Row, any, any>
+
 /** The one place a column resolves to sortability: its own `sortValue`, else the type's default projection over `get`. */
 function sortAccessor<Row>(
-  column: DataTableColumn<Row>
+  column: AnyColumn<Row>
 ): ((row: Row) => number | string) | undefined {
   if (column.sortValue) return column.sortValue
   const { type, get } = column
@@ -178,10 +210,12 @@ function sortAccessor<Row>(
 
 /** The one place a column resolves to cell content: `cell` (escape hatch) wins over the type's view face. */
 function cellContent<Row>(
-  column: DataTableColumn<Row>,
-  row: Row
+  column: AnyColumn<Row>,
+  row: Row,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- heterogeneous across the row's columns by nature
+  content: CellContentBuilder<Row, any>
 ): React.ReactNode {
-  if (column.cell) return column.cell(row)
+  if (column.cell) return column.cell(row, content)
   if (column.type && column.get) return column.type.view(column.get(row))
   return null
 }
@@ -190,6 +224,21 @@ interface SortState {
   key: string
   direction: "asc" | "desc"
 }
+
+/**
+ * The events a NON-interactive table hands its content builder. A read-only
+ * table still mints the builder (a column's `cell` always receives its second
+ * argument), but with `mode: false` every content it builds resolves to
+ * `reading` — the gestures are unreachable, so these can never fire. Frozen
+ * and module-level so a read-only table allocates nothing per cell.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- erased; unreachable while mode is false
+const INERT_CELL_EVENTS: CellValueEvents<any, any> = Object.freeze({
+  onOpen: () => {},
+  onChange: () => {},
+  onCommit: () => {},
+  onCancel: () => {},
+})
 
 /**
  * The interactive face — presence enables it; a table without this prop is
@@ -235,8 +284,18 @@ export interface DataTableInteractive<Row> {
   rowLabel?: (row: Row) => string
 }
 
-interface DataTableProps<Row> {
-  columns: DataTableColumn<Row>[]
+interface DataTableProps<
+  Row,
+  Setting extends Extract<keyof Row, string> = never,
+> {
+  /**
+   * `Setting` is inferred from this array — declare the columns as
+   * `DataTableColumn<Queue, QueueSetting>[]` and every `edits` key in every
+   * cell is checked against it. Left to default, `Setting` is `never`: a table
+   * that declared no settings has no key it can pass, so the content builder's
+   * edit methods are unreachable by construction rather than by discipline.
+   */
+  columns: DataTableColumn<Row, Setting>[]
   rows: Row[]
   rowKey: (row: Row) => string
   /** Screen-reader summary of what this table shows. */
@@ -288,8 +347,8 @@ interface DataTableProps<Row> {
   className?: string
 }
 
-function DataTable<Row>({
-  columns,
+function DataTable<Row, Setting extends Extract<keyof Row, string> = never>({
+  columns: precise,
   rows,
   rowKey,
   caption,
@@ -305,7 +364,14 @@ function DataTable<Row>({
   staleNote = true,
   interactive,
   className,
-}: DataTableProps<Row>) {
+}: DataTableProps<Row, Setting>) {
+  // The ONE erasure, at the door. Above this line a column's `edits` keys are
+  // checked against the consumer's own `Setting`; below it, a heterogeneous
+  // column array is genuinely heterogeneous and every private helper speaks
+  // AnyColumn. Re-threading Setting through the renderer would re-prove a
+  // guarantee already made here.
+  const columns = precise as AnyColumn<Row>[]
+
   const { status, lastUpdatedAt = null, onRetry } = feed
   const { sortedRows, sort, toggleSort } = useTableSort(
     columns,
@@ -342,6 +408,57 @@ function DataTable<Row>({
   }, [columns])
 
   const orderedKeys = sortedRows.map(rowKey)
+
+  /* ---- the open cell edit ------------------------------------------------
+   * A row can leave the feed on any tick, and a draft addressed to a row that
+   * no longer exists would commit into nothing. `projectEdit` is pure and runs
+   * in render; the state is then corrected in place so the drop is PERMANENT —
+   * masking it here alone would let the edit reappear if the row came back,
+   * with a draft from before it left. Adjusting state during render is React's
+   * own sanctioned pattern for exactly this (it re-renders before committing,
+   * and nothing below ever sees the dropped slot).
+   * --------------------------------------------------------------------- */
+  const liveRowKeys = new Set(orderedKeys)
+  const activeSlot = projectEdit(interaction.slot, liveRowKeys)
+  if (activeSlot !== interaction.slot) interaction.setSlot(activeSlot)
+
+  const rowsByKey = new Map(sortedRows.map((row) => [rowKey(row), row]))
+
+  /**
+   * Where a commit stops being a state transition and becomes an INTENT. The
+   * machine is pure and returns the patch; this is the only place that tells
+   * the consumer, and it never mutates a row — undo, confirmation and the
+   * optimistic overlay are all the consumer's policy, above.
+   */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- heterogeneous across columns by nature
+  const cellEvents: CellValueEvents<any, any> = {
+    onOpen: (address, behavior, value) =>
+      interaction.dispatchCell({ type: "open", address, behavior, value }),
+    onChange: (address, draft) =>
+      interaction.dispatchCell({ type: "change", address, draft }),
+    onCancel: (address) =>
+      interaction.dispatchCell({ type: "cancel", address }),
+    onCommit: (address, behavior, value, via, draft) => {
+      const { patch } = interaction.dispatchCell({
+        type: "commit",
+        address,
+        behavior,
+        value,
+        via,
+        draft,
+      })
+      if (!patch) return
+      const row = rowsByKey.get(address.rowKey)
+      if (row) {
+        interactive?.onPatch(
+          address.rowKey,
+          { [address.key]: patch.value },
+          row
+        )
+      }
+    },
+  }
+
   // Toolbar shows wherever acting makes sense: live and stale (data is
   // present; stale edits are the consumer's data story). Never over a
   // skeleton or an error body.
@@ -371,7 +488,9 @@ function DataTable<Row>({
                   interactive?.onDelete
                     ? () =>
                         deleteRows(
-                          orderedKeys.filter((k) => interaction.selected.has(k)),
+                          orderedKeys.filter((k) =>
+                            interaction.selected.has(k)
+                          ),
                           sortedRows.filter((r) =>
                             interaction.selected.has(rowKey(r))
                           ),
@@ -466,6 +585,16 @@ function DataTable<Row>({
                           editFaces,
                           orderedKeys,
                         })
+                      : null
+                  }
+                  cellContext={
+                    interaction.enabled
+                      ? {
+                          mode: editing,
+                          slot: activeSlot,
+                          rowLabel: interactive?.rowLabel?.(row) ?? rowId,
+                          events: cellEvents,
+                        }
                       : null
                   }
                 />
@@ -575,7 +704,7 @@ function buildRowInteraction<Row>({
  * ------------------------------------------------------------------------ */
 
 function useTableSort<Row>(
-  columns: DataTableColumn<Row>[],
+  columns: AnyColumn<Row>[],
   rows: Row[],
   defaultSort?: SortState
 ) {
@@ -633,7 +762,7 @@ function useExpandedKeys() {
  * ------------------------------------------------------------------------ */
 
 interface HeaderRowProps<Row> {
-  columns: DataTableColumn<Row>[]
+  columns: AnyColumn<Row>[]
   hasExpanderColumn: boolean
   sort: SortState | null
   onToggleSort: (key: string) => void
@@ -728,7 +857,7 @@ function SortHeaderButton({
 }
 
 interface SkeletonRowsProps<Row> {
-  columns: DataTableColumn<Row>[]
+  columns: AnyColumn<Row>[]
   hasExpanderColumn: boolean
   /** Mirrors the interactive gutter so a loading tick inside edit mode cannot shear the columns. */
   hasGutterColumn: boolean
@@ -806,7 +935,7 @@ interface DataRowProps<Row> {
   row: Row
   /** rowKey(row) — the React key at the call site and the aria id root here. */
   rowId: string
-  columns: DataTableColumn<Row>[]
+  columns: AnyColumn<Row>[]
   colSpan: number
   /** The table's ROW_RHYTHM step — identical on skeleton rows, so no shift on resolve. */
   rhythm: string
@@ -823,6 +952,19 @@ interface DataRowProps<Row> {
   } | null
   /** Present iff edit mode is on — the row's interactive face, assembled by the orchestrator. */
   interaction: RowInteraction<Row> | null
+  /**
+   * Everything a cell's content builder needs that isn't the (row, column) it
+   * is minted for. Null when the table has no interactive face at all — the
+   * builder still mints (a column's `cell` always gets its second argument),
+   * but with no mode and no slot every content it builds simply reads.
+   */
+  cellContext: {
+    mode: boolean
+    slot: EditSlot | null
+    rowLabel: string
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- heterogeneous across columns by nature
+    events: CellValueEvents<any, any>
+  } | null
 }
 
 function DataRow<Row>({
@@ -833,7 +975,28 @@ function DataRow<Row>({
   rhythm,
   expander,
   interaction,
+  cellContext,
 }: DataRowProps<Row>) {
+  /**
+   * The builder for one cell, closed over its row and column. Minted per cell
+   * because that is exactly what it knows — which is what lets a call site
+   * write `content.duration({ edits: "sla_target_sec" })` and nothing else.
+   */
+  function contentFor(column: AnyColumn<Row>) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- erased inside; the call site's keys were checked at the door
+    return cellContentBuilder<Row, any>({
+      row,
+      rowKey: rowId,
+      columnKey: column.key,
+      mode: cellContext?.mode ?? false,
+      slot: cellContext?.slot ?? null,
+      columnLabel:
+        typeof column.header === "string" ? column.header : column.key,
+      rowLabel: cellContext?.rowLabel ?? rowId,
+      events: cellContext?.events ?? INERT_CELL_EVENTS,
+    })
+  }
+
   return (
     <>
       <TableRow
@@ -909,7 +1072,7 @@ function DataRow<Row>({
                   display={
                     face.editCell
                       ? face.editCell(row)
-                      : cellContent(column, row)
+                      : cellContent(column, row, contentFor(column))
                   }
                   label={`Edit ${
                     typeof column.header === "string"
@@ -934,7 +1097,7 @@ function DataRow<Row>({
                   onCancel={interaction.cancelEdit}
                 />
               ) : (
-                cellContent(column, row)
+                cellContent(column, row, contentFor(column))
               )}
             </TableCell>
           )
