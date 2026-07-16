@@ -43,7 +43,7 @@
 // once, and the settable figure is marked in place. There is no second
 // renderer and no edit binding to keep in sync with it.
 
-import { useMemo, type ReactNode } from "react"
+import { useMemo } from "react"
 
 import { Duration } from "@workspace/ui/components/duration"
 import {
@@ -51,6 +51,7 @@ import {
   type DataTableColumn,
 } from "@workspace/ui/components/data-table"
 import { DeviationBar } from "@workspace/ui/components/deviation-bar"
+import { DeviationCell } from "@workspace/ui/components/deviation-cell"
 import { MetricDelta } from "@workspace/ui/components/metric-delta"
 import { SparkBars } from "@workspace/ui/components/spark-bars"
 import { StatusBadge } from "@workspace/ui/components/status-badge"
@@ -69,34 +70,6 @@ import {
   type Queue,
   type QueueSetting,
 } from "@/features/queue-health/model/queue"
-
-/**
- * Shared WHOOP-style cell anatomy for "value vs. its own target" columns:
- * context line (absolutes left, signed percent right) over a full-width
- * diverging bar. Table-layout composition, not a primitive — it earns
- * promotion to @workspace/ui only with a second consumer file.
- */
-function DeviationCell({
-  absolutes,
-  delta,
-  bar,
-}: {
-  absolutes: ReactNode
-  delta: ReactNode
-  bar: ReactNode
-}) {
-  return (
-    <div className="flex w-36 flex-col gap-1.5">
-      <div className="flex items-baseline justify-between gap-2">
-        {/* the cell's PRIMARY line: row ink (inherited, never explicit), NOT
-            muted; the delta beside it is the muted sub-text */}
-        <span className="text-metric-sm">{absolutes}</span>
-        {delta}
-      </div>
-      {bar}
-    </div>
-  )
-}
 
 /** The write half the template threads in; absent ⇒ the read-only table, unchanged. */
 export interface QueueTableInteractive {
@@ -238,10 +211,10 @@ export function QueueHealthTable({
       {
         key: "headroom",
         header: "Headroom",
-        // WHOOP-style: context line (absolutes left, percent right) over a
-        // diverging bar whose baseline dot is the target itself. The whole
-        // cell is neutral — the status verdict rides in the Status badge, so
-        // the percent stays a plain colorless annotation like every delta.
+        // A bullet graph (DeviationCell): the measures left, the percent
+        // right, over a diverging bar whose baseline dot is the target itself.
+        // The whole cell is neutral — the status verdict rides in the Status
+        // badge, so the percent stays a plain colorless annotation.
         //
         // ONE anatomy, every state. The editable half of this observed/target
         // pair is the TARGET (the promise); the wait beside it is measured, and
@@ -256,7 +229,7 @@ export function QueueHealthTable({
         // forget the bar in now.
         cell: (q, content) => (
           <DeviationCell
-            absolutes={
+            measures={
               <>
                 <Duration seconds={q.longest_wait_sec} /> /{" "}
                 {content.duration({
@@ -292,7 +265,7 @@ export function QueueHealthTable({
         // delta.
         cell: (q, content) => (
           <DeviationCell
-            absolutes={
+            measures={
               <>
                 {q.volume_last_15m} /{" "}
                 {content.number({ edits: "volume_forecast_next_15m", min: 0 })}
