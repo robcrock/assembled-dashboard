@@ -279,11 +279,16 @@ function DataTable<Row>({
   // Column presence is table-level (the callback exists), independent of any
   // row's result — a table whose every row returns null still gets the column.
   const hasExpanderColumn = Boolean(getExpandedContent)
+  // The caret is a reading affordance; edit mode swaps it for the interactive
+  // gutter in the same lead slot. Gate on !editing so the column, header cell,
+  // skeleton cell, and per-row toggle all disappear together — no shear. The
+  // open-keys state is left intact, so leaving edit mode restores open rows.
+  const showExpanderColumn = hasExpanderColumn && !editing
   // The interactive gutter exists only inside edit mode — mode gates
   // capability; the reading face stays column-identical to the plain table.
   // The reflow on toggle is a user action, not a tick, so no-shift holds.
   const colSpan =
-    columns.length + (hasExpanderColumn ? 1 : 0) + (editing ? 1 : 0)
+    columns.length + (showExpanderColumn ? 1 : 0) + (editing ? 1 : 0)
 
   const editFaces = React.useMemo(() => {
     const faces = new Map<string, EditFace<Row>>()
@@ -350,7 +355,7 @@ function DataTable<Row>({
         <TableHeader>
           <HeaderRow
             columns={columns}
-            hasExpanderColumn={hasExpanderColumn}
+            hasExpanderColumn={showExpanderColumn}
             sort={sort}
             onToggleSort={toggleSort}
             gutter={
@@ -369,7 +374,7 @@ function DataTable<Row>({
           {status === "loading" ? (
             <SkeletonRows
               columns={columns}
-              hasExpanderColumn={hasExpanderColumn}
+              hasExpanderColumn={showExpanderColumn}
               hasGutterColumn={editing}
               count={skeletonRows}
               rhythm={ROW_RHYTHM[rowSize]}
@@ -385,7 +390,9 @@ function DataTable<Row>({
           ) : (
             sortedRows.map((row) => {
               const rowId = rowKey(row)
-              const content = getExpandedContent?.(row) ?? null
+              const content = showExpanderColumn
+                ? (getExpandedContent?.(row) ?? null)
+                : null
               return (
                 <DataRow
                   key={rowId}
@@ -395,7 +402,7 @@ function DataTable<Row>({
                   colSpan={colSpan}
                   rhythm={ROW_RHYTHM[rowSize]}
                   expander={
-                    hasExpanderColumn
+                    showExpanderColumn
                       ? {
                           content,
                           isExpanded:
