@@ -195,8 +195,11 @@ its own per-theme raw colors. **Components consume tokens at the semantic tier o
 (semantic roles + component/composite utilities) — a `--primitive-*` name never appears
 outside `globals.css`. Primitives generate no utilities (structural enforcement); the one
 escape hatch, `var(--primitive-*)` in arbitrary values or inline styles, is banned — audit
-with `grep -rn "primitive-" packages/ui/src/components packages/ui/src/lib apps/web`,
-which must return nothing.
+with `grep -rn "primitive-" packages/ui/src/components packages/ui/src/lib apps/web
+--exclude-dir=node_modules --exclude-dir=.next --exclude-dir=.turbo`, which must return
+nothing. The exclusions are load-bearing, not tidiness: without them the grep walks
+`apps/web/node_modules` and `.next` and returns ~385 build-artifact hits, so the audit
+"fails" every time it is run and stops being read.
 
 The brand layer is **Braun / dieter-grid** — repo-root `DESIGN.md` (installed via
 `npx designdotmd add dieter-grid` from designdotmd.directory), applied exclusively through

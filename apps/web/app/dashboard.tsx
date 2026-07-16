@@ -43,20 +43,12 @@ import type { Feed } from "@workspace/ui/lib/feed"
 
 import { cn } from "@workspace/ui/lib/utils"
 
+import { isTypingTarget } from "@workspace/ui/lib/typing-target"
+
 import { AgentAdherenceTable } from "@/features/agent-adherence/components/agent-adherence-table"
 import { QueueHealthTable } from "@/features/queue-health/components/queue-health-table"
 import { AttainmentOverview } from "@/features/summary/components/attainment-overview"
 import { useDashboardData } from "@/hooks/use-dashboard-data"
-
-function isTypingTarget(target: EventTarget | null) {
-  if (!(target instanceof HTMLElement)) return false
-  return (
-    target.isContentEditable ||
-    target.tagName === "INPUT" ||
-    target.tagName === "TEXTAREA" ||
-    target.tagName === "SELECT"
-  )
-}
 
 /**
  * Alarm ink for the overview counts: breach red only when the count is
@@ -347,7 +339,8 @@ export function Dashboard() {
                   >
                     {summary && (
                       <div className="text-metric-sm text-muted-foreground">
-                        {summary.queues_at_risk} at risk ·{" "}
+                        {summary.queues_at_risk} at risk
+                        <span aria-hidden> · </span>
                         {summary.tickets_waiting_total} waiting
                       </div>
                     )}
@@ -385,7 +378,9 @@ export function Dashboard() {
                 label="queues"
                 hasRows={(data?.queues.length ?? 0) > 0}
                 onClearRows={() =>
-                  mutate.deleteQueues((data?.queues ?? []).map((q) => q.queue_id))
+                  mutate.deleteQueues(
+                    (data?.queues ?? []).map((q) => q.queue_id)
+                  )
                 }
               />
             }
@@ -415,7 +410,9 @@ export function Dashboard() {
                 label="agents"
                 hasRows={(data?.agents.length ?? 0) > 0}
                 onClearRows={() =>
-                  mutate.deleteAgents((data?.agents ?? []).map((a) => a.agent_id))
+                  mutate.deleteAgents(
+                    (data?.agents ?? []).map((a) => a.agent_id)
+                  )
                 }
               />
             }

@@ -172,7 +172,10 @@ export function QueueHealthTable({
                   the exact contrast hazard the muted-row comment warns about;
                   the middot already de-emphasizes */}
               {q.sla_status === "breached" && overSec > 0 && (
-                <span>· {formatDurationSec(overSec)} over</span>
+                <span>
+                  <span aria-hidden>· </span>
+                  {formatDurationSec(overSec)} over
+                </span>
               )}
             </StatusBadge>
           )
@@ -225,7 +228,15 @@ export function QueueHealthTable({
               </span>
               {levers.length > 0 && (
                 <span className="text-metric-sm text-muted-foreground">
-                  {levers.join(" · ")}
+                  {/* The separator is an ELEMENT, not a joined string: a
+                      screen reader announces "·" as content, and a string
+                      join gives it nothing to hide behind. */}
+                  {levers.map((lever, i) => (
+                    <span key={lever as string}>
+                      {i > 0 && <span aria-hidden> · </span>}
+                      {lever}
+                    </span>
+                  ))}
                 </span>
               )}
             </div>

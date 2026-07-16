@@ -343,18 +343,6 @@ export function RowGutterCell({
   )
 }
 
-/** True when the event target is a control that owns its own keystrokes — the `x` shortcut must not fire while typing. */
-export function isTypingTarget(target: EventTarget | null): boolean {
-  if (!(target instanceof HTMLElement)) return false
-  return (
-    target.isContentEditable ||
-    target.tagName === "INPUT" ||
-    target.tagName === "TEXTAREA" ||
-    target.tagName === "SELECT" ||
-    target.getAttribute("role") === "combobox"
-  )
-}
-
 /** Screen-reader announcement surface for selection and removal — visual feedback is the row states themselves. */
 export function InteractionAnnouncer({ message }: { message: string }) {
   return (
