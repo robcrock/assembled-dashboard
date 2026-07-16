@@ -25,3 +25,20 @@ export interface Agent {
   out_of_adherence_since: string | null
   out_of_adherence_sec: number
 }
+
+/**
+ * The agent figures an operator controls: who they are, what they're doing
+ * right now, and which queues they're trained on. Every other key on `Agent`
+ * is an OBSERVATION — measured, derived, or a verdict — and an editable
+ * observation would be a lie about the floor.
+ *
+ * The word "observation" appears nowhere in the code: it is expressed by
+ * ABSENCE from this union, and the compile error is the word. `adherence_status`
+ * is a verdict about whether the agent is where the schedule says; the clocks
+ * (`state_duration_sec`, `out_of_adherence_sec`) are measured from
+ * `state_since` / `out_of_adherence_since`. Typing a new number into any of
+ * them would change what the floor REPORTS without changing what the floor IS.
+ *
+ * No `readOnly` flag to forget: you declared it here or you didn't.
+ */
+export type AgentSetting = "name" | "state" | "queues"
