@@ -29,6 +29,28 @@ export interface Queue {
   wait_trend_sec: number[]
 }
 
+/**
+ * The queue figures an operator controls: a name, a PROMISE (`sla_target_sec`),
+ * and a PLAN (`volume_forecast_next_15m`). Every other key on `Queue` is an
+ * OBSERVATION — measured (`longest_wait_sec`, `volume_last_15m`,
+ * `tickets_waiting`, the staffing counts, `wait_trend_sec`), derived
+ * (`sla_headroom_pct`, `volume_vs_forecast_pct`), or a verdict (`sla_status`).
+ *
+ * The word "observation" appears nowhere in the code: it is expressed by
+ * ABSENCE from this union, and the compile error is the word. The distinction
+ * is the product's, not the type system's — `sla_target_sec` and
+ * `sla_headroom_pct` are both `number`, and TypeScript cannot tell a promise
+ * from a measurement. That makes this line a PROMISE, not a proof; its value is
+ * that the decision is made ONCE, here, next to the entity, in three reviewed
+ * lines — rather than re-made invisibly at each of a dozen call sites.
+ *
+ * No `readOnly` flag to forget: you declared it here or you didn't.
+ */
+export type QueueSetting =
+  | "name"
+  | "sla_target_sec"
+  | "volume_forecast_next_15m"
+
 /** Lower rank = more urgent. The triage ordering of the whole dashboard. */
 export const SLA_SEVERITY: Record<SlaStatus, number> = {
   breached: 0,
@@ -75,9 +97,7 @@ export const AT_RISK_HEADROOM_PCT = -25
  */
 export function rederiveQueue(q: Queue): Queue {
   const target = q.sla_target_sec > 0 ? q.sla_target_sec : 1
-  const headroom = Math.round(
-    ((q.longest_wait_sec - target) / target) * 100
-  )
+  const headroom = Math.round(((q.longest_wait_sec - target) / target) * 100)
   const forecast = q.volume_forecast_next_15m
   const vsForecast =
     forecast > 0

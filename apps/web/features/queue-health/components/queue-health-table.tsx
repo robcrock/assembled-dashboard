@@ -30,15 +30,20 @@
 //   out-of-adherence agent first, then shift a cross-trained one), derived
 //   from the SAME agent pool the adherence table reads.
 //
-// INTERACTIVE (opt-in, threaded from the template). The load-bearing edit
-// binding is the SLA TARGET (sla_target_sec, the promise). It lives on the
-// HEADROOM column — the cell that shows "wait / target" — framed as
-// observed / [input], the same shape Forecast uses to edit its plan; on
-// commit the overlay re-derives the Status badge, the headroom, and the
-// summary alarm counts (it keys on the field, not the column). Name is a text
-// edit, forecast a planning number; the Status badge, waiting, coverage, and
-// trend stay read-only — they are verdicts or observations, and an editable
-// observation would be a lie about the floor.
+// INTERACTIVE (opt-in, threaded from the template). The load-bearing edit is
+// the SLA TARGET (sla_target_sec, the promise). It lives on the HEADROOM
+// column — the cell that shows "wait / target" — because the Status badge is
+// DERIVED from it; on commit the overlay re-derives the badge, the headroom,
+// and the summary alarm counts (it keys on the field, not the column). Name is
+// a text edit, forecast a planning number. The Status badge, waiting, coverage
+// and trend stay read-only: `QueueSetting` leaves them out, so saying otherwise
+// is a compile error rather than a code review.
+//
+// MID-MIGRATION (ROB-97): Headroom and Forecast speak the new grammar — one
+// `cell(row, content)` anatomy each, with the settable figure marked in place.
+// The Queue name column still rides the legacy `edit: { field, get, type }`
+// binding and migrates in ROB-104, which is also when the old API and the
+// row-height bug that rides with it are deleted.
 
 import { useMemo, type ReactNode } from "react"
 
@@ -46,7 +51,6 @@ import { Duration } from "@workspace/ui/components/duration"
 import {
   columnTypes,
   DataTable,
-  EditFieldBox,
   type DataTableColumn,
 } from "@workspace/ui/components/data-table"
 import { DeviationBar } from "@workspace/ui/components/deviation-bar"
@@ -66,6 +70,7 @@ import {
   compareQueuesBySeverity,
   queueSeverityRank,
   type Queue,
+  type QueueSetting,
 } from "@/features/queue-health/model/queue"
 
 /**
@@ -93,47 +98,6 @@ function DeviationCell({
       </div>
       {bar}
     </div>
-  )
-}
-
-/** The read (and "full mirror" edit) face of the Headroom cell — shared so the
- *  two can't drift. */
-function headroomDisplay(q: Queue): ReactNode {
-  return (
-    <DeviationCell
-      absolutes={
-        <>
-          <Duration seconds={q.longest_wait_sec} /> /{" "}
-          <Duration seconds={q.sla_target_sec} />
-        </>
-      }
-      delta={<MetricDelta value={q.sla_headroom_pct} />}
-      bar={
-        <DeviationBar
-          value={q.sla_headroom_pct}
-          label={`${q.name}: longest wait ${formatDurationSec(q.longest_wait_sec)} against a ${formatDurationSec(q.sla_target_sec)} target`}
-          className="w-full"
-        />
-      }
-    />
-  )
-}
-
-/** The read (and "full mirror" edit) face of the Actual / forecast cell. */
-function forecastDisplay(q: Queue): ReactNode {
-  return (
-    <DeviationCell
-      absolutes={`${q.volume_last_15m} / ${q.volume_forecast_next_15m}`}
-      delta={<MetricDelta value={q.volume_vs_forecast_pct} />}
-      bar={
-        <DeviationBar
-          value={q.volume_vs_forecast_pct}
-          range={50}
-          label={`${q.name}: ${q.volume_last_15m} tickets last 15m against a forecast of ${q.volume_forecast_next_15m}`}
-          className="w-full"
-        />
-      }
-    />
   )
 }
 
@@ -172,7 +136,9 @@ export function QueueHealthTable({
     return map
   }, [queues, agents])
 
-  const columns = useMemo<DataTableColumn<Queue>[]>(
+  // `QueueSetting` is the whole edit contract: every `edits` key below is
+  // checked against it, so a column cannot offer to edit an observation.
+  const columns = useMemo<DataTableColumn<Queue, QueueSetting>[]>(
     () => [
       // Queue name leads: it's a queue table, so the entity being ranked is
       // the first thing the eye lands on; the status verdict reads second.
@@ -274,97 +240,75 @@ export function QueueHealthTable({
         // diverging bar whose baseline dot is the target itself. The whole
         // cell is neutral — the status verdict rides in the Status badge, so
         // the percent stays a plain colorless annotation like every delta.
-        cell: (q) => headroomDisplay(q),
-        // Pressure vs. the queue's own target — never raw seconds.
-        sortValue: (q) => q.sla_headroom_pct,
-        // the DeviationCell's fixed w-36 plus cell padding, exactly
-        className: "w-40",
-        // The editable half of this observed/target pair is the TARGET (the
-        // promise) — the same way Forecast's editable half is its forecast. The
-        // badge is derived, so the target is edited HERE, on the cell that shows
-        // "wait / target". renderField mirrors the Forecast cell's
-        // observed / [input] shape so the two twin columns edit identically.
-        edit: {
-          field: "sla_target_sec",
-          get: (q) => q.sla_target_sec,
-          type: columnTypes.number({ unit: "s", min: 10, max: 86_400 }),
-          renderField: ({ row, editor }) => (
-            <div className="flex items-center gap-1.5">
-              <span className="text-metric-sm whitespace-nowrap text-muted-foreground">
-                <Duration seconds={row.longest_wait_sec} /> /
-              </span>
-              <div className="min-w-0 flex-1">{editor}</div>
-            </div>
-          ),
-          // Resting edit-mode display: the observed context with the editable
-          // TARGET boxed as a field, so edit mode telegraphs which number is
-          // editable before the cell is clicked into (clicking swaps the box
-          // for the live NumberFieldEditor via renderField). The deviation bar
-          // stays; the delta drops — it's about to move as the target changes.
-          editCell: (q) => (
-            <div className="flex w-36 flex-col gap-1.5">
-              <div className="flex items-center gap-1.5">
-                <span className="text-metric-sm whitespace-nowrap text-muted-foreground">
-                  <Duration seconds={q.longest_wait_sec} /> /
-                </span>
-                <EditFieldBox>
-                  <Duration seconds={q.sla_target_sec} />
-                </EditFieldBox>
-              </div>
+        //
+        // ONE anatomy, every state. The editable half of this observed/target
+        // pair is the TARGET (the promise); the wait beside it is measured, and
+        // the bar and percent are derived from both. The badge is derived too,
+        // which is why the target is edited HERE — on the cell that actually
+        // shows it, beside the wait it is measured against.
+        //
+        // What this replaced: `cell` + `editCell` + `renderField` wrote this
+        // anatomy three times and they disagreed. `renderField` had NO
+        // DeviationBar, so clicking the cell DELETED the bar and dropped the
+        // number ~6px — every row, every click. There is no second tree to
+        // forget the bar in now.
+        cell: (q, content) => (
+          <DeviationCell
+            absolutes={
+              <>
+                <Duration seconds={q.longest_wait_sec} /> /{" "}
+                {content.duration({
+                  edits: "sla_target_sec",
+                  min: 10,
+                  max: 86_400,
+                })}
+              </>
+            }
+            delta={<MetricDelta value={q.sla_headroom_pct} />}
+            bar={
               <DeviationBar
                 value={q.sla_headroom_pct}
                 label={`${q.name}: longest wait ${formatDurationSec(q.longest_wait_sec)} against a ${formatDurationSec(q.sla_target_sec)} target`}
                 className="w-full"
               />
-            </div>
-          ),
-        },
+            }
+          />
+        ),
+        // Pressure vs. the queue's own target — never raw seconds.
+        sortValue: (q) => q.sla_headroom_pct,
+        // the DeviationCell's fixed w-36 plus cell padding, exactly
+        className: "w-40",
       },
       {
         key: "forecast",
         header: "Actual / forecast",
-        // Same deviation anatomy as headroom, deliberately COLORLESS: the bar's
-        // baseline dot is the forecast, but over-forecast is a leading
-        // indicator, not a verdict — no status tint, stock muted delta.
-        cell: (q) => forecastDisplay(q),
-        sortValue: (q) => q.volume_vs_forecast_pct,
-        className: "w-40",
-        // The forecast is a PLAN — the one editable number in this cell; the
-        // actual beside it is an observation and stays read-only.
-        edit: {
-          field: "volume_forecast_next_15m",
-          get: (q) => q.volume_forecast_next_15m,
-          type: columnTypes.number({ min: 0 }),
-          // Keep the cell's own "actual / forecast" shape while editing —
-          // `60 / [input]` makes it unmistakable the input is the forecast,
-          // not the actual, and the field sits under its own column header.
-          renderField: ({ row, editor }) => (
-            <div className="flex items-center gap-1.5">
-              <span className="text-metric-sm whitespace-nowrap text-muted-foreground">
-                {row.volume_last_15m} /
-              </span>
-              <div className="min-w-0 flex-1">{editor}</div>
-            </div>
-          ),
-          // Same framed-field treatment as Headroom: the actual stays observed
-          // context, the editable FORECAST is boxed as the field, bar retained.
-          editCell: (q) => (
-            <div className="flex w-36 flex-col gap-1.5">
-              <div className="flex items-center gap-1.5">
-                <span className="text-metric-sm whitespace-nowrap text-muted-foreground">
-                  {q.volume_last_15m} /
-                </span>
-                <EditFieldBox>{q.volume_forecast_next_15m}</EditFieldBox>
-              </div>
+        // Headroom's twin, and now visibly the twin: same anatomy, same shape,
+        // same one editable half. The forecast is a PLAN — the one figure an
+        // operator controls here; the actual beside it is measured. Deliberately
+        // COLORLESS: the bar's baseline dot is the forecast, but over-forecast
+        // is a leading indicator, not a verdict — no status tint, stock muted
+        // delta.
+        cell: (q, content) => (
+          <DeviationCell
+            absolutes={
+              <>
+                {q.volume_last_15m} /{" "}
+                {content.number({ edits: "volume_forecast_next_15m", min: 0 })}
+              </>
+            }
+            delta={<MetricDelta value={q.volume_vs_forecast_pct} />}
+            bar={
               <DeviationBar
                 value={q.volume_vs_forecast_pct}
                 range={50}
                 label={`${q.name}: ${q.volume_last_15m} tickets last 15m against a forecast of ${q.volume_forecast_next_15m}`}
                 className="w-full"
               />
-            </div>
-          ),
-        },
+            }
+          />
+        ),
+        sortValue: (q) => q.volume_vs_forecast_pct,
+        className: "w-40",
       },
       {
         key: "trend",
