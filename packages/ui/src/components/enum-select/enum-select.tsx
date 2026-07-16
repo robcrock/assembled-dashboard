@@ -56,8 +56,10 @@ function EnumSelect<V extends string>({
         // Single-select only emits null on programmatic clears, which this
         // editor never issues — a required enum has no "no value" pick.
         if (next === null) return
+        // Both intents in one tick, so the commit carries `next` rather than
+        // leaving the container to read a draft that has not rendered yet.
         onChange(next as V)
-        onCommit?.()
+        onCommit?.(next as V)
       }}
       onOpenChange={(open, details) => {
         if (!open && details.reason === "escape-key") onCancel?.()

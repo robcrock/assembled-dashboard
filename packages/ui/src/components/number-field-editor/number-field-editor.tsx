@@ -65,7 +65,7 @@ function NumberFieldEditor({
           const next = event.target.valueAsNumber
           if (!Number.isNaN(next)) onChange(next)
         }}
-        onKeyDown={editorKeyDown(onCommit, onCancel)}
+        onKeyDown={editorKeyDown(value, onCommit, onCancel)}
         autoFocus={autoFocus}
         disabled={disabled}
         aria-invalid={invalid || undefined}

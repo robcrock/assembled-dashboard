@@ -1,37 +1,24 @@
 // The cell's edit machine: what an open edit IS, how it moves, and when it
-// becomes a patch. Pure TS by design, not by accident — no React import, no
-// DOM, no rendering. Every rule below is therefore checkable in a unit test
-// rather than by clicking a table and squinting, which is the whole reason
-// the states were pulled out of the renderer in the first place.
+// becomes a patch. Pure TS — no React, no DOM.
 //
-// THE SLOT IS PURE DATA. It holds an address and a draft: no row, no
-// closures, no capability. The behavior and the current truth ride on the
-// EVENTS instead, read fresh at the moment of the gesture. That split is
-// load-bearing twice over — a poll tick re-mints every capability closure, so
-// state that retained one would be holding a stale twin of the live thing;
-// and a draft that outlives a tick must not pin the row it was seeded from.
+// The invariants a caller may rely on:
+//   - ONE slot, so two open edits are unrepresentable.
+//   - The slot is pure data — an address and a draft. Behavior and the current
+//     truth ride on the events, read fresh at the gesture.
+//   - Addresses are strings, never row identity: the table is fed a whole new
+//     row array every poll.
+//   - Nothing here mutates. A commit leaves as a patch INTENT; what it means is
+//     the consumer's policy.
 //
-// ADDRESSES ARE STRINGS, never row identity. The table is fed a whole new
-// Queue[] every poll, so `row === slot.row` is false a tick after the click,
-// and an identity-keyed draft would evaporate under the caret.
-//
-// ONE SLOT, so two open edits are UNREPRESENTABLE rather than merely
-// discouraged. "One cell edits at a time" is an invariant across siblings; no
-// cell can hold it, so no cell is asked to.
-//
-// The machine NEVER MUTATES. A commit leaves as a patch intent and the
-// consumer decides what it means — undo, confirmation, the optimistic
-// overlay are all policy above this layer.
+// Why each of those is the way it is: the `cell state` docs page.
 
 /**
- * Where an edit lives. Three strings, because a cell may hold more than one
- * editable content (the compound cells hold a figure beside a read-only
- * twin), so the column alone doesn't address it.
+ * Where an edit lives. Three strings and not two: a cell may hold more than one
+ * editable content, so the column alone doesn't address it.
  *
- * Known gap, deliberate: two contents editing the SAME key in one cell share
- * an address and would both open. Nonsense markup, visible instantly, no data
- * corruption — and the alternative (a `useId` address) buys the fix with an
- * address no one can read in devtools.
+ * Deliberate gap — two contents editing the SAME key in one cell share an
+ * address and both open. Nonsense markup, visible instantly, no data
+ * corruption.
  */
 export interface ContentAddress {
   rowKey: string
@@ -45,13 +32,9 @@ export function sameAddress(a: ContentAddress, b: ContentAddress): boolean {
 }
 
 /**
- * The behavioral half of an edit capability — everything this machine needs
- * and nothing it doesn't. The rendering half (`show`, `control`) lives in
+ * The behavioral half of an edit capability — everything this machine needs and
+ * nothing it doesn't. The rendering half (`show`, `control`) lives in
  * cell-content.tsx, whose `EditCapability` extends this.
- *
- * The dependency points this way on purpose: the state machine depends on
- * BEHAVIOR, not on rendering, which is what keeps this file React-free and
- * testable in node.
  */
 export interface EditBehavior<V, Draft> {
   /** Seed the edit from the current truth. */
@@ -60,17 +43,15 @@ export interface EditBehavior<V, Draft> {
   commit: (draft: Draft) => V | null
   /**
    * The control's popup renders outside the box, so focus legitimately leaves
-   * into a portal and blur carries no meaning. AG Grid's `cellEditorPopup`.
+   * into a portal and blur carries no meaning.
    */
   popup?: boolean
 }
 
 /**
- * The open edit. Owned by the table (one, or none), addressed by strings,
- * carrying the draft as `unknown` — the slot is heterogeneous by nature since
- * every column drafts a different shape. Type safety is established at the
- * builder, where the value type is still known; re-asserting it here would be
- * a cast wearing a generic.
+ * The open edit. Carries the draft as `unknown` because the table holds ONE of
+ * these across columns that draft different shapes; the type is restored at the
+ * builder, where the value type is still known.
  */
 export interface EditSlot {
   address: ContentAddress
@@ -79,11 +60,10 @@ export interface EditSlot {
 
 /**
  * What a cell IS right now. Three arms, because "no box", "a box", and "a box
- * with a live control in it" are three visibly different things and collapsing
- * any two of them is how a cell starts lying about what a click will do.
+ * with a live control in it" are three visibly different things.
  *
  * `reading` is not "not editable" — a cell with a capability still reads as
- * `reading` until the table enters edit mode. Mode gates the box.
+ * `reading` until editing is permitted. Permission gates the box.
  */
 export type CellState<
   V,
@@ -100,16 +80,9 @@ export type CellState<
       committable: boolean
     }
 
-/* The value and draft types are read OFF the capability rather than asked for
- * separately: `edit` is the only argument that knows both, so it's the only
- * honest inference site. Given `{ draft: (v: number) => number | null }`, the
- * `value` argument is then checked as number and the draft surfaces as
- * `number | null` — with no call site ever writing a type argument.
- *
- * `any` in the constraint is load-bearing, not laziness: EditBehavior is
- * contravariant in both parameters (`draft` takes V, `commit` takes Draft), so
- * `any` is its only universal supertype — `unknown`/`never` reject every real
- * capability. Same reason the incumbent wrote `ColumnType<any, any>`. */
+/* `any` is load-bearing, not laziness: EditBehavior is contravariant in both
+ * parameters (`draft` takes V, `commit` takes Draft), so `any` is its only
+ * universal supertype — `unknown`/`never` reject every real capability. */
 /* eslint-disable @typescript-eslint/no-explicit-any -- see above: the only supertype of a doubly-contravariant type */
 type AnyEdit = EditBehavior<any, any>
 type EditValue<E> = E extends EditBehavior<infer V, any> ? V : never
@@ -117,28 +90,34 @@ type EditDraft<E> = E extends EditBehavior<any, infer Draft> ? Draft : never
 /* eslint-enable @typescript-eslint/no-explicit-any */
 
 /**
- * Project a cell's state. `edit` is REQUIRED: a content with no edit
- * capability never asks for a state, because it doesn't have one — the
- * read-only cells don't *skip* the editing branch, they have none to skip.
- * That's the difference between this and a `readOnly` flag somebody forgets.
+ * Project a cell's state. `edit` is REQUIRED: a content with no edit capability
+ * never asks for a state, because it doesn't have one — read-only cells don't
+ * skip the editing branch, they have none to skip.
+ *
+ * V and Draft are read OFF the capability rather than asked for separately:
+ * `edit` is the only argument that knows both, so it's the only honest
+ * inference site — and no call site ever writes a type argument.
  */
 export function cellState<E extends AnyEdit>(args: {
   edit: E
-  /** The table's edit mode. Capability without mode still reads. */
-  mode: boolean
+  /**
+   * May this value be changed right now — every gate the consumer applies,
+   * already resolved to one answer by the caller. Today that is the table's
+   * edit mode; a row-level or per-key rule would be `&&`-ed in at the same
+   * site and this machine would not notice, which is the seam working.
+   */
+  permitted: boolean
   value: EditValue<E>
   address: ContentAddress
   slot: EditSlot | null
 }): CellState<EditValue<E>, EditDraft<E>, E> {
-  const { edit, mode, address, slot } = args
-  if (!mode) return { state: "reading" }
+  const { edit, permitted, address, slot } = args
+  if (!permitted) return { state: "reading" }
   if (!slot || !sameAddress(slot.address, address)) {
     return { state: "editable", edit }
   }
-  // The one cast in the machine, and the reason it's confined here: the slot
-  // is heterogeneous (`unknown`) because the table holds ONE of them across
-  // columns that draft different shapes. This is where the value type is known
-  // again, so this is where it's restored.
+  // The one cast in the machine, and the reason it's confined here: this is
+  // where the value type is known again, so this is where it's restored.
   const draft = slot.draft as EditDraft<E>
   return {
     state: "editing",
@@ -149,21 +128,18 @@ export function cellState<E extends AnyEdit>(args: {
 }
 
 /**
- * The gestures. `commit` carries `via` because the three ways to ask are not
- * the same question: Enter is a deliberate assertion (a bad draft HOLDS, so
- * the operator sees why), while blur and pick are departures (a bad draft
- * reverts rather than blocking an exit nobody can see they're blocked from).
+ * The gestures.
  *
- * `value` is the current truth, read at the gesture — there is no `value`
- * prop that could disagree with the row.
+ * `via` distinguishes them because the three ways to ask are not the same
+ * question: Enter is a deliberate assertion (a bad draft HOLDS, so the operator
+ * sees why), while blur and pick are departures (a bad draft reverts rather
+ * than blocking an exit nobody can see they're blocked from).
  *
- * `commit` CARRIES THE DRAFT IT MEANS rather than letting the machine read the
- * slot. A picker fires `onChange` then `onCommit` in ONE tick (EnumSelect
- * does exactly this), so the slot's draft is a render behind at commit time
- * and committing from it would silently land the PREVIOUS value on every
- * pick. The gesture knows what it is committing; the slot is a render behind
- * by construction, and no amount of care in the store fixes that. The
- * incumbent papered over it with a pair of refs beside the state.
+ * `value` is the current truth, read at the gesture — there is no `value` prop
+ * that could disagree with the row. `commit` likewise carries the draft it
+ * means rather than letting the machine read the slot, because a picker emits
+ * its change and its commit in one tick and the slot is a render behind by
+ * construction.
  */
 export type CellEvent<V, Draft> =
   | {
@@ -194,8 +170,8 @@ export interface CellTransition<V> {
 
 /**
  * Every transition, in one place. Total by construction: an event for an
- * address that isn't open is a no-op rather than an error, because a stray
- * blur from a unmounting control is normal and shouldn't be a crash.
+ * address that isn't open is a no-op rather than an error, because a stray blur
+ * from an unmounting control is normal and shouldn't be a crash.
  */
 export function reduceCell<V, Draft>(
   slot: EditSlot | null,
@@ -211,8 +187,7 @@ export function reduceCell<V, Draft>(
     }
   }
 
-  // Not the open cell? Nothing happened. Covers the stray blur from a control
-  // being torn down, and the second cell's events during a replace.
+  // Not the open cell? Nothing happened.
   if (!slot || !sameAddress(slot.address, event.address)) {
     return { slot, patch: null }
   }
@@ -233,18 +208,16 @@ export function reduceCell<V, Draft>(
   const value = event.behavior.commit(event.draft)
 
   if (value === null) {
-    // Enter on a draft that isn't a value yet: HOLD. Staying open with
-    // aria-invalid is the only way the operator learns why — closing would
-    // silently discard what they typed. Hold the EVENT's draft, so the held
-    // cell shows what was actually typed rather than a render-old copy.
+    // Enter on a draft that isn't a value yet: HOLD, so the operator learns
+    // why rather than watching what they typed vanish. Hold the EVENT's draft.
     if (event.via === "enter") {
       return {
         slot: { address: slot.address, draft: event.draft },
         patch: null,
       }
     }
-    // Blur or pick: revert to truth. The cell repaints from the row rather
-    // than inventing a 0 out of an emptied field.
+    // Blur or pick: revert to truth rather than inventing a 0 from an emptied
+    // field.
     return { slot: null, patch: null }
   }
 
@@ -268,12 +241,11 @@ export function projectEdit(
 }
 
 /**
- * Did a commit actually change anything? Reference equality is wrong here and
- * shipped as a bug: a multi-select mints a NEW array every render, so an
- * untouched membership list compared `!==` its own truth and emitted a phantom
- * patch on every close. One shallow step is enough — every value that reaches
- * a cell is a scalar or a flat list of them, and a deep compare would be
- * answering a question this system doesn't ask.
+ * Did a commit actually change anything? Arrays compare member-wise, not by
+ * reference: a multi-select mints a new array every render, so an untouched
+ * membership list would otherwise compare `!==` its own truth and emit a
+ * phantom patch on every close. One shallow step is enough — every value that
+ * reaches a cell is a scalar or a flat list of them.
  */
 export function unchanged(a: unknown, b: unknown): boolean {
   if (Array.isArray(a) && Array.isArray(b)) {

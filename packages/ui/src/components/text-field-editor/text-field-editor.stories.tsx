@@ -48,7 +48,7 @@ function Controlled(props: {
           setValue(next)
           setNote(null)
         }}
-        onCommit={() => setNote(`committed "${value}"`)}
+        onCommit={(draft) => setNote(`committed "${draft}"`)}
         onCancel={() => {
           setValue(props.initial)
           setNote("cancelled — draft reverted")

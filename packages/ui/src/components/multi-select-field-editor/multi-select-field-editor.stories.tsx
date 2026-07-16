@@ -60,7 +60,7 @@ function Controlled(props: {
           setValue(next)
           setNote(null)
         }}
-        onCommit={() => setNote(`committed ${value.length} queue(s)`)}
+        onCommit={(draft) => setNote(`committed ${draft.length} queue(s)`)}
         onCancel={() => {
           setValue(props.initial)
           setNote("cancelled — draft reverted")

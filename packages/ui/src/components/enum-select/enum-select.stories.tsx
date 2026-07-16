@@ -16,7 +16,7 @@ const meta = {
         component: `
 The edit face of a one-of-N value — the editor an \`enum\` column type (and the preferred-component types built on it: \`status\`, an app's \`agentState\`) resolves to. Composes the vendored \`Select\`; the generic \`V\` keeps the chosen value on the **same union the display primitive renders**, so view and editor cannot drift.
 
-The keyboard grammar adapts to a picker: **picking an option IS the save intent** (\`onChange\` then \`onCommit\`), and **Escape maps to onCancel** whether the popup is open or the trigger is focused closed. Enter/Space stay native — they open the picker.
+The keyboard grammar adapts to a picker: **picking an option IS the save intent** (\`onChange\` then \`onCommit\`, both in the same tick — which is why \`onCommit\` carries the draft it means, rather than leaving the container to read one that has not rendered yet), and **Escape maps to onCancel** whether the popup is open or the trigger is focused closed. Enter/Space stay native — they open the picker.
 
 **Use it for:** an agent's state, any status-class enum — one value from a short, closed set.
 
@@ -83,7 +83,7 @@ function Controlled<V extends string>(props: {
       <EnumSelect
         value={value}
         onChange={setValue}
-        onCommit={() => setNote("committed — a pick is the intent")}
+        onCommit={(draft) => setNote(`committed "${draft}" — a pick is the intent`)}
         onCancel={() => {
           setValue(props.initial)
           setNote("cancelled — draft reverted")

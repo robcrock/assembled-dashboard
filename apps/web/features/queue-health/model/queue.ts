@@ -1,13 +1,9 @@
 // Queue entity + SLA value concepts. Pure TS — no React imports.
 //
-// Field names mirror the wire format (dashboard_state.json) 1:1: the fixture
-// is already the shape a metrics API hands the frontend, and a renaming layer
-// would buy nothing but drift. Pre-computed fields (sla_status, *_pct) are
-// trusted as-is — the server is the source of truth for classification; the
-// raw inputs (longest_wait_sec, sla_target_sec) stay available for display.
-// A mirrored field may lead its rendering by a while (agents_available sat
-// unrendered until the Coverage cell earned it) — the typed wire contract is
-// the point, not the current render coverage.
+// Field names mirror the wire format (dashboard_state.json) 1:1: the fixture is
+// already the shape a metrics API hands the frontend, and a renaming layer would
+// buy nothing but drift. Pre-computed fields (sla_status, *_pct) are trusted
+// as-is — the server classifies; the raw inputs stay available for display.
 
 export type SlaStatus = "healthy" | "at_risk" | "breached"
 
@@ -32,24 +28,18 @@ export interface Queue {
 /**
  * The queue figures an operator controls: a name, a PROMISE (`sla_target_sec`),
  * and a PLAN (`volume_forecast_next_15m`). Every other key on `Queue` is an
- * OBSERVATION — measured (`longest_wait_sec`, `volume_last_15m`,
- * `tickets_waiting`, the staffing counts, `wait_trend_sec`), derived
- * (`sla_headroom_pct`, `volume_vs_forecast_pct`), or a verdict (`sla_status`).
+ * OBSERVATION — measured, derived, or a verdict — and an editable observation is
+ * a lie about the floor.
  *
- * The word "observation" appears nowhere in the code: it is expressed by
- * ABSENCE from this union, and the compile error is the word. The distinction
- * is the product's, not the type system's — `sla_target_sec` and
- * `sla_headroom_pct` are both `number`, and TypeScript cannot tell a promise
- * from a measurement. That makes this line a PROMISE, not a proof; its value is
- * that the decision is made ONCE, here, next to the entity, in three reviewed
- * lines — rather than re-made invisibly at each of a dozen call sites.
- *
- * No `readOnly` flag to forget: you declared it here or you didn't.
+ * "Observation" appears nowhere in the code: it is expressed by ABSENCE from
+ * this union, and the compile error is the word. The distinction is the
+ * product's, not the type system's — `sla_target_sec` and `sla_headroom_pct` are
+ * both `number`. That makes this a PROMISE, not a proof; its value is that the
+ * decision is made ONCE, here, beside the entity, rather than re-made invisibly
+ * at a dozen call sites. No `readOnly` flag to forget: you declared it or you
+ * didn't.
  */
-export type QueueSetting =
-  | "name"
-  | "sla_target_sec"
-  | "volume_forecast_next_15m"
+export type QueueSetting = "name" | "sla_target_sec" | "volume_forecast_next_15m"
 
 /** Lower rank = more urgent. The triage ordering of the whole dashboard. */
 export const SLA_SEVERITY: Record<SlaStatus, number> = {
@@ -60,11 +50,9 @@ export const SLA_SEVERITY: Record<SlaStatus, number> = {
 
 /**
  * The single triage sort key: severity band first, then depth past the queue's
- * own target (higher headroom = further past — never raw wait seconds, since a
- * 370s wait can be healthy against a 30-min promise). Lower rank = more urgent.
- *
- * Both the pre-sort comparator below AND the queue table's status column sort
- * by this one function, so the two orderings cannot drift.
+ * own target — never raw wait seconds, since a 370s wait can be healthy against
+ * a 30-minute promise. Both the pre-sort comparator and the table's status
+ * column sort by this one function, so the two orderings cannot drift.
  */
 export function queueSeverityRank(q: Queue): number {
   return SLA_SEVERITY[q.sla_status] * 10_000 - q.sla_headroom_pct
@@ -80,39 +68,45 @@ export function compareQueuesBySeverity(a: Queue, b: Queue): number {
 }
 
 /**
- * The at-risk band: a queue whose longest wait sits within this many percent
- * BELOW its target is "approaching the promise". Reverse-engineered from the
- * fixture's own classifications (vip at −17% is at_risk, general at −37% is
- * healthy) so re-derived statuses agree with server-computed ones.
+ * The at-risk band: a reading within this many percent BELOW its target is
+ * "approaching the promise". Reverse-engineered from the fixture's own
+ * classifications (vip at −17% is at_risk, general at −37% is healthy) so
+ * re-derived statuses agree with server-computed ones.
  */
 export const AT_RISK_HEADROOM_PCT = -25
 
 /**
+ * Signed % of a reading against its target; positive = past it. The one shape
+ * every SLA-ish band in this model is measured with.
+ */
+export function headroomPct(reading: number, target: number): number {
+  const safe = target > 0 ? target : 1
+  return Math.round(((reading - safe) / safe) * 100)
+}
+
+/** The one severity classifier. Every band on this entity comes from here. */
+export function classify(headroom: number): SlaStatus {
+  if (headroom > 0) return "breached"
+  return headroom > AT_RISK_HEADROOM_PCT ? "at_risk" : "healthy"
+}
+
+/**
  * Re-derive a queue's computed fields from its raw inputs — the write-side
- * counterpart of "pre-computed fields are trusted as-is": once an EDIT
- * changes an input (a new sla_target_sec, a new forecast), the server-baked
- * derivations are stale and the badge would lie. The formulas reproduce the
- * fixture's own numbers exactly (billing: (175−120)/120 → 46, breached;
- * vip: −17, at_risk), verified against every fixture row.
+ * counterpart of "pre-computed fields are trusted as-is". Once an EDIT changes
+ * an input (a new target, a new forecast), the server-baked derivations are
+ * stale and the badge would lie.
  */
 export function rederiveQueue(q: Queue): Queue {
-  const target = q.sla_target_sec > 0 ? q.sla_target_sec : 1
-  const headroom = Math.round(((q.longest_wait_sec - target) / target) * 100)
+  const headroom = headroomPct(q.longest_wait_sec, q.sla_target_sec)
   const forecast = q.volume_forecast_next_15m
   const vsForecast =
     forecast > 0
       ? Math.round(((q.volume_last_15m - forecast) / forecast) * 100)
       : 0
-  const status: SlaStatus =
-    headroom > 0
-      ? "breached"
-      : headroom > AT_RISK_HEADROOM_PCT
-        ? "at_risk"
-        : "healthy"
   return {
     ...q,
     sla_headroom_pct: headroom,
     volume_vs_forecast_pct: vsForecast,
-    sla_status: status,
+    sla_status: classify(headroom),
   }
 }
