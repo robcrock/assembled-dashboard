@@ -38,6 +38,7 @@ import { OrgIdentity } from "@workspace/ui/components/org-identity"
 import { PageSection } from "@workspace/ui/components/page-section"
 import { StaleIndicator } from "@workspace/ui/components/stale-indicator"
 import { StatCard } from "@workspace/ui/components/stat-card"
+import { Toast } from "@workspace/ui/components/toast"
 import type { Feed } from "@workspace/ui/lib/feed"
 
 import { cn } from "@workspace/ui/lib/utils"
@@ -106,12 +107,15 @@ function ToggleLabel({
  */
 function DemoControls({
   paused,
+  editHold,
   injectError,
   onTogglePause,
   onToggleError,
   feed,
 }: {
   paused: boolean
+  /** Edit mode is holding the replay (independent of the user's Pause lever). */
+  editHold: boolean
   injectError: boolean
   onTogglePause: () => void
   onToggleError: () => void
@@ -155,9 +159,11 @@ function DemoControls({
           />
         </Button>
       </div>
-      {paused && (
+      {(paused || editHold) && (
         <div className="text-metric-sm text-muted-foreground max-lg:hidden">
-          replay paused · goes stale when the next tick is late
+          {paused
+            ? "replay paused · goes stale when the next tick is late"
+            : "editing — replay held so a tick can't shuffle your draft"}
         </div>
       )}
       <StaleIndicator
@@ -171,7 +177,19 @@ function DemoControls({
 export function Dashboard() {
   const [paused, setPaused] = useState(false)
   const [injectError, setInjectError] = useState(false)
-  const { data, org, feed } = useDashboardData({ paused, fail: injectError })
+  // Per-table edit mode, owned here because it COUPLES to page state: while
+  // either table is being edited the replay pauses (a tick mid-draft would
+  // shuffle rows under the operator's pointer). The overlay is what makes
+  // edits durable; the pause is only draft-time stability. The feed still
+  // ages honestly while paused — a long edit session dims to stale, which is
+  // the truth about the data, not a bug in the mode.
+  const [editingQueues, setEditingQueues] = useState(false)
+  const [editingAgents, setEditingAgents] = useState(false)
+  const pausedEffective = paused || editingQueues || editingAgents
+  const { data, org, feed, mutate, toast } = useDashboardData({
+    paused: pausedEffective,
+    fail: injectError,
+  })
 
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
@@ -210,6 +228,7 @@ export function Dashboard() {
                 />
                 <DemoControls
                   paused={paused}
+                  editHold={editingQueues || editingAgents}
                   injectError={injectError}
                   onTogglePause={() => setPaused((p) => !p)}
                   onToggleError={() => setInjectError((e) => !e)}
@@ -285,6 +304,12 @@ export function Dashboard() {
               queues={data?.queues ?? []}
               agents={data?.agents ?? []}
               feed={feed}
+              interactive={{
+                onPatch: mutate.patchQueue,
+                onDelete: mutate.deleteQueues,
+                editing: editingQueues,
+                onEditingChange: setEditingQueues,
+              }}
             />
           </PageSection>
 
@@ -297,10 +322,32 @@ export function Dashboard() {
               agents={data?.agents ?? []}
               feed={feed}
               queueNamesById={queueNamesById}
+              interactive={{
+                onPatch: mutate.patchAgent,
+                onDelete: mutate.deleteAgents,
+                editing: editingAgents,
+                onEditingChange: setEditingAgents,
+              }}
             />
           </PageSection>
         </div>
       </main>
+      {/* The store's one transient notice (undo countdown / rollback alert).
+          key restarts the lifetime when a newer notice supersedes. Placement
+          is the page's: the primitive is just the card. */}
+      {toast && (
+        <div className="fixed right-6 bottom-6 z-50">
+          <Toast
+            key={toast.key}
+            tone={toast.tone}
+            message={toast.message}
+            actionLabel={toast.actionLabel}
+            duration={toast.duration}
+            onAction={toast.onAction}
+            onExpire={toast.onExpire}
+          />
+        </div>
+      )}
     </div>
   )
 }

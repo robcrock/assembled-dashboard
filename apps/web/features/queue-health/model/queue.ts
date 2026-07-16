@@ -56,3 +56,43 @@ export function compareQueuesBySeverity(a: Queue, b: Queue): number {
     a.name.localeCompare(b.name)
   )
 }
+
+/**
+ * The at-risk band: a queue whose longest wait sits within this many percent
+ * BELOW its target is "approaching the promise". Reverse-engineered from the
+ * fixture's own classifications (vip at −17% is at_risk, general at −37% is
+ * healthy) so re-derived statuses agree with server-computed ones.
+ */
+export const AT_RISK_HEADROOM_PCT = -25
+
+/**
+ * Re-derive a queue's computed fields from its raw inputs — the write-side
+ * counterpart of "pre-computed fields are trusted as-is": once an EDIT
+ * changes an input (a new sla_target_sec, a new forecast), the server-baked
+ * derivations are stale and the badge would lie. The formulas reproduce the
+ * fixture's own numbers exactly (billing: (175−120)/120 → 46, breached;
+ * vip: −17, at_risk), verified against every fixture row.
+ */
+export function rederiveQueue(q: Queue): Queue {
+  const target = q.sla_target_sec > 0 ? q.sla_target_sec : 1
+  const headroom = Math.round(
+    ((q.longest_wait_sec - target) / target) * 100
+  )
+  const forecast = q.volume_forecast_next_15m
+  const vsForecast =
+    forecast > 0
+      ? Math.round(((q.volume_last_15m - forecast) / forecast) * 100)
+      : 0
+  const status: SlaStatus =
+    headroom > 0
+      ? "breached"
+      : headroom > AT_RISK_HEADROOM_PCT
+        ? "at_risk"
+        : "healthy"
+  return {
+    ...q,
+    sla_headroom_pct: headroom,
+    volume_vs_forecast_pct: vsForecast,
+    sla_status: status,
+  }
+}

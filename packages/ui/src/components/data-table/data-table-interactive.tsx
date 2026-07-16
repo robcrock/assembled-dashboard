@@ -11,6 +11,9 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@workspace/ui/components/dropdown-menu"
+import { TableCell, TableRow } from "@workspace/ui/components/table"
+import { cn } from "@workspace/ui/lib/utils"
+
 import type { ColumnType } from "./column-types"
 import type { DataTableColumn, DataTableInteractive } from "./data-table"
 
@@ -60,6 +63,8 @@ export interface EditFace<Row> {
   read: (row: Row) => unknown
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- heterogeneous by nature
   type: ColumnType<any, any>
+  /** Frames the editor with read-only context in the row form (the object binding's `renderField`). */
+  renderField?: (ctx: { row: Row; editor: React.ReactNode }) => React.ReactNode
 }
 
 export function resolveEditFace<Row>(
@@ -74,7 +79,7 @@ export function resolveEditFace<Row>(
   const type = edit.type ?? column.type
   const read = edit.get ?? column.get
   if (!type?.editor || !read) return null
-  return { field: edit.field, read, type }
+  return { field: edit.field, read, type, renderField: edit.renderField }
 }
 
 /* ---- state ---------------------------------------------------------------
@@ -488,9 +493,12 @@ export function EditableCell({
 
 interface RowEditFormProps<Row> {
   row: Row
-  /** Human name for the row, heading the form. */
+  /** Human name for the row, naming the form in the action strip. */
   label: string
   columns: DataTableColumn<Row>[]
+  colSpan: number
+  /** Width classes for the empty lead cells (gutter, expander) so the field row aligns to the data row above. */
+  leadingCells: string[]
   drafts: Record<string, unknown>
   onDraftChange: (field: string, draft: unknown) => void
   onSave: (patch: Record<string, unknown>) => void
@@ -498,27 +506,37 @@ interface RowEditFormProps<Row> {
 }
 
 /**
- * The row-level edit face, rendered in the expander's detail slot: every
- * editable column as a labeled field, one batched Save (a single onPatch
- * with the CHANGED fields only), Cancel discards. Per-field editors get no
- * onCommit — Enter must not half-save a form.
+ * The row-level edit face — the batched form, but laid out as REAL table
+ * cells in the same table, so each field sits under the column it edits
+ * (under layout="fixed" the browser aligns them for free; no width mirroring
+ * to drift). Two rows: an aligned field row (one cell per column, editor
+ * where editable, empty otherwise) and an action strip. The column header
+ * above is the field's label, so per-field labels are gone — with the
+ * association restored, repeating "Actual / forecast" as a caption was the
+ * old flow-layout's tax, not a real need. Per-field editors get no onCommit:
+ * Enter must not half-save a batched form; the strip's Save commits.
  */
 export function RowEditForm<Row>({
   row,
   label,
   columns,
+  colSpan,
+  leadingCells,
   drafts,
   onDraftChange,
   onSave,
   onCancel,
 }: RowEditFormProps<Row>) {
-  const fields = columns
-    .map((column) => ({ column, face: resolveEditFace(column) }))
+  const facesByKey = new Map(
+    columns.map((column) => [column.key, resolveEditFace(column)])
+  )
+  const editable = columns
+    .map((column) => ({ column, face: facesByKey.get(column.key) }))
     .filter((f): f is { column: DataTableColumn<Row>; face: EditFace<Row> } =>
       Boolean(f.face)
     )
 
-  const invalid = fields.some(({ face }) => {
+  const invalid = editable.some(({ face }) => {
     const draft = drafts[face.field]
     const from = face.type.fromDraft ?? ((d: unknown) => d)
     return from(draft) === null
@@ -526,7 +544,7 @@ export function RowEditForm<Row>({
 
   function save() {
     const patch: Record<string, unknown> = {}
-    for (const { face } of fields) {
+    for (const { face } of editable) {
       const draft = drafts[face.field]
       const from = face.type.fromDraft ?? ((d: unknown) => d)
       const next = from(draft)
@@ -535,41 +553,81 @@ export function RowEditForm<Row>({
     onSave(patch)
   }
 
+  const bandClass = "bg-muted/40 hover:bg-muted/40"
+
   return (
-    <div className="flex flex-col gap-3">
-      <div className="text-label text-muted-foreground">Edit {label}</div>
-      <div className="flex flex-wrap gap-x-8 gap-y-3">
-        {fields.map(({ column, face }) => {
-          const draft = drafts[face.field]
-          const from = face.type.fromDraft ?? ((d: unknown) => d)
+    <>
+      <TableRow className={bandClass}>
+        {leadingCells.map((width, i) => (
+          <TableCell key={`lead-${i}`} className={cn(width, "py-2")} />
+        ))}
+        {columns.map((column) => {
+          const face = facesByKey.get(column.key)
           return (
-            <div key={column.key} className="flex min-w-40 flex-col gap-1">
-              <div className="text-label text-muted-foreground">
-                {column.header}
-              </div>
-              {React.createElement(face.type.editor!, {
-                value: draft,
-                onChange: (next: unknown) => onDraftChange(face.field, next),
-                onCancel,
-                invalid: from(draft) === null,
-                "aria-label":
-                  typeof column.header === "string" ? column.header : column.key,
-                className: "h-8",
-              })}
-            </div>
+            <TableCell
+              key={column.key}
+              className={cn("py-2 align-middle", column.className)}
+            >
+              {face
+                ? renderField(row, face, drafts, onDraftChange, onCancel, column)
+                : null}
+            </TableCell>
           )
         })}
-      </div>
-      <div className="flex items-center gap-2">
-        <Button variant="default" size="sm" onClick={save} disabled={invalid}>
-          Save
-        </Button>
-        <Button variant="ghost" size="sm" onClick={onCancel}>
-          Cancel
-        </Button>
-      </div>
-    </div>
+      </TableRow>
+      <TableRow className={bandClass}>
+        {/* Actions live at the LEFT of the strip, not pushed right: the table
+            can be wider than the viewport (it scrolls), so an ml-auto Save
+            would sit off-screen. Left-aligned, they stay where the row
+            starts and stay visible. */}
+        <TableCell colSpan={colSpan} className="px-4 pt-1 pb-3">
+          <div className="flex items-center gap-3">
+            <span className="text-label text-muted-foreground">
+              Editing {label}
+            </span>
+            <Button
+              variant="default"
+              size="sm"
+              onClick={save}
+              disabled={invalid}
+            >
+              Save
+            </Button>
+            <Button variant="ghost" size="sm" onClick={onCancel}>
+              Cancel
+            </Button>
+            {invalid && (
+              <span className="text-metric-sm text-destructive">
+                Fill in every field to save.
+              </span>
+            )}
+          </div>
+        </TableCell>
+      </TableRow>
+    </>
   )
+}
+
+/** One aligned field: the type's editor, framed by the column's optional `renderField` context. */
+function renderField<Row>(
+  row: Row,
+  face: EditFace<Row>,
+  drafts: Record<string, unknown>,
+  onDraftChange: (field: string, draft: unknown) => void,
+  onCancel: () => void,
+  column: DataTableColumn<Row>
+): React.ReactNode {
+  const draft = drafts[face.field]
+  const from = face.type.fromDraft ?? ((d: unknown) => d)
+  const editor = React.createElement(face.type.editor!, {
+    value: draft,
+    onChange: (next: unknown) => onDraftChange(face.field, next),
+    onCancel,
+    invalid: from(draft) === null,
+    "aria-label": typeof column.header === "string" ? column.header : column.key,
+    className: "h-8 w-full",
+  })
+  return face.renderField ? face.renderField({ row, editor }) : editor
 }
 
 /** True when the event target is a control that owns its own keystrokes — the `x` shortcut must not fire while typing. */

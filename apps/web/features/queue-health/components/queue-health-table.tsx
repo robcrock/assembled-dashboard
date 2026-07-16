@@ -29,11 +29,21 @@
 // - Each row expands to its "who can help" coverage roster (recover the
 //   out-of-adherence agent first, then shift a cross-trained one), derived
 //   from the SAME agent pool the adherence table reads.
+//
+// INTERACTIVE (opt-in, threaded from the template). The load-bearing edit
+// binding is the STATUS column: the badge is DERIVED (target vs. wait), so
+// "editing the status" means editing the PROMISE behind it — the edit face
+// binds sla_target_sec as a seconds field, and on commit the overlay
+// re-derives badge, headroom, and the summary alarm counts. Name is a text
+// edit, forecast a planning number; waiting/coverage/headroom/trend stay
+// read-only — they are observations, and an editable observation would be a
+// lie about the floor.
 
 import { useMemo, type ReactNode } from "react"
 
 import { Duration } from "@workspace/ui/components/duration"
 import {
+  columnTypes,
   DataTable,
   type DataTableColumn,
 } from "@workspace/ui/components/data-table"
@@ -84,17 +94,27 @@ function DeviationCell({
   )
 }
 
+/** The write half the template threads in; absent ⇒ the read-only table, unchanged. */
+export interface QueueTableInteractive {
+  onPatch: (queueId: string, patch: Record<string, unknown>) => void
+  onDelete: (queueIds: string[]) => void
+  editing: boolean
+  onEditingChange: (editing: boolean) => void
+}
+
 interface QueueHealthTableProps {
   queues: Queue[]
   /** The shared agent pool — powers the per-queue "who can help" detail. */
   agents?: CoverageAgent[]
   feed?: Feed
+  interactive?: QueueTableInteractive
 }
 
 export function QueueHealthTable({
   queues,
   agents = [],
   feed,
+  interactive,
 }: QueueHealthTableProps) {
   const rows = useMemo(
     () => [...queues].sort(compareQueuesBySeverity),
@@ -124,6 +144,7 @@ export function QueueHealthTable({
         cell: (q) => <span className="font-medium">{q.name}</span>,
         sortValue: (q) => q.name,
         className: "w-32",
+        edit: { field: "name", get: (q) => q.name, type: columnTypes.text() },
       },
       {
         key: "status",
@@ -146,6 +167,24 @@ export function QueueHealthTable({
         sortValue: (q) => queueSeverityRank(q),
         // the widest cell on the page's widest tick: "Breached · 1m 20s over"
         className: "w-60",
+        // The derived-display binding: the badge is a VERDICT computed from
+        // target vs. wait — what an operator actually controls is the
+        // PROMISE, so editing this cell opens the target in seconds and the
+        // overlay re-derives the badge (memo's view-value ≠ edit-value case).
+        edit: {
+          field: "sla_target_sec",
+          get: (q) => q.sla_target_sec,
+          type: columnTypes.number({ unit: "s", min: 10, max: 86_400 }),
+          // Keep the verdict in view while you change the promise behind it:
+          // the target editor sits beside the current badge, so it's clear
+          // you're editing the target, not picking a status.
+          renderField: ({ row, editor }) => (
+            <div className="flex items-center gap-2">
+              <div className="w-24">{editor}</div>
+              <StatusBadge status={row.sla_status} />
+            </div>
+          ),
+        },
       },
       // Demand and capacity (waiting, coverage) read before the derived
       // pressure metrics: how deep is the line and who's on it, then how
@@ -243,6 +282,24 @@ export function QueueHealthTable({
         ),
         sortValue: (q) => q.volume_vs_forecast_pct,
         className: "w-40",
+        // The forecast is a PLAN — the one editable number in this cell; the
+        // actual beside it is an observation and stays read-only.
+        edit: {
+          field: "volume_forecast_next_15m",
+          get: (q) => q.volume_forecast_next_15m,
+          type: columnTypes.number({ min: 0 }),
+          // Keep the cell's own "actual / forecast" shape while editing —
+          // `60 / [input]` makes it unmistakable the input is the forecast,
+          // not the actual, and the field sits under its own column header.
+          renderField: ({ row, editor }) => (
+            <div className="flex items-center gap-1.5">
+              <span className="text-metric-sm whitespace-nowrap text-muted-foreground">
+                {row.volume_last_15m} /
+              </span>
+              <div className="min-w-0 flex-1">{editor}</div>
+            </div>
+          ),
+        },
       },
       {
         key: "trend",
@@ -286,6 +343,15 @@ export function QueueHealthTable({
       // fixed: ticking cells (badge suffixes, lever lines) must never
       // re-solve the grid — widths live on the columns above
       layout="fixed"
+      interactive={
+        interactive && {
+          rowLabel: (q) => q.name,
+          onPatch: (queueId, patch) => interactive.onPatch(queueId, patch),
+          onDelete: (queueIds) => interactive.onDelete(queueIds),
+          editing: interactive.editing,
+          onEditingChange: interactive.onEditingChange,
+        }
+      }
     />
   )
 }

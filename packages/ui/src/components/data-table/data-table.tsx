@@ -100,6 +100,18 @@ export type ColumnEdit<Row> =
       /** Editor-bearing type for the edit value where its shape differs from the column's own. */
       // eslint-disable-next-line @typescript-eslint/no-explicit-any -- heterogeneous by nature; the helper binds precise types
       type?: ColumnType<any, any>
+      /**
+       * Frames the editor with read-only context in the row-edit form, so a
+       * compound cell keeps what it shows around the part it edits (Actual /
+       * `60 / [input]`, or a target field beside its current status badge).
+       * Domain data on the same row, so it's the column's to supply, not the
+       * type's. Absent ⇒ the bare editor. The row form aligns each field
+       * under its column, so this is the label's replacement, not an addition.
+       */
+      renderField?: (ctx: {
+        row: Row
+        editor: React.ReactNode
+      }) => React.ReactNode
     }
 
 // V defaults to `any`, not `unknown`: a heterogeneous column array must
@@ -931,17 +943,25 @@ function DataRow<Row>({
         })}
       </TableRow>
       {interaction?.form ? (
-        <ExpandedDetailRow rowId={rowId} colSpan={colSpan}>
-          <RowEditForm
-            row={row}
-            label={interaction.label}
-            columns={columns}
-            drafts={interaction.form.drafts}
-            onDraftChange={interaction.form.onDraftChange}
-            onSave={interaction.form.onSave}
-            onCancel={interaction.form.onCancel}
-          />
-        </ExpandedDetailRow>
+        // The row-edit form renders its OWN aligned table rows (a field row
+        // whose cells line up under the columns, plus an action strip), so
+        // it is not wrapped in the full-width ExpandedDetailRow. Leading
+        // empty cells mirror this row's gutter + expander so the fields sit
+        // under their headers.
+        <RowEditForm
+          row={row}
+          label={interaction.label}
+          columns={columns}
+          colSpan={colSpan}
+          leadingCells={[
+            ...(interaction ? [INTERACTIVE_COL] : []),
+            ...(expander ? [EXPANDER_COL] : []),
+          ]}
+          drafts={interaction.form.drafts}
+          onDraftChange={interaction.form.onDraftChange}
+          onSave={interaction.form.onSave}
+          onCancel={interaction.form.onCancel}
+        />
       ) : (
         expander?.isExpanded && (
           <ExpandedDetailRow rowId={rowId} colSpan={colSpan}>
