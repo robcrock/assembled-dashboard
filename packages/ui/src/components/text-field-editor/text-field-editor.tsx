@@ -8,8 +8,8 @@ import { editorKeyDown, type EditorProps } from "@workspace/ui/lib/editor"
 // and adds exactly two things: the EditorProps contract and the shared
 // keyboard grammar (Enter commits, Escape cancels). Commit-on-blur is
 // deliberately NOT wired here — blur policy belongs to the container (see
-// lib/editor.ts), so the same editor serves an inline cell and a batched
-// row form without modification.
+// lib/editor.ts), which is what lets this editor sit in a field cell that
+// commits on focus-out beside a picker cell that must ignore blur.
 
 interface TextFieldEditorProps extends EditorProps<string> {
   placeholder?: string

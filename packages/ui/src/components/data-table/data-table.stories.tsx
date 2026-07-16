@@ -308,13 +308,15 @@ The dense, sortable, keyboard-operable table both dashboard tables are built fro
 
 **Use it for:** dense read-only rows. \`getExpandedContent\` adds expandable rows — an inline, \`aria-controls\`-linked detail panel per row; return \`null\` for rows with nothing to expand and their toggle is omitted; \`expandLabel\` gives each toggle a row-specific accessible name. The disclosure is deliberately NOT built on shadcn's Collapsible (evaluated, never vendored): a Collapsible's Root/Panel wrappers can't sit between \`<tbody>\` and \`<tr>\` without breaking table semantics, so the expansion keeps native table markup while speaking the same interaction grammar — \`aria-expanded\`/\`aria-controls\`, \`data-state="open|closed"\`, Enter/Space on a real button.
 
-**The interactive face** (opt-in — \`interactive\` prop): an **Edit-mode gate** protects the glanceable reading surface — the toolbar's Edit toggle (or the controlled \`editing\`/\`onEditingChange\` pair, for pages whose mode couples to app state) reveals the interactive gutter: a selection checkbox + \`⋮\` row menu (Edit row · Duplicate · Delete) per row, select-all in the header, and a bulk bar replacing the toolbar while a selection exists. Cells whose column carries an \`edit\` binding become click-to-edit — the type's editor at cell-flush size; field editors commit on Enter / focus-out and cancel on Escape, picker editors commit on pick. "Edit row" opens a batched form in the expander's detail slot. Everything lands as intents: one \`onPatch(rowKey, patch, row)\` per commit, one \`onDelete(rowKeys, rows)\` per removal — **DataTable never mutates**; undo, confirmation, and optimistic overlays are the consumer's policy. Keyboard: \`x\` toggles selection from anywhere in a row, Shift+click / Shift+Arrow (on a checkbox) extend the range, and selection changes announce via a polite live region.
+**The interactive face** (opt-in — \`interactive\` prop): an **Edit-mode gate** protects the glanceable reading surface — the toolbar's Edit toggle (or the controlled \`editing\`/\`onEditingChange\` pair, for pages whose mode couples to app state; set \`editToggle: false\` when the page mounts its own, as the dashboard's section headers do) reveals a selection checkbox per row, select-all in the header, and a bulk bar while a selection exists.
+
+**Editing is one gesture: click the cell you mean.** Every cell whose column carries an \`edit\` binding rests in edit mode as a **framed field** — the box IS the affordance, so the mode telegraphs what's editable before a click, and clicking swaps box for editor in place at the same height. Field editors commit on Enter / focus-out and cancel on Escape; picker editors commit on pick. A compound cell frames only its editable sub-value (\`editCell\` at rest, \`renderField\` around the live editor) — only that part is a field, so \`48s / [input]\` survives the click. There is deliberately **no row menu and no batched row form**: a menu whose items are "edit this row" and "delete this row" is a second road to the cell you could have clicked and to the selection the bulk bar already reads. Everything lands as intents: one \`onPatch(rowKey, patch, row)\` per commit, one \`onDelete(rowKeys, rows)\` per removal — **DataTable never mutates**; undo, confirmation, and optimistic overlays are the consumer's policy. Keyboard: \`x\` toggles selection from anywhere in a row, Shift+click / Shift+Arrow (on a checkbox) extend the range, and selection changes announce via a polite live region.
 
 **Not for:** large paginated/virtualized datasets or row navigation — rows expand to an inline detail panel, they don't link out.
 
 **Deliberately omitted:** a compound/context API — still a single component taking columns + rows; the interaction state is one internal hook beside the sort tuple, and context machinery would give consumers nothing but wiring. No pagination/virtualization (~19 rows total on the dashboard). No \`rowTone\`/row-dimming prop — muted ink is reserved for genuine sub-text, never whole rows of data, so the table makes that violation impossible; triage emphasis rides on sort order + a status column (the same make-it-impossible discipline as StatusBadge's missing color props). No add-row affordance — creation needs default values and a create flow the consumer owns. No confirm dialogs or undo inside the table — intents out, policy above.
 
-**Column types — the declarative path:** a column may declare \`type\` + \`get\` instead of a hand-wired \`cell\` — the type resolves the value to its view, its editor face (consumed when the interaction layer lands), and a default sort projection, so the faces cannot drift apart. \`cell\` stays the escape hatch for compound anatomies and wins by precedence. See the **column types** docs page beside these stories and the *Typed columns* story below; \`createColumns\` gives per-column type safety a heterogeneous array erases.
+**Column types — the declarative path:** a column may declare \`type\` + \`get\` instead of a hand-wired \`cell\` — the type resolves the value to its view, its editor face (what a framed cell swaps in on click), and a default sort projection, so the faces cannot drift apart. \`cell\` stays the escape hatch for compound anatomies and wins by precedence. See the **column types** docs page beside these stories and the *Typed columns* story below; \`createColumns\` gives per-column type safety a heterogeneous array erases.
 
 These stories' sample fixture mirrors the shipped queue table's composition cell for cell — column order, deviation-cell anatomy, threshold-judged \`SparkBars\` — using only \`@workspace/ui\` primitives and local sample rows, so the catalog teaches the production pattern without importing app code.
 `,
@@ -585,8 +587,8 @@ const AGENT_COLUMNS = [
 /* ---- interactive ------------------------------------------------------ */
 
 // Stateful wrapper: the story plays the CONSUMER's role — it applies the
-// intents DataTable emits (patch/delete/duplicate) to local rows, exactly
-// what the dashboard's store will do with a route handler behind it.
+// intents DataTable emits (patch/delete) to local rows, exactly what the
+// dashboard's store does with a route handler behind it.
 function InteractiveAgentsStory() {
   const [agentRows, setAgentRows] = useState(AGENT_ROWS)
 
@@ -648,11 +650,6 @@ function InteractiveAgentsStory() {
           ),
         onDelete: (rowKeys) =>
           setAgentRows((prev) => prev.filter((a) => !rowKeys.includes(a.id))),
-        onDuplicate: (row) =>
-          setAgentRows((prev) => [
-            ...prev,
-            { ...row, id: `${row.id}-copy`, name: `${row.name} (copy)` },
-          ]),
       }}
     />
   )
@@ -664,7 +661,7 @@ export const Interactive: StoryObj = {
     docs: {
       description: {
         story:
-          "The full interactive face, uncontrolled. Click **Edit** to enter edit mode: the gutter appears (checkbox + `⋮` menu per row, select-all in the header). Click a cell to edit inline — Agent is a text field (Enter/blur commits, Escape cancels), State a picker (pick commits), Queues a multi-select (closing commits); *Out for* stays read-only, an observation. `⋮` → **Edit row** opens the batched form in the detail slot (one Save = one patch); Duplicate and Delete are intents the story's local state applies. Select rows (checkbox, `x` anywhere in the row, Shift+click / Shift+Arrow for ranges) and the toolbar becomes the bulk bar. Note the expander panel and the row form share the detail slot — the form wins while open.",
+          "The full interactive face, uncontrolled. Click **Edit** to enter edit mode and the editable cells resolve into **framed fields** — Agent, State and Queues each rest in a field box, so what's editable is legible before you touch anything, while *Out for* stays plain: an observation is not a setting. **Editing is one gesture — click the cell you mean.** Agent is a text field (Enter/blur commits, Escape cancels), State a picker (pick commits), Queues a multi-select (closing commits); the box becomes the editor in place, at the same height, so nothing moves. There is no row menu and no batched row form: removal routes through selection instead — check rows (`x` anywhere in the row, Shift+click / Shift+Arrow for ranges) and the toolbar becomes the bulk bar. Every commit leaves as an intent the story's local state applies.",
       },
     },
   },

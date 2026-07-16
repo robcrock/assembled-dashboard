@@ -17,6 +17,13 @@ import { cn } from "@workspace/ui/lib/utils"
 // input, but enforcement is likewise the container's at commit time.
 // Spinner buttons are stripped: in a dense cell they add 20px of chrome to
 // do what typing already does.
+//
+// `className` styles the FIELD, not the wrapper — the same contract every
+// other editor keeps (TextFieldEditor hands it to its Input; the pickers hand
+// it to their trigger). The unit suffix needs a positioned parent, and it is
+// tempting to let that parent take the class; doing so silently swallowed the
+// container's sizing, because a bare span paints neither a radius nor a
+// border. The wrapper is structure; the Input is the control a caller means.
 
 interface NumberFieldEditorProps extends EditorProps<number | null> {
   /** Muted suffix rendered inside the field ("s", "%"). Meaning, not chrome — keep it to a few characters. */
@@ -45,7 +52,7 @@ function NumberFieldEditor({
   placeholder,
 }: NumberFieldEditorProps) {
   return (
-    <span className={cn("relative inline-flex w-full", className)}>
+    <span className="relative inline-flex w-full">
       <Input
         type="number"
         value={value ?? ""}
@@ -70,7 +77,11 @@ function NumberFieldEditor({
         placeholder={placeholder}
         className={cn(
           "[appearance:textfield] text-metric [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none",
-          unit && "pr-8"
+          unit && "pr-8",
+          // Last: the caller's sizing/radius must win over the vendored
+          // Input's own (h-8, rounded-lg) — that is the whole point of
+          // handing it down here.
+          className
         )}
       />
       {unit && (

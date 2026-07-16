@@ -26,8 +26,8 @@ import type { ColumnEdit, DataTableColumn } from "./data-table"
 // faces of a cell — the view (a display primitive) and, where the value is
 // editable, the editor (an editor primitive over the SAME value) — plus a
 // default sort projection. A column then declares `type` + `get` instead of
-// hand-wiring a `cell`, and view, inline editor, and row form all derive
-// from the one declaration, so they cannot drift.
+// hand-wiring a `cell`, and the view and the inline editor both derive from
+// the one declaration, so they cannot drift.
 //
 // Two kinds of type, one grammar: value-shaped PRIMITIVES (text, number,
 // enum, multiselect, duration) and references to PREFERRED COMPONENTS
@@ -40,9 +40,10 @@ import type { ColumnEdit, DataTableColumn } from "./data-table"
 // The registry is OPEN: this module ships the types whose views and value
 // unions already live in ui; an app slice mints its own named types from the
 // same factories (see `defineColumnTypes`) — agentState is an app enum, so
-// it is an app type. `cell` / `renderEditor` on the column remain the escape
-// hatch for anatomies richer than one value (the queue table's compound
-// headroom cell), and they win over the type's faces by precedence.
+// it is an app type. `cell` on the column — with `edit.editCell` /
+// `edit.renderField` for the two edit-mode faces — remains the escape hatch
+// for anatomies richer than one value (the queue table's compound headroom
+// cell), and they win over the type's faces by precedence.
 
 /**
  * A column type: one value shape, both faces.

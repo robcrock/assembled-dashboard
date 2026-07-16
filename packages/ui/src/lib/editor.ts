@@ -6,11 +6,13 @@
 // Editors are deliberately COMMIT-POLICY-AGNOSTIC: they translate explicit
 // user intents (Enter → onCommit, Escape → onCancel) but never decide WHEN a
 // value is saved — the container supplies the policy. That one decoupling is
-// what lets the same editor serve an inline table cell (commit on Enter/blur,
-// container-owned), a batched row form (one Save button; per-field onCommit
-// simply not passed), and any future surface: no commit affordance is baked
-// in. Blur handling in particular belongs to the CONTAINER (a focusout on
-// its wrapper) — commit-on-blur in one surface would be a bug in another.
+// what lets a single editor set serve grammars that genuinely disagree: a
+// FIELD cell commits on Enter or focus-out, while a PICKER cell commits on
+// pick/close and must ignore blur entirely (its focus legitimately leaves
+// into a portal). Bake either policy in and the other becomes a bug. Blur
+// handling in particular belongs to the CONTAINER (a focusout on its
+// wrapper), and a surface that wanted to batch would simply not pass
+// onCommit — no commit affordance is baked in here.
 //
 // Pure TS by the lib rule (no React import): the event parameter below is
 // structurally compatible with React.KeyboardEvent without naming it.
@@ -31,6 +33,15 @@ export interface EditorProps<V> {
   id?: string
   /** Editors render unlabeled controls; the container names them (e.g. from the column header). */
   "aria-label"?: string
+  /**
+   * Styles the CONTROL — the input, or a picker's trigger — and must reach
+   * whatever paints the border, never a positioning wrapper. Containers size
+   * their editors through this (a table cell hands down a flush height and a
+   * square radius), so an editor that parks it on a bare span silently drops
+   * the request: a span paints no radius and no border, and the field below
+   * keeps its stock look while the caller believes it was styled. Put it last
+   * in `cn()` so the caller's utilities win the merge.
+   */
   className?: string
 }
 

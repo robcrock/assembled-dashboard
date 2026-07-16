@@ -19,7 +19,7 @@ The edit face of a plain-text value — the editor a \`text\` column type resolv
 - One-of-N values — \`EnumSelect\`.
 - Free-form multi-line notes — that's a textarea-shaped need this system hasn't earned yet.
 
-**Deliberately omitted:** a commit/cancel button pair (the editor is **commit-policy-agnostic** — the container decides when a draft saves, so the same editor serves an inline cell and a batched row form); commit-on-blur (blur policy belongs to the container's wrapper — baking it in here would break batched forms); a label prop (the container names the control via \`aria-label\`, e.g. from its column header); validation logic (the container validates and reflects the result back through \`invalid\`).
+**Deliberately omitted:** a commit/cancel button pair (the editor is **commit-policy-agnostic** — the container decides when a draft saves); commit-on-blur (blur policy belongs to the container's wrapper — baking it in would break the picker cells, whose focus legitimately leaves into a portal); a label prop (the container names the control via \`aria-label\`, e.g. from its column header); validation logic (the container validates and reflects the result back through \`invalid\`).
 
 Stateless leaf: the draft lives in the container; it never owns feed states.
 `,
