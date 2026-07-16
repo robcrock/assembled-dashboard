@@ -57,9 +57,8 @@ import {
 /* ---- the contract --------------------------------------------------------- */
 
 /**
- * Content a cell shows. One call, every state: `show` renders the read face,
- * the face inside the box, AND the invisible width strut behind a live
- * control — so a box can never promise an edit of a figure it isn't showing.
+ * Content a cell shows. `show` is the value in its DISPLAY representation —
+ * the read face, and the only thing a cell without a box ever renders.
  *
  * Sets no type scale. That belongs to the td and the anatomy, never to the
  * value: the incumbent's `editCell` re-declared the Agent clock's size and
@@ -84,6 +83,25 @@ export interface EditCapability<V, Draft> extends EditBehavior<V, Draft> {
    * Called, the element's type is the stable inner primitive.
    */
   control: (props: EditorProps<Draft>) => React.ReactNode
+  /**
+   * The draft in the CONTROL's own representation — what the box actually has
+   * to hold, in both its states.
+   *
+   * This exists because `show` cannot do it, which the first compound duration
+   * cell proved: an SLA target DISPLAYS as `2m` (9px) and is TYPED as `120`
+   * (27px). Sizing the box from `show` clipped the live control down to its
+   * unit suffix — the operator saw `[s]` and no number. Click parity still
+   * "passed", because the box held its width by amputating the control; a
+   * measurement that green-lights an invisible input is measuring the wrong
+   * thing.
+   *
+   * So: `show` is how the value READS; `showDraft` is how the draft TYPES, and
+   * the box is sized from the latter. Identical for text/number/enum — the
+   * duration pair is the only one where a value's two representations
+   * genuinely differ. The author writes NEITHER (both are the builder's), so
+   * they still cannot be made to disagree at a call site, which was the point.
+   */
+  showDraft: (draft: Draft) => React.ReactNode
 }
 
 /**
@@ -229,6 +247,12 @@ export function CellValue<V, Draft>({
 
   if (state.state === "reading") return <>{content.show(value)}</>
 
+  // The box shows the DRAFT, not the value — the figure in the form you will
+  // actually type it in. For text/number/enum that is the same string `show`
+  // would render; for a duration it is `120s` where the read face says `2m`,
+  // and showing `2m` here would size the box to a figure the control cannot
+  // fit. A box is a promise that a click edits THIS; it should show the thing
+  // it is promising.
   if (state.state === "editable") {
     return (
       <button
@@ -240,17 +264,19 @@ export function CellValue<V, Draft>({
         }}
         className={cn("text-left focus-ring", EDITABLE_CONTENT_FRAME)}
       >
-        <span className="min-w-0 truncate">{content.show(value)}</span>
+        <span className="min-w-0 truncate">
+          {content.edit.showDraft(content.edit.draft(value))}
+        </span>
       </button>
     )
   }
 
-  // The strut measures the DRAFT, not the committed value: the box grows with
-  // what is being typed rather than snapping on commit. An uncommittable draft
-  // has no value to show, so it holds the box at the committed width instead
-  // of collapsing it to nothing under the caret.
-  const drafted = content.edit.commit(state.draft)
-  const strut = drafted ?? value
+  // The strut measures the DRAFT in the control's own representation, so the
+  // box grows with what is being typed and the control it holds is never
+  // clipped. An uncommittable draft (an emptied field is exactly that) has
+  // nothing to measure, so the box holds at the committed width rather than
+  // collapsing to nothing under the caret.
+  const strutDraft = state.committable ? state.draft : content.edit.draft(value)
 
   /** The draft to commit: whatever this tick's onChange saw, else the rendered one. */
   const freshest = () => (live.current ? live.current.draft : state.draft)
@@ -277,8 +303,24 @@ export function CellValue<V, Draft>({
     // must not paint a second one. It inherits the anatomy's type scale rather
     // than setting its own — the value looks the same being typed as it does
     // at rest.
+    //
+    // POSITIONING IS NOT IN HERE, and that is the contract, not a preference:
+    // `EditorProps.className` reaches "whatever paints the border, never a
+    // positioning wrapper" (lib/editor.ts). Passing `absolute inset-0` through
+    // it put the class on NumberFieldEditor's INPUT while its own wrapper
+    // stayed in flow — a flex sibling of the strut, so the two shrank to half
+    // the box each and the live control was clipped to its unit suffix. The
+    // overlay below is the cell's own, which is the only thing that can be.
+    // The `md:` twin is load-bearing, not belt-and-braces: the vendored Input
+    // ships `md:text-sm`, and a variant beats a base utility at every width
+    // this dashboard is used at — so a bare `text-[length:inherit]` lost, and
+    // tailwind-merge never deduped it because the two live in different
+    // variant groups. The control rendered 14px while the anatomy (and the
+    // strut sizing its box) rendered 12px: the typed figure was bigger than
+    // the resting one AND overflowed a box measured for the smaller. Matching
+    // the variant is what lets the merge do its job.
     className:
-      "absolute inset-0 h-full w-full rounded-none border-0 bg-transparent px-0 text-[length:inherit] shadow-none focus-visible:ring-0",
+      "h-full w-full rounded-none border-0 bg-transparent px-0 text-[length:inherit] shadow-none focus-visible:ring-0 md:text-[length:inherit]",
   }
 
   return (
@@ -304,10 +346,20 @@ export function CellValue<V, Draft>({
             }
       }
     >
+      {/* The strut: the box's ONLY in-flow child, so it alone decides the
+          width, and the width it decides is the draft's — the same one the
+          resting box shows. */}
       <span aria-hidden className="invisible min-w-0 truncate">
-        {content.show(strut)}
+        {content.edit.showDraft(strutDraft)}
       </span>
-      <CellControl control={content.edit.control} editorProps={editorProps} />
+      {/* The overlay: the cell's own positioning wrapper, laid exactly over the
+          strut. It has to live here rather than ride in on the editor's
+          className, because an editor styles its FIELD and keeps its own
+          wrapper — park `absolute` on the field and the wrapper stays a flex
+          sibling of the strut, which is how the control got clipped. */}
+      <span className="absolute inset-0 flex items-center px-2">
+        <CellControl control={content.edit.control} editorProps={editorProps} />
+      </span>
     </span>
   )
 }
@@ -461,6 +513,8 @@ export function cellContentBuilder<
           control: (props) => (
             <TextFieldEditor {...props} placeholder={cfg.placeholder} />
           ),
+          // Same string either way — a name reads as it types.
+          showDraft: (draft) => draft,
           draft: (value) => value,
           // An emptied name is a draft, never a commit: a queue called "" is
           // not a thing the floor can have.
@@ -470,19 +524,34 @@ export function cellContentBuilder<
 
     number: (cfg) =>
       render<number, number | null>(cfg.edits as string, {
+        // `tabular-nums` and nothing else. Tabular figures are a property of
+        // the VALUE (a ticking number must not jitter its own width); the type
+        // SCALE belongs to the anatomy that holds it. The incumbent's `number`
+        // type set `text-metric` because it was a whole cell — carried in here
+        // it would force 14px inside DeviationCell's 12px line and silently
+        // resize the figure. This is the rule `show` documents, in the one
+        // place it was easiest to break: same recipe as `Duration`.
         show: (value) => (
-          <span className="text-metric">
+          <span className="tabular-nums">
             {cfg.format ? cfg.format(value) : `${value}${cfg.unit ?? ""}`}
           </span>
         ),
         edit: {
+          // No `unit` here, deliberately: NumberFieldEditor renders a unit as
+          // an absolutely-pinned suffix plus 32px of reserved padding — chrome
+          // sized for a comfortable form field, not a 30px cell. In this box
+          // the unit is the BOX's to say (it is in `showDraft`, and the strut
+          // reserves its width); handing it to the control too would either
+          // eat the digits with padding or overlap them without it.
           control: (props) => (
-            <NumberFieldEditor
-              {...props}
-              unit={cfg.unit}
-              min={cfg.min}
-              max={cfg.max}
-            />
+            <NumberFieldEditor {...props} min={cfg.min} max={cfg.max} />
+          ),
+          // The same figure the read face shows — `number` displays and types
+          // in one representation, which is exactly why it never exposed this.
+          showDraft: (draft) => (
+            <span className="tabular-nums">
+              {draft === null ? "" : `${draft}${cfg.unit ?? ""}`}
+            </span>
           ),
           draft: (value) => value,
           // The draft boundary's reason to exist: an emptied field is a real
@@ -496,13 +565,19 @@ export function cellContentBuilder<
       render<number, number | null>(cfg.edits as string, {
         show: (value) => <Duration seconds={value} />,
         edit: {
+          // No `unit` — see `number` above. The box says "120s"; the control
+          // it holds types the digits.
           control: (props) => (
-            <NumberFieldEditor
-              {...props}
-              unit="s"
-              min={cfg.min}
-              max={cfg.max}
-            />
+            <NumberFieldEditor {...props} min={cfg.min} max={cfg.max} />
+          ),
+          // THE pair whose two representations genuinely differ, and the reason
+          // `showDraft` exists at all: an SLA target READS as "2m" and TYPES as
+          // "120". Sizing the box from `show` clipped the live control down to
+          // its own unit suffix — the operator saw "[s]" and no number.
+          showDraft: (draft) => (
+            <span className="tabular-nums">
+              {draft === null ? "" : `${draft}s`}
+            </span>
           ),
           draft: (value) => value,
           commit: (draft) =>
@@ -519,39 +594,50 @@ export function cellContentBuilder<
           cfg.options.find((option) => option.value === value)?.label ?? value,
         edit: {
           control: (props) => <EnumSelect {...props} options={cfg.options} />,
+          // The option's label — the same node `show` renders, by construction.
+          showDraft: (draft: string) =>
+            cfg.options.find((option) => option.value === draft)?.label ??
+            draft,
           draft: (value: string) => value,
           commit: (draft: string) => draft,
           popup: true,
         },
       }),
 
-    multiselect: (cfg) =>
-      render(cfg.edits as string, {
-        show: (value: readonly string[]) => {
-          const selected = cfg.options.filter((o) => value.includes(o.value))
-          if (selected.length === 0) return null
-          return (
-            <span className="inline-flex flex-wrap items-center gap-x-1.5">
-              {selected.map((option, i) => (
-                <span
-                  key={option.value}
-                  className="inline-flex items-center gap-x-1.5"
-                >
-                  {i > 0 && <span aria-hidden>·</span>}
-                  {option.label}
-                </span>
-              ))}
-            </span>
-          )
-        },
+    multiselect: (cfg) => {
+      // ONE renderer, referenced twice — not two copies that happen to match.
+      // A membership list reads and types identically, so `show` and
+      // `showDraft` are literally the same function here; writing it out twice
+      // is how the incumbent's faces drifted in the first place.
+      const showMembers = (members: readonly string[]) => {
+        const selected = cfg.options.filter((o) => members.includes(o.value))
+        if (selected.length === 0) return null
+        return (
+          <span className="inline-flex flex-wrap items-center gap-x-1.5">
+            {selected.map((option, i) => (
+              <span
+                key={option.value}
+                className="inline-flex items-center gap-x-1.5"
+              >
+                {i > 0 && <span aria-hidden>·</span>}
+                {option.label}
+              </span>
+            ))}
+          </span>
+        )
+      }
+      return render(cfg.edits as string, {
+        show: showMembers,
         edit: {
           control: (props) => (
             <MultiSelectFieldEditor {...props} options={cfg.options} />
           ),
+          showDraft: showMembers,
           draft: (value: readonly string[]) => [...value],
           commit: (draft: string[]) => draft,
           popup: true,
         },
-      }),
+      })
+    },
   }
 }
