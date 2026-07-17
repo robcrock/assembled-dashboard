@@ -18,7 +18,7 @@ The anatomy isn't ours — it's [Stephen Few's Bullet Graph Design Specification
 
 **Use it for:** a cell that answers *"how far is this from where it should be?"* — the dashboard's **Headroom** (wait vs SLA target) and **Actual / forecast** (volume vs plan), which are the same question over different keys.
 
-**Not for:** saturation (*"how full is this?"* — that's \`Meter\`, a 0→max fill), a trend over time (\`Sparkline\`/\`SparkBars\`), or a bare number with a delta (\`StatCard\`). The line against \`Meter\` is the one worth holding: this measures **distance from a target**, which is signed and can point either way; a fill cannot.
+**Not for:** saturation (*"how full is this?"* — that's \`Meter\`, a 0→max fill), a trend over time (\`SparkBars\`), or a bare number with a delta (\`StatCard\`). The line against \`Meter\` is the one worth holding: this measures **distance from a target**, which is signed and can point either way; a fill cannot.
 
 **Why \`measures\` is one slot, not \`actual\` + \`target\`:** Few's comparative measure spans *"a target — or the same measure at some point in the past"*, and this dashboard uses both. Headroom compares a wait against a **promise**; volume compares actual against a **forecast**, which is a prediction. Two props would name one of them wrong. It would also force this component to render the \`/\`, putting number formatting inside an anatomy that explicitly disclaims it.
 

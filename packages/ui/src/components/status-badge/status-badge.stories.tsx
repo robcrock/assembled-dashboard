@@ -11,7 +11,7 @@ const meta = {
         component: `
 The canonical status surface: one \`status\` value (a five-value union covering both scales of the domain language — SLA \`healthy | at_risk | breached\` and adherence \`adherent | out_of_adherence\`) becomes glyph + label + tint through the single \`STATUS_META\` map. \`StatusDot\` renders the standalone glyph. Status reads by **icon shape first, color second** — the palette's loud accent is reserved for a broken promise (SLA breach and out-of-adherence, which share it by design).
 
-**Use it for:** any surface stating a status *verdict* — table cells, row labels, legends. \`children\` render extra detail after the canonical label (e.g. "· 55s over") — they augment the label, never replace it, so status always stays textual. To tint *other* primitives from the same canonical map, use the exported \`statusTextClass\` / \`statusFillClass\` helpers rather than hand-picking colors.
+**Use it for:** any surface stating a status *verdict* — table cells, row labels, legends. \`children\` render extra detail after the canonical label (e.g. "· 55s over") — they augment the label, never replace it, so status always stays textual. To tint *other* primitives from the same canonical map, use the exported \`statusFillClass\` helper rather than hand-picking colors.
 
 **Not for:** deltas or indicators that aren't verdicts (\`MetricDelta\` is deliberately colorless); ad-hoc colored labels.
 

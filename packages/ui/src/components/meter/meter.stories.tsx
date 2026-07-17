@@ -16,7 +16,7 @@ A normalized 0→max fill against a bound — the **saturation** reading.
 **Not for:**
 - Signed distance from a target — \`DeviationBar\` (Meter answers saturation, not distance-from-target).
 - Per-tick threshold crossings over time — \`SparkBars\`.
-- Trend shape — \`Sparkline\`.
+- Trend shape over time — \`SparkBars\`.
 - One normalized hero reading — \`Gauge\`.
 
 **Deliberately omitted:** magnitude labels — overflow (\`value > max\`) caps the fill at 100%; the meter shows saturation, and the number that says HOW far over rides beside it in a \`MetricDelta\`. Also any fourth severity color.

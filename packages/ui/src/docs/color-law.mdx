@@ -65,7 +65,7 @@ edit instead of a per-component negotiation.
 - **Deviation bars are colorless.** Over-forecast is an *indicator* (the leading
   signal of the next breach), not a verdict — tint it and every over-forecast bar
   becomes a false alarm that trains the eye to ignore orange.
-- **No per-call color props.** `StatusBadge`, `StatusDot`, `Sparkline`, `SparkBars`
+- **No per-call color props.** `StatusBadge`, `StatusDot`, `SparkBars`
   take a `status`, never a color; the canonical classes merge *after* `className`,
   so a consumer cannot re-tint them even by accident.
 - **Focus is ink, not color.** The ring token is foreground ink — focus should be

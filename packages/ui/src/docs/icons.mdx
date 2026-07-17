@@ -5,10 +5,8 @@ import {
   ChevronDown,
   ChevronRight,
   CircleAlert,
-  Moon,
   Pause,
   Play,
-  Sun,
 } from "lucide-react"
 
 import { StatusBadge, StatusDot } from "@workspace/ui/components/status-badge"
@@ -98,21 +96,6 @@ transcribed from source, so treat the *used by* column as the audit trail:
     size="size-4"
     usedBy="DataTable expand toggle (closed)"
     meaning="row detail is collapsed"
-  />
-  <IconSpecimen
-    icon={Sun}
-    name="Sun"
-    size="size-4"
-    usedBy="ThemeToggle (light)"
-    meaning="light theme is active"
-    note="No explicit size class — inherits Button's icon slot ([&_svg]:size-4). Sun/Moon swap via dark: visibility classes — the sanctioned dark: idiom (structural swaps, never per-theme color values)."
-  />
-  <IconSpecimen
-    icon={Moon}
-    name="Moon"
-    size="size-4"
-    usedBy="ThemeToggle (dark)"
-    meaning="dark theme is active"
   />
   <IconSpecimen
     icon={Play}

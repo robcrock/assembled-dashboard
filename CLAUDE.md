@@ -172,7 +172,7 @@ Two parts:
 - **`current`** — the live snapshot for "now" (mid-morning, `ts` = `2026-05-26T14:45:00Z`). The
   single object a static render would consume.
 - **`history`** — the last several ticks (every 5 minutes) leading up to now, same shape. Drives
-  sparklines/trends, or replay it on a timer to simulate live updates.
+  trends, or replay it on a timer to simulate live updates.
 
 Each frame has `ts`, a top-level `summary`, a `queues[]` array (6 queues), and an `agents[]`
 array (13 agents). The data carries a **deliberate, legible narrative** the design should tell
@@ -254,7 +254,7 @@ structurally cannot consume them.
 Light/dark stays demonstrably real in the Storybook catalog; the dashboard itself defaults
 to LIGHT (the Braun ramp is authored light-first, so every visitor lands on the same
 canonical surface regardless of OS appearance) and deliberately mounts no theme toggle —
-dark stays reachable via the "d" hotkey; the `ThemeToggle` primitive is catalog-only.
+dark stays reachable via the "d" hotkey.
 
 ## Component inventory — the sharp set
 
@@ -268,7 +268,7 @@ conventions below:
 | Atomic tier | Lives at | Contents |
 |---|---|---|
 | **Ions** (tokens) | `packages/ui/src/styles/globals.css` | the 4-tier token architecture (primitive → semantic → component → composite) |
-| **Atoms** | `packages/ui/src/components/*` | leaves that compose no other component: vendored `badge/button/card/table/tooltip/separator/skeleton/checkbox/input/select` + `duration`, `metric-delta`, `sparkline`, `spark-bars`, `meter`, `deviation-bar`, `gauge`, `callout`, `theme-toggle` |
+| **Atoms** | `packages/ui/src/components/*` | leaves that compose no other component: vendored `badge/button/card/table/tooltip/separator/skeleton/checkbox/input/select` + `duration`, `metric-delta`, `spark-bars`, `meter`, `deviation-bar`, `callout` |
 | **Molecules** | `packages/ui/src/components/*` | compose atoms / own multi-part anatomy + feed states: `status-badge` (+`StatusDot`), `stat-card`, `data-table`, `deviation-cell`, `empty-state`, `error-state`, `stale-indicator`, `page-section`, `org-identity`, `toast`, and the **editor primitives** — `text-field-editor`, `number-field-editor`, `enum-select`, `multi-select-field-editor` (each composes a vendored control and speaks the one `EditorProps` contract from `lib/editor.ts`) |
 | **Organisms** | `apps/web/features/*/components` | domain-bound compositions: `attainment-overview`, `queue-health-table` (+`queue-coverage`), `agent-adherence-table` |
 | **Template** | `apps/web/app/dashboard.tsx` | the one client boundary: owns `useDashboardData()` + page UI state, arranges organisms, passes `{data-slice, feed}` down |
@@ -285,7 +285,7 @@ template never fetch, and nothing below the table decides who is editing.
 **Primitives — `packages/ui`:**
 - `StatusBadge` / `StatusDot` — `status: healthy | at_risk | breached` (+ the adherence pair).
   One canonical `STATUS_META` map turns a status into glyph + label + color (`ink`, `badge`,
-  `fill`); every status surface derives from it (`statusTextClass`, `statusFillClass`) so nothing
+  `fill`); every status surface derives from it (`statusFillClass`, or in place) so nothing
   drifts. Status reads by **glyph shape first, color second**. `StatusDot` renders the standalone
   glyph. **No per-call color props.**
 - `StatCard` — headline number + label + optional `delta` + optional trend slot (via children,
@@ -300,14 +300,7 @@ template never fetch, and nothing below the table decides who is editing.
   direction (no arrows/glyphs), muted ink keeps it an annotation. No `invert` prop, no verdict
   color — **without exception**: even the queue table's headroom percent stays neutral, since
   that row's SLA verdict already lives in its Status badge. Verdict color rides on the status
-  surfaces (badges, `Sparkline` tint) alone; orange is reserved for breach.
-- `Sparkline` — line trend; `status`-tinted, accessible aria-label. (Catalog primitive — its
-  summary-strip consumer was replaced by the attainment overview.)
-- `Gauge` — one normalized value (0–100) as an open-bottom arc; center content via children
-  (the gauge owns only the arc, never number formatting). Muted track + `currentColor` value
-  arc — no gradient, no threshold zones, no needle, no animation. (Catalog primitive — the
-  overview replaced the arc with the attainment tile's Meter line; kept deliberately,
-  awaiting a hero-reading consumer.)
+  surfaces (badges, the `SparkBars` breach accent) alone; orange is reserved for breach.
 - `SparkBars` — bar trend for `wait_trend_sec` in the queue table; bars past a `threshold` take
   the reserved breach accent, the rest stay muted (the tint is not overridable).
 - `Meter` — normalized 0→max fill for bounded-fill/saturation readings; tint from the one
@@ -394,7 +387,6 @@ template never fetch, and nothing below the table decides who is editing.
 - `Toast` — the transient notice the optimistic overlay raises when a write is rejected.
 - State primitives: `Skeleton`, `EmptyState`, `ErrorState`, `StaleIndicator` (last-updated +
   degraded styling).
-- `ThemeToggle` (catalog-only — the dashboard defaults to light and mounts no toggle).
 - `PageSection` — the labelled section shell: `id` (wires `aria-labelledby` to
   `${id}-heading`), `title`, optional `description`, optional `actions`, children. Heading
   level fixed at h2 (sections sit under the page's one h1); no margins baked in. `actions` is
@@ -408,7 +400,7 @@ template never fetch, and nothing below the table decides who is editing.
 
 **Compositions — `apps/web` feature slices:** `AttainmentOverview` (`features/summary` — the
 SLA-attainment tile: `StatCard size="lg"` + a neutral `Meter` fill line; it replaced the old
-`SummaryBar` KPI strip and later the arc gauge; the section-level alarm counts beside it are
+`SummaryBar` KPI strip; the section-level alarm counts beside it are
 sibling `StatCard size="lg"` tiles fed breach-ink values by the template),
 `QueueHealthTable` (`features/queue-health`), `AgentAdherenceTable` (`features/agent-adherence`).
 
@@ -444,7 +436,7 @@ Design as if live even if the render is static.
 - A single `useDashboardData()` hook / small in-memory store (`apps/web/hooks/use-dashboard-data.ts`)
   exposes `{ data, status: 'loading' | 'live' | 'stale' | 'error', lastUpdatedAt }`.
 - Data comes from the Next Route Handler (`app/api/dashboard/route.ts`) serving the fixture. The
-  client **replays `history[]` on a timer** up to `current`, so sparklines and deltas actually
+  client **replays `history[]` on a timer** up to `current`, so trends and deltas actually
   move during a walkthrough.
 - Simulate **late data** (mark `stale` when a tick doesn't arrive on schedule) and inject an
   **error** via a toggle (the route handler can return latency/500s), so failure paths are

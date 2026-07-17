@@ -11,7 +11,7 @@ const meta = {
         component: `
 Vendored shadcn/ui Button on Base UI (style \`base-nova\`), kept as-shipped with its full stock variant surface even where unused — as-shipped fidelity keeps upstream upgrades cheap. Don't fork it for domain needs; compose it.
 
-In this system it is composed by \`ErrorState\` (the retry affordance) and \`ThemeToggle\` in the library, and by the dashboard template's demo controls (pause replay / inject error) in the app.
+In this system it is composed by \`ErrorState\` (the retry affordance) in the library, and by the dashboard template's demo controls (pause replay / inject error) in the app.
 
 All colors route through semantic tokens; the Braun radius scale clamps its \`rounded-*\` utilities.
 

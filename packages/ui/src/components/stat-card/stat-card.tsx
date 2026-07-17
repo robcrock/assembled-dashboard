@@ -45,7 +45,7 @@ interface StatCardProps {
   variant?: "card" | "plain"
   /** Value type scale: dense-strip default, or lg for overview hero counts. */
   size?: "default" | "lg"
-  /** Trend slot (e.g. a `Sparkline`), rendered under the value. */
+  /** Trend slot (e.g. `SparkBars`), rendered under the value. */
   children?: React.ReactNode
   /**
    * Render the "Stale · updated Xs ago" note when the feed degrades (default

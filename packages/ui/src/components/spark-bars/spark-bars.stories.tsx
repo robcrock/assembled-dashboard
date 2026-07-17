@@ -19,7 +19,7 @@ An inline SVG bar series growing from a **zero baseline**; bars that exceed \`th
 **Use it for:** "how often did we cross the promise" — per-tick threshold crossings against a limit (the queue table's \`wait_trend_sec\` against the SLA target). The zero baseline keeps magnitude honest, unlike a min/max-normalized line.
 
 **Not for:**
-- Trend shape without a limit — \`Sparkline\`.
+- Reading an exact figure at a point — a trend carries shape; the number rides beside it.
 - Saturation toward a bound — \`Meter\`.
 - Signed distance from a baseline/target — \`DeviationBar\`.
 - One normalized hero reading — \`Gauge\`.

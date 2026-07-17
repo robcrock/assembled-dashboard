@@ -6,14 +6,11 @@ import { cn } from "@workspace/ui/lib/utils"
 
 // The canonical status surface. One component covers both value scales of the
 // domain language (SLA status and adherence) because they share optics by
-// design — the token layer aliases adherence onto the status scale, and this
-// map is the single place a status value becomes icon + color + label.
+// design — the token layer aliases adherence onto the status scale.
 //
-// Status is conveyed by ICON SHAPE first (check / clock / alert), color
-// second: the palette's loud red is reserved for SLA breach alone, so every
-// non-breach status must stay legible through its glyph even if its ink
-// reads as calm. The icon carries an sr-only label unless explicitly marked
-// decorative (i.e. adjacent text already names the status).
+// Status is conveyed by ICON SHAPE first (check / clock / alert), colour
+// second: the reserved accent is spent on breach alone, so every non-breach
+// status must stay legible through its glyph even where its ink reads as calm.
 
 export type Status =
   | "healthy"
@@ -22,11 +19,11 @@ export type Status =
   | "adherent"
   | "out_of_adherence"
 
-// The single place a status value becomes icon + label + color classes:
-// `ink` (status-colored text/glyph), `badge` (tinted pill), and `fill` (solid
-// accent, for meters/bars). Every status surface derives from this one map so
-// nothing drifts — StatusBadge, Meter (via statusFillClass), and Sparkline
-// (via statusTextClass) all read from here.
+// The single place a status value becomes icon + label + colour classes:
+// `ink` (glyph/text), `badge` (tinted pill), `fill` (solid, for meters/bars).
+// Every status surface reads from here, so nothing drifts. A face gets an
+// exported accessor only where a consumer outside this file needs it — today
+// that is `fill` alone (Meter); `ink` and `badge` are consumed in place.
 const STATUS_META: Record<
   Status,
   { label: string; icon: LucideIcon; ink: string; badge: string; fill: string }
@@ -73,11 +70,6 @@ const STATUS_META: Record<
     badge: "bg-adherence-out-bg text-adherence-out",
     fill: "bg-adherence-out",
   },
-}
-
-/** Canonical status → ink text class, for primitives that tint via currentColor (Sparkline). */
-function statusTextClass(status: Status): string {
-  return STATUS_META[status].ink
 }
 
 /** Canonical status → solid fill class, for meters/bars that fill a track. */
@@ -136,4 +128,4 @@ function StatusBadge({ status, children, className }: StatusBadgeProps) {
   )
 }
 
-export { StatusBadge, StatusDot, statusTextClass, statusFillClass }
+export { StatusBadge, StatusDot, statusFillClass }

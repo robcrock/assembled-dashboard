@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite"
 
 import { MetricDelta } from "@workspace/ui/components/metric-delta"
-import { Sparkline } from "@workspace/ui/components/sparkline"
+import { SparkBars } from "@workspace/ui/components/spark-bars"
 import { StatCard } from "@workspace/ui/components/stat-card"
 
 const ATTAINMENT_TREND = [97, 96, 95, 93, 90, 87, 84, 82, 84, 86]
@@ -13,7 +13,7 @@ const meta = {
     docs: {
       description: {
         component: `
-Headline number + label, with a \`delta\` slot (a \`MetricDelta\`, beside the value) and a trend slot (\`children\`, e.g. a \`Sparkline\`, under it). Two presentations over one anatomy: \`variant: card | plain\` (standalone bordered card vs bare content for divider-separated KPI rows where the container owns the separation) and \`size: default | lg\` (dense-strip metric ramp vs overview hero counts — type scale only, same structure and states).
+Headline number + label, with a \`delta\` slot (a \`MetricDelta\`, beside the value) and a trend slot (\`children\`, e.g. \`SparkBars\`, under it). Two presentations over one anatomy: \`variant: card | plain\` (standalone bordered card vs bare content for divider-separated KPI rows where the container owns the separation) and \`size: default | lg\` (dense-strip metric ramp vs overview hero counts — type scale only, same structure and states).
 
 **The feed contract:** StatCard is a feed OWNER — it owns all four feed states internally. Consumers forward one \`feed\` object (\`{ status: "loading" | "live" | "stale" | "error", lastUpdatedAt?, onRetry? }\`, the store's value object) and never compose state visuals by hand: loading renders skeletons that mirror the final layout (no shift on resolve), error renders an \`ErrorState\` with retry, stale dims the value and appends a \`StaleIndicator\` — it never blanks — and a nullish \`value\` under a live feed renders a deliberate em dash. The leaf state primitives (Skeleton / ErrorState / StaleIndicator) are the visuals this owner renders, not something to wrap around it. StatCard never fetches — components below the template never do.
 
@@ -49,7 +49,7 @@ export const WithTrend: Story = {
     value: "86%",
     delta: <MetricDelta value={2} />,
     children: (
-      <Sparkline
+      <SparkBars
         points={ATTAINMENT_TREND}
         label="Attainment recovering from 82% to 86%"
       />
@@ -69,7 +69,7 @@ export const Loading: Story = {
   args: {
     label: "Tickets waiting",
     feed: { status: "loading" },
-    children: <Sparkline points={ATTAINMENT_TREND} />,
+    children: <SparkBars points={ATTAINMENT_TREND} />,
   },
 }
 
@@ -214,7 +214,7 @@ export const States: StoryObj<{ state: (typeof PLAYGROUND_STATES)[number] }> = {
       }
     >
       {state === "empty" ? null : (
-        <Sparkline
+        <SparkBars
           points={ATTAINMENT_TREND}
           label="Attainment recovering from 82% to 86%"
         />
@@ -239,7 +239,7 @@ export const Strip: Story = {
         value="86%"
         delta={<MetricDelta value={2} />}
       >
-        <Sparkline points={ATTAINMENT_TREND} />
+        <SparkBars points={ATTAINMENT_TREND} />
       </StatCard>
       <StatCard label="Queues breaching" value="2" />
       <StatCard label="Tickets waiting" value="84" />
