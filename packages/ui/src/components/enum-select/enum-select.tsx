@@ -52,6 +52,12 @@ function EnumSelect<V extends string>({
   return (
     <Select
       value={value}
+      // A picker's reading of autoFocus is OPEN (lib/editor.ts). Mounting
+      // focused-but-closed is why an inline cell felt broken: the click that
+      // opened the edit was spent on the state change, and the control it
+      // revealed was another closed button — so picking cost two clicks and
+      // the first one looked like a no-op.
+      defaultOpen={autoFocus}
       onValueChange={(next) => {
         // Single-select only emits null on programmatic clears, which this
         // editor never issues — a required enum has no "no value" pick.

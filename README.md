@@ -36,7 +36,7 @@ Chat breaches mid-replay and jumps to the top; the final frame shows Billing
 | Loading | visit `/?delay=4000` — skeletons mirror the final layout |
 | Error | click **Inject error** in the overview band's Demo controls (or visit `/?fail=1`) — every surface degrades independently with a Retry |
 | **Stale** | press **`p`** — replay pauses; ~8s later the page shows "Stale · updated Xs ago", dims, and keeps the data rendered (stale never blanks). No lever needed at the end: once the ~30s replay exhausts the fixture, the feed decays to stale on its own — an exhausted feed ages honestly rather than heartbeating "live". Reload restarts the replay |
-| Dark mode | the dashboard defaults to light; press `d` to flip themes — it mounts no toggle, and the `ThemeToggle` primitive lives in the Storybook catalog |
+| Dark mode | the dashboard defaults to light; press `d` to flip themes — it mounts no toggle |
 
 ## Stack (and why)
 
@@ -165,15 +165,12 @@ primitives:
 | `MetricDelta` | raw signed `value`, `unit` → **colorless** signed number (the explicit +/− sign carries direction) | color (deltas are annotations, not verdicts — verdict color lives on the status surfaces; the palette's orange is reserved for breach); direction arrows/glyphs (the sign already says it); an `invert` prop (there is no good/bad to flip when it's colorless); pre-formatted strings |
 | `Meter` | normalized `value`/`max`, `label`, optional `status` tint (from the one canonical `statusFillClass`) | magnitude labels (the meter shows *saturation*; the number that says how far over rides beside it in a `MetricDelta`); a fourth severity color |
 | `DeviationBar` | signed `value` (± % around a center baseline dot), `label`, `range` clamp per half | color entirely — one neutral muted fill (verdict color lives on the badges beside it); a direction/`invert` prop (the sign IS the direction — over extends right past the dot, under extends left); a rendered number (the exact figure rides beside it); threshold markers |
-| `Sparkline` | `points`, optional `status` tint, computed a11y label with override | chart deps, axes, tooltips, animation (snaps on tick). Catalog-only: the shipped queue table renders `SparkBars`; kept awaiting a line-trend consumer |
-| `Gauge` | normalized `value` (0–100), `label`, center content via **children** (the gauge owns only the arc — it never formats numbers) | gradient / threshold zones / needle (tokens only: muted track, `currentColor` arc); animation; internal number formatting. Catalog-only: the overview replaced the arc with the attainment tile's `Meter` line; kept awaiting a hero-reading consumer |
 | `DeviationCell` | `measures` (the featured + comparative measure as one line) / `delta` / `bar` + `className` — a **bullet graph** in a cell; slot names are [Stephen Few's](https://www.perceptualedge.com/articles/misc/Bullet_Graph_Design_Spec.pdf) | splitting `measures` into `actual`/`target` (Few's comparative measure spans "a target — **or** the same measure at some point in the past"; volume compares a *forecast*, so two props would name one wrong — and it would force the anatomy to render the separator it disclaims); `invert` (Tremor's `DeltaBar.isIncreasePositive` — a documented divergence from our closest prior art); a status tint (verdicts ride on the badge); number formatting; a `width` prop (the fixed `w-36` is what lets `layout="fixed"` hold still — `className` overrides) |
 | `SparkBars` | `points`, `threshold` (bars past it take the reserved breach accent, others muted), computed a11y label | a configurable tint (the breach accent is not overridable — an orange bar always means "over threshold") |
 | `DataTable<Row, Setting>` | generic column config — `cell(row, content)` writes **one anatomy for every state**, and `content.text/number/duration/enum/multiselect({ edits })` marks the parts an operator controls (`edits` is checked against the entity's `Setting` union AND the value's shape; `Setting` defaults to `never`, so a read-only table cannot reach the edit builders and a read-only cell just never writes the second parameter). Plus `key/header/sortValue/align`, required sr-only `caption`, optional expandable rows (`getExpandedContent` + `expandLabel`, `aria-controls`-linked), `defaultSort`, `rowSize: default \| tall` (skeleton AND data rows share the chosen rhythm — pick the step that clears your tallest cell, and loading resolves with zero shift), `layout: auto \| fixed` (fixed sizes columns from the header row's width classes so ticking cell content never reflows the grid — both dashboard tables use it), one `feed` object, one optional `interactive` object (`onPatch`/`onDelete` — the table produces **intents**, never mutations; controlled `editing`/`onEditingChange`, since edit mode holds the replay; `editToggle`/`clearRows`, which the dashboard turns off to mount both in the section heading; `rowLabel`) | compound/context API (the consumers want to *declare* columns, not assemble `<DataTable.Row>`s — so sort, expansion, selection and the one open cell edit stay internal, and context would be wiring with no consumer); an `editing` flag reaching your anatomy, a second renderer, or a `readOnly` prop (read-only is the **absence** of an `edits` call — there is no branch to write and none to get wrong); a `reads` counterpart (a value nobody edits is better written as the primitive it already is); pagination/virtualization (~19 rows total); a row menu or batched row form (**editing is one gesture: click the value you mean**); **row navigation** (rows expand to an inline detail panel, they don't link out); a `rowTone`/row-dimming prop (muted ink is sub-text only — the table makes whole-row muting impossible; triage emphasis rides on sort + a status column) |
 | `Duration` | `seconds` → semantic `<time>` | live ticking (compressed replay time would contradict the wall clock — `StaleIndicator` is the only wall-clock surface) |
 | `Callout` | children + `className` — a quiet aside (hairline rule, muted small text) for context beside data | status/variant tints (a tinted callout is a verdict, and verdicts belong to status surfaces); icon slot; title prop; dismissal |
 | `EmptyState` / `ErrorState` / `StaleIndicator` | title/description/action slot; optional `onRetry`; self-ticking `lastUpdatedAt` + `tone` | icons; auto-derived staleness (the hook is the single owner of that logic) |
-| `ThemeToggle` | — (no props) | light/dark/system menu (binary flip suffices). Catalog-only: the dashboard defaults to light and mounts no toggle |
 | `PageSection` | `id` (heading gets `${id}-heading`, `aria-labelledby` wired), `title`, `description`, `actions` (a **slot**, not an `onEdit` prop — a section-scoped control belongs beside its heading, where the eye already looks for what a section can do, and the shell has no opinion about what the action IS), children | heading-level prop (h2 is the page anatomy under the single h1); baked-in margins (the call site's stack owns spacing); collapse |
 | `OrgIdentity` | `name` (null → layout-mirroring skeletons), `tagline`, `href` (default "/", `aria-label="Homepage"`) | logo upload (monogram derives from the name — identity is data in a whitelabel system); a size prop (single consumer scale); heading-level choice (the identity block anchors a page, so the name IS the h1) |
 
@@ -188,10 +185,32 @@ an orange pixel anywhere on the page reads as "a promise is broken." The
 the queue table's headroom percent stays neutral, because the SLA verdict
 already lives in that row's Status badge — a second colored number would just
 compete with it. The status colors ride on the dedicated status surfaces
-(badges, the `Sparkline` tint), never on the deltas.
+(badges, the `SparkBars` breach accent), never on the deltas.
 
 Also deliberately **not built**: `RelativeTime` (zero consumers — inventory,
 not a primitive).
+
+And deliberately **un-built**. `Sparkline`, `Gauge` and `ThemeToggle` shipped
+here and were deleted, because each had been reduced to defending its own
+presence — the inventory notes literally read *"kept awaiting a consumer."* A
+primitive nothing reaches is not a component library, it is a graveyard with
+good documentation, and it costs a reviewer real time: every entry in the table
+above is a claim that this is the primitive for that job.
+
+- `Sparkline` was the sharper cut, because it wasn't merely unused — it was
+  **redundant**. `SparkBars.threshold` is optional, so omitting it renders
+  precisely the neutral trend `Sparkline` drew. Two primitives answering one
+  question turns *choosing a data primitive* from a decision into a preference.
+- `Gauge` had no consumer and no pending one; the overview answers the same
+  question with a `StatCard` + `Meter` tile.
+- `ThemeToggle` was catalog-only by design, for a dashboard that mounts no
+  toggle. Its deletion also stranded the `Sun`/`Moon` icons and, one step
+  further out, `statusTextClass` — whose only caller had been `Sparkline`.
+
+That cascade is the argument. Deleting 455 lines of component immediately
+falsified **17 prose references** across the docs, the catalog, `CLAUDE.md` and
+this file — none of which a compiler would ever have caught. This system mints
+on first use; it now unmints on last.
 
 ## Product tradeoffs
 

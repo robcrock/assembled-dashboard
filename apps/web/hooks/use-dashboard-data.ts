@@ -8,7 +8,7 @@
 //   so the route handler's failure toggles are demoable with zero extra UI
 //   (visit /?fail=1 or /?delay=4000).
 // - Replays the fixture's history[] frames on a compressed timer (default one
-//   tick per 3s vs. the real 300s cadence) up to `current`, so sparklines and
+//   tick per 3s vs. the real 300s cadence) up to `current`, so trends and
 //   deltas visibly move during a walkthrough. The fixture's last history frame
 //   IS `current`; a guard appends `current` only if that ever changes.
 // - When the fixture is exhausted, ticks STOP: freshness freezes at the last

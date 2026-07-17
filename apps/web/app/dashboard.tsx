@@ -16,8 +16,7 @@
 //
 // Theming defaults to LIGHT (next-themes defaultTheme="light" — the Braun
 // ramp is authored light-first) — the dashboard deliberately mounts no theme
-// toggle; dark stays reachable via the "d" hotkey, and the ThemeToggle
-// primitive stays in the Storybook catalog.
+// toggle; dark stays reachable via the "d" hotkey.
 //
 // Demo levers (the failure story, demonstrable from the chrome row or by hand):
 //   Pause button / "p" → pause replay; ~8s later ticks are "late" and the

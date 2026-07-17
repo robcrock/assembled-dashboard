@@ -26,7 +26,13 @@ export interface EditorProps<V> {
   onCommit?: (draft: V) => void
   /** Explicit revert intent (Escape). The container restores the pre-draft value. */
   onCancel?: () => void
-  /** Focus the control on mount — an editor opened by user gesture should receive focus. */
+  /**
+   * The user's gesture was meant for this control — act as though they just
+   * reached it. Each editor reads that in its own grammar: a FIELD takes the
+   * caret, a PICKER opens its popup. A picker that merely took focus would
+   * hand back a closed trigger that looks like the box just clicked, so the
+   * gesture would appear to do nothing and every pick would cost two clicks.
+   */
   autoFocus?: boolean
   disabled?: boolean
   /** Failed validation face: sets aria-invalid and the destructive ring. Message rendering is the container's. */

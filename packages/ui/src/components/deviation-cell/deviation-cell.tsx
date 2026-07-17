@@ -56,7 +56,7 @@ interface DeviationCellProps {
  * different keys.
  *
  * **Not for:** saturation ("how full is this?" — that's `Meter`, a 0→max
- * fill), a trend over time (`Sparkline`, `SparkBars`), or a bare number with a
+ * fill), a trend over time (`SparkBars`), or a bare number with a
  * delta (`StatCard`). The distinction from `Meter` is the one worth holding:
  * this measures DISTANCE FROM A TARGET, which is signed and can point either
  * way; a meter measures fill, which cannot.

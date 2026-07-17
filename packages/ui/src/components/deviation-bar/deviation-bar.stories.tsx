@@ -16,7 +16,7 @@ A **signed deviation around a center baseline dot** (the target): positive exten
 **Not for:**
 - Saturation against a bound — \`Meter\` (different question: DeviationBar is signed distance-from-target, Meter is a normalized 0→max fill).
 - Per-tick threshold crossings over time — \`SparkBars\`.
-- Trend shape — \`Sparkline\`.
+- Trend shape over time — \`SparkBars\`.
 - One normalized hero reading — \`Gauge\`.
 
 **Deliberately omitted:**

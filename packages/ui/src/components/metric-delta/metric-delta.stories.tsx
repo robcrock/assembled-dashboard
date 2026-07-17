@@ -13,7 +13,7 @@ A signed value plus unit, rendered as a colorless, glyph-free annotation in mute
 
 **Use it for:** how far a number sits from its target or forecast, riding beside the number it annotates (StatCard deltas, the queue table's headroom and volume percents, the Gauge's center slot).
 
-**Not for:** verdicts. Whether a move is good or bad already lives on the status surfaces (\`StatusBadge\`, the \`Sparkline\` tint) — never on the delta.
+**Not for:** verdicts. Whether a move is good or bad already lives on the status surfaces (\`StatusBadge\`, the \`SparkBars\` breach accent) — never on the delta.
 
 **Deliberately omitted:**
 - Color — deltas are annotations, not verdicts; the palette's one loud accent stays reserved for SLA breach. No exceptions: even the queue table's headroom percent stays neutral.
